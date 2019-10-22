@@ -28,7 +28,7 @@
 ;; An HTTP library that uses curl as a backend.  Inspired by, and some
 ;; code copied from, Christopher Wellons's library, elfeed-curl.el.
 ;;
-;; * Why this package?
+;; Why this package?
 ;;
 ;; 1.  `url' works well for many things, but it has some issues (and have
 ;;     you seen its code?).
@@ -37,7 +37,7 @@
 ;; 3.  Chris Wellons doesn't have time to factor his excellent
 ;;     elfeed-curl.el library out of Elfeed.  This will have to do.
 ;;
-;; * Why is it called `plz'?
+;; Why is it called `plz'?
 ;;
 ;; 1.  There's already a package called `http'.
 ;; 2.  There's already a package called `request'.
