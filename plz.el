@@ -19,9 +19,24 @@
 ;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-
+;;
 ;; An HTTP library that uses curl as a backend.  Inspired by, and some
 ;; code copied from, Christopher Wellons's library, elfeed-curl.el.
+;;
+;; * Why this package?
+;;
+;; 1.  `url' works well for many things, but it has some issues (and have
+;;     you seen its code?).
+;; 2.  `request' works well for many things, but it has some issues (and
+;;     have you seen its code?).
+;; 3.  Chris Wellons doesn't have time to factor his excellent
+;;     elfeed-curl.el library out of Elfeed.  This will have to do.
+;;
+;; * Why is it called `plz'?
+;;
+;; 1.  There's already a package called `http'.
+;; 2.  There's already a package called `request'.
+;; 3.  Naming things is hard.
 
 ;;; Code:
 
@@ -156,14 +171,25 @@
 ;;;; Functions
 
 (cl-defun plz-get (url &key headers _connect-timeout sync
-                            success error)
-  "FIXME: Docstring."
+                       success error)
+  "Get HTTP URL with curl.
+If SYNC is non-nil, return the response object; otherwise, return
+the curl process object.
+
+HEADERS may be an alist of extra headers to send with the
+request.
+
+For asynchronous requests, SUCCESS and ERROR should be callback
+functions, called when the curl process finishes with a single
+argument: the `plz-response' object.
+
+"
   (plz--request 'get url
-                     :sync sync
-                     :headers headers
-                     ;;  :connect-timeout timeout
-                     :success success
-                     :error error))
+                :sync sync
+                :headers headers
+                ;;  :connect-timeout timeout
+                :success success
+                :error error))
 
 (cl-defun plz-request-async (&rest args)
   "FIXME: Docstring."
@@ -209,7 +235,10 @@
       (plz--sentinel (current-buffer) status))))
 
 (defun plz--sentinel (process-or-buffer status)
-  "FIXME: Docstring."
+  "Process buffer of curl output in PROCESS-OR-BUFFER.
+If PROCESS-OR-BUFFER if a process, uses its buffer; if a buffer,
+uses it.  STATUS should be the process's event
+string (see info node `(elisp) Sentinels')."
   ;; Inspired by and some code copied from `elfeed-curl--sentinel'.
   (let ((buffer (cl-etypecase process-or-buffer
                   (process (process-buffer process-or-buffer))
@@ -219,7 +248,7 @@
           (pcase status
             ((or 0 "finished\n")
              ;; Request completed successfully: call success callback with parsed response.
-             (let ((response (plz--parse-response buffer)))
+             (let ((response (plz--response buffer)))
                (funcall plz-success response)))
 
             ((rx "exited abnormally with code " (group (1+ digit)))
@@ -228,12 +257,12 @@
              (warn "plz--sentinel: ERROR: %s" (buffer-string))
              ;; (let* ((code (string-to-number (match-string 1 status)))
              ;;        (message (alist-get code plz-curl-errors)))
-             ;;   (funcall plz-error (plz--parse-response buffer)))
+             ;;   (funcall plz-error (plz--response buffer)))
              )))
       (kill-buffer buffer))))
 
-(defun plz--parse-response (buffer)
-  "FIXME: Docstring."
+(defun plz--response (buffer)
+  "Return response struct for HTTP response in BUFFER."
   (with-current-buffer buffer
     (save-excursion
       (goto-char (point-min))
@@ -254,7 +283,7 @@
          :body body)))))
 
 (defun plz--headers (buffer)
-  "FIXME: Docstring."
+  "Return headers alist for HTTP response in BUFFER."
   (with-current-buffer buffer
     (save-excursion
       (goto-char (point-min))
@@ -268,7 +297,8 @@
                  collect (cons (match-string 1) (match-string 2)))))))
 
 (defun plz--decode-body (buffer coding-system)
-  "FIXME: Docstring."
+  "Return decoded body for HTTP response in BUFFER.
+Decodes with `decode-coding-region' according to CODING-SYSTEM."
   (with-current-buffer buffer
     (save-excursion
       (goto-char (point-min))
