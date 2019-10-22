@@ -48,6 +48,7 @@
 ;;;; Requirements
 
 (require 'cl-lib)
+(require 'rx)
 (require 'subr-x)
 
 ;;;; Structs

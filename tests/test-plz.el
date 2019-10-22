@@ -29,6 +29,8 @@
 (require 'ert)
 (require 'json)
 
+(require 'plz)
+
 ;;;; Variables
 
 
