@@ -223,7 +223,7 @@ argument: the `plz-response' object."
 SUCCESS and ERROR should be callback functions, called when the
 curl process finishes with a single argument: the `plz-response'
 object.  Uses `make-process' to call curl asynchronously."
-  (with-current-buffer (generate-new-buffer "*plz-request-curl*")
+  (with-current-buffer (generate-new-buffer " *plz-request-curl*")
     (let ((process (make-process :name "plz-request-curl"
                                  :buffer (current-buffer)
                                  :command (append (list plz-curl-program) curl-args)
@@ -237,7 +237,7 @@ object.  Uses `make-process' to call curl asynchronously."
 (cl-defun plz-request--sync (curl-args &key success error)
   "Return HTTP response object for curl called with CURL-ARGS.
 Uses `call-process' to call curl synchronously."
-  (with-current-buffer (generate-new-buffer "*plz-request-curl*")
+  (with-current-buffer (generate-new-buffer " *plz-request-curl*")
     (let ((status (apply #'call-process plz-curl-program nil t nil
                          curl-args))
           (plz-success #'identity))
@@ -246,8 +246,8 @@ Uses `call-process' to call curl synchronously."
 (defun plz--sentinel (process-or-buffer status)
   "Process buffer of curl output in PROCESS-OR-BUFFER.
 If PROCESS-OR-BUFFER if a process, uses its buffer; if a buffer,
-uses it.  STATUS should be the process's event
-string (see info node `(elisp) Sentinels')."
+uses it.  STATUS should be the process's event string (see info
+node `(elisp) Sentinels').  Kills the buffer before returning."
   ;; Inspired by and some code copied from `elfeed-curl--sentinel'.
   (let ((buffer (cl-etypecase process-or-buffer
                   (process (process-buffer process-or-buffer))
