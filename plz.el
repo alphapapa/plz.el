@@ -162,23 +162,25 @@
   '("--silent"
     "--compressed"
     "--location"
-    ;; TODO: Move timeout to a defcustom and use a function to build args list.
-    "--connect-timeout" "5"
     "--dump-header" "-")
   "Default arguments to curl."
   :type '(repeat string))
 
+(defcustom plz-connect-timeout 5
+  "Default connection timeout in seconds."
+  :type 'number)
+
 ;;;; Functions
 
-(cl-defun plz-get (url &key headers _connect-timeout sync
-                       success error)
-  ;; TODO: Handle connect-timeout argument.
+(cl-defun plz-get (url &key headers sync success error
+                       (connect-timeout plz-connect-timeout))
   "Get HTTP URL with curl.
 If SYNC is non-nil, return the response object; otherwise, return
 the curl process object.
 
 HEADERS may be an alist of extra headers to send with the
-request.
+request.  CONNECT-TIMEOUT may be a number of seconds to timeout
+the initial connection attempt.
 
 For asynchronous requests, SUCCESS and ERROR should be callback
 functions, called when the curl process finishes with a single
@@ -186,18 +188,19 @@ argument: the `plz-response' object."
   (plz--request 'get url
                 :sync sync
                 :headers headers
-                ;;  :connect-timeout timeout
+                :connect-timeout connect-timeout
                 :success success
                 :error error))
 
-(cl-defun plz--request (_method url &key headers _connect-timeout sync
+(cl-defun plz--request (_method url &key headers connect-timeout sync
                                 success error)
   "Return process or response for HTTP request to URL.
 If SYNC is non-nil, return the response object; otherwise, return
 the curl process object.
 
 HEADERS may be an alist of extra headers to send with the
-request.
+request.  CONNECT-TIMEOUT may be a number of seconds to timeout
+the initial connection attempt.
 
 For asynchronous requests, SUCCESS and ERROR should be callback
 functions, called when the curl process finishes with a single
@@ -208,6 +211,8 @@ argument: the `plz-response' object."
          (header-args (cl-loop for (key . value) in headers
                                collect (format "--header %s: %s" key value)))
          (curl-args (append plz-curl-default-args header-args
+                            (when connect-timeout
+                              (list "--connect-timeout" (number-to-string connect-timeout)))
                             (list url))))
     (pcase sync
       (`nil (plz-request--async curl-args :success success :error error))
