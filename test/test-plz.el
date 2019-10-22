@@ -1,4 +1,4 @@
-;;; test-http-lib.el --- Tests for http-lib          -*- lexical-binding: t; -*-
+;;; test-plz.el --- Tests for plz          -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2019  Adam Porter
 
@@ -41,11 +41,11 @@
 
 ;;;; Tests
 
-(ert-deftest http-lib-get-sync nil
-  (http-lib-response-p (http-lib-get "https://httpbin.org/get" :sync t)))
+(ert-deftest plz-get-sync nil
+  (plz-response-p (plz-get "https://httpbin.org/get" :sync t)))
 
 ;;;; Footer
 
-(provide 'test-http-lib)
+(provide 'test-plz)
 
-;;; test-http-lib.el ends here
+;;; test-plz.el ends here

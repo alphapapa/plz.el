@@ -1,4 +1,4 @@
-;;; http-lib.el --- HTTP library                         -*- lexical-binding: t; -*-
+;;; plz.el --- HTTP library                         -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2019  Adam Porter
 
@@ -32,12 +32,12 @@
 
 ;;;; Structs
 
-(cl-defstruct http-lib-response
+(cl-defstruct plz-response
   version status headers body)
 
 ;;;; Constants
 
-(defconst http-lib-curl-errors
+(defconst plz-curl-errors
   ;; Copied from elfeed-curl.el.
   '((1 . "Unsupported protocol.")
     (2 . "Failed to initialize.")
@@ -120,33 +120,33 @@
 
 ;;;; Variables
 
-(defvar-local http-lib-error nil
+(defvar-local plz-error nil
   "Callback function for errored completion of request in current curl process buffer.")
 
-(defvar-local http-lib-success nil
+(defvar-local plz-success nil
   "Callback function for successful completion of request in current curl process buffer.")
 
 ;;;; Customization
 
-(defgroup http-lib nil
-  "Options for `http-lib'."
+(defgroup plz nil
+  "Options for `plz'."
   :group 'network)
 
-(defcustom http-lib-curl-program "curl"
+(defcustom plz-curl-program "curl"
   "Name of curl program to call."
   :type 'string)
 
-(defcustom http-lib-curl-default-args
+(defcustom plz-curl-default-args
   '("--silent"
     "--compressed"
     "--location"
-    ;;  "--write-out" "(http-lib-curl-request . %%{size_header})"
+    ;;  "--write-out" "(plz-curl-request . %%{size_header})"
     "--connect-timeout" "5"
     "--dump-header" "-")
   "Default arguments to curl."
   :type '(repeat string))
 
-;; (defcustom http-lib-curl-connection-timeout 5
+;; (defcustom plz-curl-connection-timeout 5
 ;;   "Default connection timeout for HTTP requests made with curl.
 ;; The --connect-timeout option for curl.")
 
@@ -155,25 +155,25 @@
 
 ;;;; Functions
 
-(cl-defun http-lib-get (url &key headers _connect-timeout sync
+(cl-defun plz-get (url &key headers _connect-timeout sync
                             success error)
   "FIXME: Docstring."
-  (http-lib--request 'get url
+  (plz--request 'get url
                      :sync sync
                      :headers headers
                      ;;  :connect-timeout timeout
                      :success success
                      :error error))
 
-(cl-defun http-lib-request-async (&rest args)
+(cl-defun plz-request-async (&rest args)
   "FIXME: Docstring."
-  (apply #'http-lib--request args))
+  (apply #'plz--request args))
 
-(cl-defun http-lib-request-sync (&rest args)
+(cl-defun plz-request-sync (&rest args)
   "FIXME: Docstring."
-  (apply #'http-lib--request :sync t args))
+  (apply #'plz--request :sync t args))
 
-(cl-defun http-lib--request (_method url &key headers _connect-timeout sync
+(cl-defun plz--request (_method url &key headers _connect-timeout sync
                                      success error)
   "FIXME: Docstring."
   ;; Inspired by and copied from `elfeed-curl-retrieve'.
@@ -181,34 +181,34 @@
          (process-connection-type nil)
          (header-args (cl-loop for (key . value) in headers
                                collect (format "--header %s: %s" key value)))
-         (curl-args (append http-lib-curl-default-args header-args
+         (curl-args (append plz-curl-default-args header-args
                             (list url))))
     (if sync
-        (http-lib-request--sync curl-args :success success :error error)
-      (http-lib-request--async curl-args :success success :error error))))
+        (plz-request--sync curl-args :success success :error error)
+      (plz-request--async curl-args :success success :error error))))
 
-(cl-defun http-lib-request--async (curl-args &key success error)
+(cl-defun plz-request--async (curl-args &key success error)
   "FIXME: Docstring."
-  (with-current-buffer (generate-new-buffer "*http-lib-request-curl*")
-    (let ((process (make-process :name "http-lib-request-curl"
+  (with-current-buffer (generate-new-buffer "*plz-request-curl*")
+    (let ((process (make-process :name "plz-request-curl"
                                  :buffer (current-buffer)
-                                 :command (append (list http-lib-curl-program) curl-args)
+                                 :command (append (list plz-curl-program) curl-args)
                                  :connection-type 'pipe
-                                 :sentinel #'http-lib--sentinel
+                                 :sentinel #'plz--sentinel
                                  :stderr (current-buffer))))
-      (setf http-lib-success success
-            http-lib-error error)
+      (setf plz-success success
+            plz-error error)
       process)))
 
-(cl-defun http-lib-request--sync (curl-args &key success error)
+(cl-defun plz-request--sync (curl-args &key success error)
   "FIXME: Docstring."
-  (with-current-buffer (generate-new-buffer "*http-lib-request-curl*")
-    (let ((status (apply #'call-process http-lib-curl-program nil t nil
+  (with-current-buffer (generate-new-buffer "*plz-request-curl*")
+    (let ((status (apply #'call-process plz-curl-program nil t nil
                          curl-args))
-          (http-lib-success #'identity))
-      (http-lib--sentinel (current-buffer) status))))
+          (plz-success #'identity))
+      (plz--sentinel (current-buffer) status))))
 
-(defun http-lib--sentinel (process-or-buffer status)
+(defun plz--sentinel (process-or-buffer status)
   "FIXME: Docstring."
   ;; Inspired by and some code copied from `elfeed-curl--sentinel'.
   (let ((buffer (cl-etypecase process-or-buffer
@@ -219,20 +219,20 @@
           (pcase status
             ((or 0 "finished\n")
              ;; Request completed successfully: call success callback with parsed response.
-             (let ((response (http-lib--parse-response buffer)))
-               (funcall http-lib-success response)))
+             (let ((response (plz--parse-response buffer)))
+               (funcall plz-success response)))
 
             ((rx "exited abnormally with code " (group (1+ digit)))
              ;; Error: call error callback.
              ;; FIXME: Call with an error struct.
-             (warn "http-lib--sentinel: ERROR: %s" (buffer-string))
+             (warn "plz--sentinel: ERROR: %s" (buffer-string))
              ;; (let* ((code (string-to-number (match-string 1 status)))
-             ;;        (message (alist-get code http-lib-curl-errors)))
-             ;;   (funcall http-lib-error (http-lib--parse-response buffer)))
+             ;;        (message (alist-get code plz-curl-errors)))
+             ;;   (funcall plz-error (plz--parse-response buffer)))
              )))
       (kill-buffer buffer))))
 
-(defun http-lib--parse-response (buffer)
+(defun plz--parse-response (buffer)
   "FIXME: Docstring."
   (with-current-buffer buffer
     (save-excursion
@@ -242,18 +242,18 @@
                       (group (1+ digit))))
       (let* ((http-version (string-to-number (match-string 1)))
              (status-code (string-to-number (match-string 2)))
-             (headers (http-lib--headers buffer))
+             (headers (plz--headers buffer))
              (coding-system (or (when-let* ((it (alist-get "Content-Type" headers nil nil #'string=)))
                                   (coding-system-from-name it))
                                 'utf-8))
-             (body (http-lib--decode-body buffer coding-system)))
-        (make-http-lib-response
+             (body (plz--decode-body buffer coding-system)))
+        (make-plz-response
          :version http-version
          :status status-code
          :headers headers
          :body body)))))
 
-(defun http-lib--headers (buffer)
+(defun plz--headers (buffer)
   "FIXME: Docstring."
   (with-current-buffer buffer
     (save-excursion
@@ -267,7 +267,7 @@
                                           limit t)
                  collect (cons (match-string 1) (match-string 2)))))))
 
-(defun http-lib--decode-body (buffer coding-system)
+(defun plz--decode-body (buffer coding-system)
   "FIXME: Docstring."
   (with-current-buffer buffer
     (save-excursion
@@ -279,6 +279,6 @@
 
 ;;;; Footer
 
-(provide 'http-lib)
+(provide 'plz)
 
-;;; http-lib.el ends here
+;;; plz.el ends here
