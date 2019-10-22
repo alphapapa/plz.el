@@ -41,10 +41,8 @@
 
 ;;;; Tests
 
-(ert-deftest http-lib-get nil
-  (http-lib-response-body (http-lib-get "https://httpbin.org/get"))
-  )
-
+(ert-deftest http-lib-get-sync nil
+  (http-lib-response-p (http-lib-get "https://httpbin.org/get" :sync t)))
 
 ;;;; Footer
 

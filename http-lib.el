@@ -155,41 +155,69 @@
 
 ;;;; Functions
 
-(cl-defun http-lib-get (url &key headers _connect-timeout
+(cl-defun http-lib-get (url &key headers _connect-timeout sync
                             success error)
   "FIXME: Docstring."
-  (http-lib-request 'get url
-                    :headers headers
-                    ;;  :connect-timeout timeout
-                    :success success
-                    :error error))
+  (http-lib--request 'get url
+                     :sync sync
+                     :headers headers
+                     ;;  :connect-timeout timeout
+                     :success success
+                     :error error))
 
-(cl-defun http-lib-request (_method url &key headers _connect-timeout
-                                    success error)
+(cl-defun http-lib-request-async (&rest args)
+  "FIXME: Docstring."
+  (apply #'http-lib--request args))
+
+(cl-defun http-lib-request-sync (&rest args)
+  "FIXME: Docstring."
+  (apply #'http-lib--request :sync t args))
+
+(cl-defun http-lib--request (_method url &key headers _connect-timeout sync
+                                     success error)
   "FIXME: Docstring."
   ;; Inspired by and copied from `elfeed-curl-retrieve'.
+  (let* ((coding-system-for-read 'binary)
+         (process-connection-type nil)
+         (header-args (cl-loop for (key . value) in headers
+                               collect (format "--header %s: %s" key value)))
+         (curl-args (append http-lib-curl-default-args header-args
+                            (list url))))
+    (if sync
+        (http-lib-request--sync curl-args :success success :error error)
+      (http-lib-request--async curl-args :success success :error error))))
+
+(cl-defun http-lib-request--async (curl-args &key success error)
+  "FIXME: Docstring."
   (with-current-buffer (generate-new-buffer "*http-lib-request-curl*")
-    (let* ((coding-system-for-read 'binary)
-           (process-connection-type nil)
-           (header-args (cl-loop for (key . value) in headers
-                                 collect (format "--header %s: %s" key value)))
-           (curl-args (append http-lib-curl-default-args header-args
-                              (list url)))
-           (process (apply #'start-process "http-lib-request-curl" (current-buffer)
-                           http-lib-curl-program curl-args)))
+    (let ((process (make-process :name "http-lib-request-curl"
+                                 :buffer (current-buffer)
+                                 :command (append (list http-lib-curl-program) curl-args)
+                                 :connection-type 'pipe
+                                 :sentinel #'http-lib--sentinel
+                                 :stderr (current-buffer))))
       (setf http-lib-success success
-            http-lib-error error
-            (process-sentinel process) #'http-lib--sentinel)
+            http-lib-error error)
       process)))
 
-(defun http-lib--sentinel (process status)
+(cl-defun http-lib-request--sync (curl-args &key success error)
+  "FIXME: Docstring."
+  (with-current-buffer (generate-new-buffer "*http-lib-request-curl*")
+    (let ((status (apply #'call-process http-lib-curl-program nil t nil
+                         curl-args))
+          (http-lib-success #'identity))
+      (http-lib--sentinel (current-buffer) status))))
+
+(defun http-lib--sentinel (process-or-buffer status)
   "FIXME: Docstring."
   ;; Inspired by and some code copied from `elfeed-curl--sentinel'.
-  (let ((buffer (process-buffer process)))
+  (let ((buffer (cl-etypecase process-or-buffer
+                  (process (process-buffer process-or-buffer))
+                  (buffer process-or-buffer))))
     (unwind-protect
         (with-current-buffer buffer
           (pcase status
-            ("finished\n"
+            ((or 0 "finished\n")
              ;; Request completed successfully: call success callback with parsed response.
              (let ((response (http-lib--parse-response buffer)))
                (funcall http-lib-success response)))
