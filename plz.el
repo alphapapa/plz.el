@@ -3,7 +3,12 @@
 ;; Copyright (C) 2019  Adam Porter
 
 ;; Author: Adam Porter <adam@alphapapa.net>
-;; Keywords:
+;; URL: https://github.com/alphapapa/plz.el
+;; Version: 0.1-pre
+;; Package-Requires: ((emacs "26.3"))
+;; Keywords: network, http
+
+;;; License:
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -145,7 +150,8 @@
 
 (defgroup plz nil
   "Options for `plz'."
-  :group 'network)
+  :group 'network
+  :link '(url-link "https://github.com/alphapapa/plz.el"))
 
 (defcustom plz-curl-program "curl"
   "Name of curl program to call."
@@ -155,23 +161,17 @@
   '("--silent"
     "--compressed"
     "--location"
-    ;;  "--write-out" "(plz-curl-request . %%{size_header})"
+    ;; TODO: Move timeout to a defcustom and use a function to build args list.
     "--connect-timeout" "5"
     "--dump-header" "-")
   "Default arguments to curl."
   :type '(repeat string))
 
-;; (defcustom plz-curl-connection-timeout 5
-;;   "Default connection timeout for HTTP requests made with curl.
-;; The --connect-timeout option for curl.")
-
-;;;; Commands
-
-
 ;;;; Functions
 
 (cl-defun plz-get (url &key headers _connect-timeout sync
                        success error)
+  ;; TODO: Handle connect-timeout argument.
   "Get HTTP URL with curl.
 If SYNC is non-nil, return the response object; otherwise, return
 the curl process object.
@@ -181,9 +181,7 @@ request.
 
 For asynchronous requests, SUCCESS and ERROR should be callback
 functions, called when the curl process finishes with a single
-argument: the `plz-response' object.
-
-"
+argument: the `plz-response' object."
   (plz--request 'get url
                 :sync sync
                 :headers headers
@@ -191,17 +189,18 @@ argument: the `plz-response' object.
                 :success success
                 :error error))
 
-(cl-defun plz-request-async (&rest args)
-  "FIXME: Docstring."
-  (apply #'plz--request args))
-
-(cl-defun plz-request-sync (&rest args)
-  "FIXME: Docstring."
-  (apply #'plz--request :sync t args))
-
 (cl-defun plz--request (_method url &key headers _connect-timeout sync
-                                     success error)
-  "FIXME: Docstring."
+                                success error)
+  "Return process or response for HTTP request to URL.
+If SYNC is non-nil, return the response object; otherwise, return
+the curl process object.
+
+HEADERS may be an alist of extra headers to send with the
+request.
+
+For asynchronous requests, SUCCESS and ERROR should be callback
+functions, called when the curl process finishes with a single
+argument: the `plz-response' object."
   ;; Inspired by and copied from `elfeed-curl-retrieve'.
   (let* ((coding-system-for-read 'binary)
          (process-connection-type nil)
@@ -209,12 +208,15 @@ argument: the `plz-response' object.
                                collect (format "--header %s: %s" key value)))
          (curl-args (append plz-curl-default-args header-args
                             (list url))))
-    (if sync
-        (plz-request--sync curl-args :success success :error error)
-      (plz-request--async curl-args :success success :error error))))
+    (pcase sync
+      (`nil (plz-request--async curl-args :success success :error error))
+      (_ (plz-request--sync curl-args :success success :error error)))))
 
 (cl-defun plz-request--async (curl-args &key success error)
-  "FIXME: Docstring."
+  "Return process object for curl called with CURL-ARGS.
+SUCCESS and ERROR should be callback functions, called when the
+curl process finishes with a single argument: the `plz-response'
+object.  Uses `make-process' to call curl asynchronously."
   (with-current-buffer (generate-new-buffer "*plz-request-curl*")
     (let ((process (make-process :name "plz-request-curl"
                                  :buffer (current-buffer)
@@ -227,7 +229,8 @@ argument: the `plz-response' object.
       process)))
 
 (cl-defun plz-request--sync (curl-args &key success error)
-  "FIXME: Docstring."
+  "Return HTTP response object for curl called with CURL-ARGS.
+Uses `call-process' to call curl synchronously."
   (with-current-buffer (generate-new-buffer "*plz-request-curl*")
     (let ((status (apply #'call-process plz-curl-program nil t nil
                          curl-args))
@@ -305,7 +308,6 @@ Decodes with `decode-coding-region' according to CODING-SYSTEM."
       ;; Skip headers.
       (re-search-forward "^\r\n" nil)
       (decode-coding-region (point) (point-max) coding-system t))))
-
 
 ;;;; Footer
 
