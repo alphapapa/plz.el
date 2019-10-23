@@ -129,6 +129,18 @@
 ;;;;; Errors
 
 (ert-deftest plz-get-curl-error nil
+  ;; Async.
+  (let* ((err)
+         (process (plz-get "https://httpbinnnnnn.org/get/status/404"
+                    :as 'string
+                    :else (lambda (e)
+                            (setf err e)))))
+    (plz-test-wait process)
+    (should (and (plz-error-p err)
+                 (equal '(6 . "Couldn't resolve host. The given remote host was not resolved.")
+                        (plz-error-curl-error err)))))
+
+  ;; Sync.
   (let ((err (should-error (plz-get-sync "https://httpbinnnnnn.org/get/status/404"
                              :as 'string)
                            :type 'plz-curl-error)))
@@ -138,6 +150,18 @@
                         (plz-error-curl-error (cdr err)))))))
 
 (ert-deftest plz-get-404-error nil
+  ;; Async.
+  (let* ((err)
+         (process (plz-get "https://httpbin.org/get/status/404"
+                    :as 'string
+                    :else (lambda (e)
+                            (setf err e)))))
+    (plz-test-wait process)
+    (should (and (plz-error-p err)
+                 (plz-response-p (plz-error-response err))
+                 (eq 404 (plz-response-status (plz-error-response err))))))
+
+  ;; Sync.
   (let ((err (should-error (plz-get-sync "https://httpbin.org/get/status/404"
                              :as 'string)
                            :type 'plz-http-error)))
