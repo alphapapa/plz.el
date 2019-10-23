@@ -211,8 +211,8 @@ above with AS.
 ELSE is an optional callback function called when the request
 fails with one argument, a `plz-error' struct.  If ELSE is nil,
 an error is signaled when the request fails, either
-`plz-curl-error' or `plz-http-error', as appropriate, with a
-`plz-error' struct as the error data..
+`plz-curl-error' or `plz-http-error' as appropriate, with a
+`plz-error' struct as the error data.
 
 HEADERS may be an alist of extra headers to send with the
 request.  CONNECT-TIMEOUT may be a number of seconds to timeout
@@ -241,7 +241,7 @@ If DECODE is non-nil, the response body is decoded automatically.
 For binary content, it should be nil.
 
 If the request fails, an error is signaled, either
-`plz-curl-error' or `plz-http-error', as appropriate, with a
+`plz-curl-error' or `plz-http-error' as appropriate, with a
 `plz-error' struct as the error data.
 
 HEADERS may be an alist of extra headers to send with the
@@ -282,8 +282,8 @@ above with AS.
 ELSE is an optional callback function called when the request
 fails with one argument, a `plz-error' struct.  If ELSE is nil,
 an error is signaled when the request fails, either
-`plz-curl-error' or `plz-http-error', as appropriate, with a
-`plz-error' struct as the error data..
+`plz-curl-error' or `plz-http-error' as appropriate, with a
+`plz-error' struct as the error data.
 
 HEADERS may be an alist of extra headers to send with the
 request.  CONNECT-TIMEOUT may be a number of seconds to timeout
@@ -343,7 +343,7 @@ request.  CONNECT-TIMEOUT may be a number of seconds to timeout
 the initial connection attempt.
 
 If the request fails, an error is signaled, either
-`plz-curl-error' or `plz-http-error', as appropriate, with a
+`plz-curl-error' or `plz-http-error' as appropriate, with a
 `plz-error' struct as the error data.
 
 Uses `call-process' to call curl synchronously."
