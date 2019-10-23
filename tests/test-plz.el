@@ -71,9 +71,7 @@
                             :as 'string
                             :then (lambda (string)
                                     (setf test-string string)))))
-            (cl-loop for i upto 100 ;; 10 seconds
-                     while (equal 'run (process-status process))
-                     do (sleep-for 0.1))
+            (plz-test-wait process)
             (string-match "curl" test-string))))
 
 (ert-deftest plz-get-buffer nil
@@ -84,9 +82,7 @@
                             :then (lambda (buffer)
                                     (with-current-buffer buffer
                                       (setf test-buffer-string (buffer-string)))))))
-            (cl-loop for i upto 100 ;; 10 seconds
-                     while (equal 'run (process-status process))
-                     do (sleep-for 0.1))
+            (plz-test-wait process)
             (string-match "curl" test-buffer-string))))
 
 (ert-deftest plz-get-response nil
@@ -95,9 +91,7 @@
                             :as 'response
                             :then (lambda (response)
                                     (setf test-response response)))))
-            (cl-loop for i upto 100 ;; 10 seconds
-                     while (equal 'run (process-status process))
-                     do (sleep-for 0.1))
+            (plz-test-wait process)
             (plz-test-get-response test-response))))
 
 (ert-deftest plz-get-json nil
@@ -106,9 +100,7 @@
                             :as #'json-read
                             :then (lambda (json)
                                     (setf test-json json)))))
-            (cl-loop for i upto 100 ;; 10 seconds
-                     while (equal 'run (process-status process))
-                     do (sleep-for 0.1))
+            (plz-test-wait process)
             (let* ((headers (alist-get 'headers test-json))
                    (user-agent (alist-get 'User-Agent headers nil nil #'equal)))
               (string-match "curl" user-agent)))))
@@ -158,10 +150,6 @@
 ;;;;; Binary
 
 (ert-deftest plz-test-get-jpeg ()
-  (let ((jpeg (plz-get-sync "https://httpbin.org/image/jpeg"
-                :decode nil)))
-    (should (image-jpeg-p jpeg)))
-
   (let* ((test-jpeg)
          (process (plz-get "https://httpbin.org/image/jpeg"
                     :decode nil
@@ -169,7 +157,12 @@
                     :then (lambda (string)
                             (setf test-jpeg string)))))
     (plz-test-wait process)
-    (should (image-jpeg-p test-jpeg))))
+    (should (equal 'jpeg (image-type-from-data test-jpeg)))))
+
+(ert-deftest plz-test-get-jpeg-sync ()
+  (let ((jpeg (plz-get-sync "https://httpbin.org/image/jpeg"
+                :decode nil)))
+    (should (equal 'jpeg (image-type-from-data jpeg)))))
 
 ;;;; Footer
 
