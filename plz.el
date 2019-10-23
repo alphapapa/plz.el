@@ -186,12 +186,32 @@
 
 ;;;; Functions
 
+;;;;; Public
+
 (cl-defun plz-get (url &key headers as then else
                        (connect-timeout plz-connect-timeout)
                        (decode t))
   "Get HTTP URL with curl.
 
-FIXME: Docstring.
+AS selects the kind of result to pass to the callback function
+THEN.  It may be:
+
+- `buffer' to pass the response buffer.
+- `string' to pass the response body as a string.
+- `response' to pass a `plz-response' struct.
+- A function, which is called in the response buffer with it
+  narrowed to the response body (suitable for, e.g. `json-read').
+
+If DECODE is non-nil, the response body is decoded automatically.
+
+THEN is a callback function, whose sole argument is selected
+above with AS.
+
+ELSE is an optional callback function called when the request
+fails with one argument, a `plz-error' struct.  If ELSE is nil,
+an error is signaled when the request fails, either
+`plz-curl-error' or `plz-http-error', as appropriate, with a
+`plz-error' struct as the error data..
 
 HEADERS may be an alist of extra headers to send with the
 request.  CONNECT-TIMEOUT may be a number of seconds to timeout
@@ -208,7 +228,18 @@ the initial connection attempt."
                             (decode t))
   "Get HTTP URL with curl synchronously.
 
-FIXME: Docstring.
+AS selects the kind of result to return.  It may be:
+
+- `string' to pass the response body as a string.
+- `response' to pass a `plz-response' struct.
+- A function, which is called in the response buffer with it
+  narrowed to the response body (suitable for, e.g. `json-read').
+
+If DECODE is non-nil, the response body is decoded automatically.
+
+If the request fails, an error is signaled, either
+`plz-curl-error' or `plz-http-error', as appropriate, with a
+`plz-error' struct as the error data.
 
 HEADERS may be an alist of extra headers to send with the
 request.  CONNECT-TIMEOUT may be a number of seconds to timeout
@@ -220,11 +251,35 @@ the initial connection attempt."
                      :decode decode
                      :as as))
 
+;;;;; Private
+
+;;;;;; Curl
+
+;; Functions for calling and handling curl processes.
+
 (cl-defun plz--request (_method url &key headers connect-timeout
                                 decode as then else)
-  "Return curl process for HTTP request to URL.
+  "Get HTTP URL with curl.
 
-FIXME: Docstring.
+AS selects the kind of result to pass to the callback function
+THEN.  It may be:
+
+- `buffer' to pass the response buffer.
+- `string' to pass the response body as a string.
+- `response' to pass a `plz-response' struct.
+- A function, which is called in the response buffer with it
+  narrowed to the response body (suitable for, e.g. `json-read').
+
+If DECODE is non-nil, the response body is decoded automatically.
+
+THEN is a callback function, whose sole argument is selected
+above with AS.
+
+ELSE is an optional callback function called when the request
+fails with one argument, a `plz-error' struct.  If ELSE is nil,
+an error is signaled when the request fails, either
+`plz-curl-error' or `plz-http-error', as appropriate, with a
+`plz-error' struct as the error data..
 
 HEADERS may be an alist of extra headers to send with the
 request.  CONNECT-TIMEOUT may be a number of seconds to timeout
@@ -268,8 +323,25 @@ the initial connection attempt."
 
 (cl-defun plz--request-sync (_method url &key headers connect-timeout
                                      decode as)
-  "Return HTTP response for curl called with CURL-ARGS.
-FIXME: Docstring.
+  "Return result for HTTP request to URL made synchronously with curl.
+
+AS selects the kind of result to return.  It may be:
+
+- `string' to pass the response body as a string.
+- `response' to pass a `plz-response' struct.
+- A function, which is called in the response buffer with it
+  narrowed to the response body (suitable for, e.g. `json-read').
+
+If DECODE is non-nil, the response body is decoded automatically.
+
+HEADERS may be an alist of extra headers to send with the
+request.  CONNECT-TIMEOUT may be a number of seconds to timeout
+the initial connection attempt.
+
+If the request fails, an error is signaled, either
+`plz-curl-error' or `plz-http-error', as appropriate, with a
+`plz-error' struct as the error data.
+
 Uses `call-process' to call curl synchronously."
   (with-current-buffer (generate-new-buffer " *plz-request-curl*")
     (let* ((coding-system-for-read 'binary)
@@ -285,12 +357,12 @@ Uses `call-process' to call curl synchronously."
            ;; THEn form copied from `plz--request'.
            ;; TODO: DRY this.  Maybe we could use a thread and a condition variable, but...
            (plz-then (pcase-exhaustive as
-                       ('string (lambda ()
-                                  (let ((coding-system (or (plz--coding-system) 'utf-8)))
-                                    (plz--narrow-to-body)
-                                    (when decode
-                                      (decode-coding-region (point) (point-max) coding-system))
-                                    (buffer-string))))
+                       ((or `nil 'string) (lambda ()
+                                            (let ((coding-system (or (plz--coding-system) 'utf-8)))
+                                              (plz--narrow-to-body)
+                                              (when decode
+                                                (decode-coding-region (point) (point-max) coding-system))
+                                              (buffer-string))))
                        ('response #'plz--response)
                        ((pred functionp) (lambda ()
                                            (let ((coding-system (or (plz--coding-system) 'utf-8)))
@@ -299,12 +371,6 @@ Uses `call-process' to call curl synchronously."
                                                (decode-coding-region (point) (point-max) coding-system))
                                              (funcall as)))))))
       (plz--sentinel (current-buffer) status))))
-
-(defun plz--narrow-to-body ()
-  "Narrow to body of HTTP response in current buffer."
-  (goto-char (point-min))
-  (re-search-forward "^\r\n" nil)
-  (narrow-to-region (point) (point-max)))
 
 (defun plz--sentinel (process-or-buffer status)
   "Process buffer of curl output in PROCESS-OR-BUFFER.
@@ -340,13 +406,9 @@ node `(elisp) Sentinels').  Kills the buffer before returning."
                  ((pred functionp) (funcall plz-else err)))))))
       (kill-buffer buffer))))
 
-(defun plz--http-status ()
-  "Return HTTP status code for HTTP response in current buffer.
-Assumes point is at beginning of buffer."
-  (save-excursion
-    (goto-char (point-min))
-    (when (looking-at plz-http-response-status-line-regexp)
-      (string-to-number (match-string 2)))))
+;;;;;; HTTP Responses
+
+;; Functions for parsing HTTP responses.
 
 (defun plz--response ()
   "Return response struct for HTTP response in current buffer."
@@ -375,6 +437,14 @@ refer to rather than the current buffer's unparsed headers."
     (when content-type
       (coding-system-from-name content-type))))
 
+(defun plz--http-status ()
+  "Return HTTP status code for HTTP response in current buffer.
+Assumes point is at beginning of buffer."
+  (save-excursion
+    (goto-char (point-min))
+    (when (looking-at plz-http-response-status-line-regexp)
+      (string-to-number (match-string 2)))))
+
 (defun plz--headers ()
   "Return headers alist for HTTP response in current buffer"
   (save-excursion
@@ -388,15 +458,11 @@ refer to rather than the current buffer's unparsed headers."
                                         limit t)
                collect (cons (match-string 1) (match-string 2))))))
 
-(defun plz--decode-body (coding-system)
-  "Decode body for HTTP response in current buffer.
-Return length of decoded text.  Decodes with
-`decode-coding-region' according to CODING-SYSTEM."
-  (save-excursion
-    (goto-char (point-min))
-    ;; Skip headers.
-    (re-search-forward "^\r\n" nil)
-    (decode-coding-region (point) (point-max) coding-system)))
+(defun plz--narrow-to-body ()
+  "Narrow to body of HTTP response in current buffer."
+  (goto-char (point-min))
+  (re-search-forward "^\r\n" nil)
+  (narrow-to-region (point) (point-max)))
 
 ;;;; Footer
 
