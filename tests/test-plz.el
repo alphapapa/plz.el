@@ -28,6 +28,7 @@
 
 (require 'ert)
 (require 'json)
+(require 'let-alist)
 
 (require 'plz)
 
@@ -66,44 +67,43 @@
 ;;;;; Async
 
 (ert-deftest plz-get-string nil
-  (should (let* ((test-string)
-                 (process (plz-get "https://httpbin.org/get"
-                            :as 'string
-                            :then (lambda (string)
-                                    (setf test-string string)))))
-            (plz-test-wait process)
-            (string-match "curl" test-string))))
+  (let* ((test-string)
+         (process (plz-get "https://httpbin.org/get"
+                    :as 'string
+                    :then (lambda (string)
+                            (setf test-string string)))))
+    (plz-test-wait process)
+    (should (string-match "curl" test-string))))
 
 (ert-deftest plz-get-buffer nil
   ;; The sentinel kills the buffer, so we get the buffer as a string.
-  (should (let* ((test-buffer-string)
-                 (process (plz-get "https://httpbin.org/get"
-                            :as 'buffer
-                            :then (lambda (buffer)
-                                    (with-current-buffer buffer
-                                      (setf test-buffer-string (buffer-string)))))))
-            (plz-test-wait process)
-            (string-match "curl" test-buffer-string))))
+  (let* ((test-buffer-string)
+         (process (plz-get "https://httpbin.org/get"
+                    :as 'buffer
+                    :then (lambda (buffer)
+                            (with-current-buffer buffer
+                              (setf test-buffer-string (buffer-string)))))))
+    (plz-test-wait process)
+    (should (string-match "curl" test-buffer-string))))
 
 (ert-deftest plz-get-response nil
-  (should (let* ((test-response)
-                 (process (plz-get "https://httpbin.org/get"
-                            :as 'response
-                            :then (lambda (response)
-                                    (setf test-response response)))))
-            (plz-test-wait process)
-            (plz-test-get-response test-response))))
+  (let* ((test-response)
+         (process (plz-get "https://httpbin.org/get"
+                    :as 'response
+                    :then (lambda (response)
+                            (setf test-response response)))))
+    (plz-test-wait process)
+    (should (plz-test-get-response test-response))))
 
 (ert-deftest plz-get-json nil
-  (should (let* ((test-json)
-                 (process (plz-get "https://httpbin.org/get"
-                            :as #'json-read
-                            :then (lambda (json)
-                                    (setf test-json json)))))
-            (plz-test-wait process)
-            (let* ((headers (alist-get 'headers test-json))
-                   (user-agent (alist-get 'User-Agent headers nil nil #'equal)))
-              (string-match "curl" user-agent)))))
+  (let* ((test-json)
+         (process (plz-get "https://httpbin.org/get"
+                    :as #'json-read
+                    :then (lambda (json)
+                            (setf test-json json)))))
+    (plz-test-wait process)
+    (let-alist test-json
+      (should (string-match "curl" .headers.User-Agent)))))
 
 ;;;;; Sync
 
@@ -117,11 +117,9 @@
                                    :as 'response))))
 
 (ert-deftest plz-get-sync-json nil
-  (should (let* ((test-json (plz-get-sync "https://httpbin.org/get"
-                              :as #'json-read))
-                 (headers (alist-get 'headers test-json))
-                 (user-agent (alist-get 'User-Agent headers nil nil #'equal)))
-            (string-match "curl" user-agent))))
+  (let-alist (plz-get-sync "https://httpbin.org/get"
+               :as #'json-read)
+    (should (string-match "curl" .headers.User-Agent))))
 
 (ert-deftest plz-get-sync-buffer nil
   ;; `buffer' is not a valid type for `plz-get-sync'.
@@ -136,7 +134,8 @@
                            :type 'plz-curl-error)))
     (should (and (eq 'plz-curl-error (car err))
                  (plz-error-p (cdr err))
-                 (equal '(6 . "Couldn't resolve host. The given remote host was not resolved.") (plz-error-curl-error (cdr err)))))))
+                 (equal '(6 . "Couldn't resolve host. The given remote host was not resolved.")
+                        (plz-error-curl-error (cdr err)))))))
 
 (ert-deftest plz-get-404-error nil
   (let ((err (should-error (plz-get-sync "https://httpbin.org/get/status/404"
