@@ -440,8 +440,7 @@ refer to rather than the current buffer's unparsed headers."
       (coding-system-from-name content-type))))
 
 (defun plz--http-status ()
-  "Return HTTP status code for HTTP response in current buffer.
-Assumes point is at beginning of buffer."
+  "Return HTTP status code for HTTP response in current buffer."
   (save-excursion
     (goto-char (point-min))
     (when (looking-at plz-http-response-status-line-regexp)
