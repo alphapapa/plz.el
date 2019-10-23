@@ -141,10 +141,10 @@
 
 ;;;; Variables
 
-(defvar-local plz-error nil
+(defvar-local plz-else nil
   "Callback function for errored completion of request in current curl process buffer.")
 
-(defvar-local plz-success nil
+(defvar-local plz-then nil
   "Callback function for successful completion of request in current curl process buffer.")
 
 ;;;; Customization
@@ -172,39 +172,49 @@
 
 ;;;; Functions
 
-(cl-defun plz-get (url &key headers sync success error
-                       (connect-timeout plz-connect-timeout))
+(cl-defun plz-get (url &key headers as then
+                       (connect-timeout plz-connect-timeout)
+                       (decode t))
   "Get HTTP URL with curl.
-If SYNC is non-nil, return the response object; otherwise, return
-the curl process object.
+
+FIXME: Docstring.
 
 HEADERS may be an alist of extra headers to send with the
 request.  CONNECT-TIMEOUT may be a number of seconds to timeout
-the initial connection attempt.
-
-For asynchronous requests, SUCCESS and ERROR should be callback
-functions, called when the curl process finishes with a single
-argument: the `plz-response' object."
+the initial connection attempt."
+  (declare (indent defun))
   (plz--request 'get url
-                :sync sync
                 :headers headers
                 :connect-timeout connect-timeout
-                :success success
-                :error error))
+                :decode decode
+                :as as :then then))
 
-(cl-defun plz--request (_method url &key headers connect-timeout sync
-                                success error)
-  "Return process or response for HTTP request to URL.
-If SYNC is non-nil, return the response object; otherwise, return
-the curl process object.
+(cl-defun plz-get-sync (url &key headers as
+                            (connect-timeout plz-connect-timeout)
+                            (decode t))
+  "Get HTTP URL with curl synchronously.
+
+FIXME: Docstring.
 
 HEADERS may be an alist of extra headers to send with the
 request.  CONNECT-TIMEOUT may be a number of seconds to timeout
-the initial connection attempt.
+the initial connection attempt."
+  (declare (indent defun))
+  (plz--request-sync 'get url
+                     :headers headers
+                     :connect-timeout connect-timeout
+                     :decode decode
+                     :as as))
 
-For asynchronous requests, SUCCESS and ERROR should be callback
-functions, called when the curl process finishes with a single
-argument: the `plz-response' object."
+(cl-defun plz--request (_method url &key headers connect-timeout
+                                decode as then)
+  "Return curl process for HTTP request to URL.
+
+FIXME: Docstring.
+
+HEADERS may be an alist of extra headers to send with the
+request.  CONNECT-TIMEOUT may be a number of seconds to timeout
+the initial connection attempt."
   ;; Inspired by and copied from `elfeed-curl-retrieve'.
   (let* ((coding-system-for-read 'binary)
          (process-connection-type nil)
@@ -214,34 +224,73 @@ argument: the `plz-response' object."
                             (when connect-timeout
                               (list "--connect-timeout" (number-to-string connect-timeout)))
                             (list url))))
-    (pcase sync
-      (`nil (plz-request--async curl-args :success success :error error))
-      (_ (plz-request--sync curl-args :success success :error error)))))
+    (with-current-buffer (generate-new-buffer " *plz-request-curl*")
+      (let ((process (make-process :name "plz-request-curl"
+                                   :buffer (current-buffer)
+                                   :command (append (list plz-curl-program) curl-args)
+                                   :connection-type 'pipe
+                                   :sentinel #'plz--sentinel
+                                   :stderr (current-buffer)))
+            ;; The THEN function is called in the response buffer.
+            (then (pcase-exhaustive as
+                    ('string (lambda ()
+                               (let ((coding-system (or (plz--coding-system) 'utf-8)))
+                                 (plz--narrow-to-body)
+                                 (when decode
+                                   (decode-coding-region (point) (point-max) coding-system))
+                                 (funcall then (buffer-string)))))
+                    ('buffer (lambda ()
+                               (funcall then (current-buffer))))
+                    ('response (lambda ()
+                                 (funcall then (plz--response))))
+                    ((pred functionp) (lambda ()
+                                        (let ((coding-system (or (plz--coding-system) 'utf-8)))
+                                          (plz--narrow-to-body)
+                                          (when decode
+                                            (decode-coding-region (point) (point-max) coding-system))
+                                          (funcall then (funcall as))))))))
+        (setf plz-then then)
+        process))))
 
-(cl-defun plz-request--async (curl-args &key success error)
-  "Return process object for curl called with CURL-ARGS.
-SUCCESS and ERROR should be callback functions, called when the
-curl process finishes with a single argument: the `plz-response'
-object.  Uses `make-process' to call curl asynchronously."
-  (with-current-buffer (generate-new-buffer " *plz-request-curl*")
-    (let ((process (make-process :name "plz-request-curl"
-                                 :buffer (current-buffer)
-                                 :command (append (list plz-curl-program) curl-args)
-                                 :connection-type 'pipe
-                                 :sentinel #'plz--sentinel
-                                 :stderr (current-buffer))))
-      (setf plz-success success
-            plz-error error)
-      process)))
-
-(cl-defun plz-request--sync (curl-args &key success error)
-  "Return HTTP response object for curl called with CURL-ARGS.
+(cl-defun plz--request-sync (_method url &key headers connect-timeout
+                                     decode as)
+  "Return HTTP response for curl called with CURL-ARGS.
+FIXME: Docstring.
 Uses `call-process' to call curl synchronously."
   (with-current-buffer (generate-new-buffer " *plz-request-curl*")
-    (let ((status (apply #'call-process plz-curl-program nil t nil
-                         curl-args))
-          (plz-success #'identity))
+    (let* ((coding-system-for-read 'binary)
+           (process-connection-type nil)
+           (header-args (cl-loop for (key . value) in headers
+                                 collect (format "--header %s: %s" key value)))
+           (curl-args (append plz-curl-default-args header-args
+                              (when connect-timeout
+                                (list "--connect-timeout" (number-to-string connect-timeout)))
+                              (list url)))
+           (status (apply #'call-process plz-curl-program nil t nil
+                          curl-args))
+           ;; THEn form copied from `plz--request'.
+           ;; TODO: DRY this.  Maybe we could use a thread and a condition variable, but...
+           (plz-then (pcase-exhaustive as
+                       ('string (lambda ()
+                                  (let ((coding-system (or (plz--coding-system) 'utf-8)))
+                                    (plz--narrow-to-body)
+                                    (when decode
+                                      (decode-coding-region (point) (point-max) coding-system))
+                                    (buffer-string))))
+                       ('response #'plz--response)
+                       ((pred functionp) (lambda ()
+                                           (let ((coding-system (or (plz--coding-system) 'utf-8)))
+                                             (plz--narrow-to-body)
+                                             (when decode
+                                               (decode-coding-region (point) (point-max) coding-system))
+                                             (funcall as)))))))
       (plz--sentinel (current-buffer) status))))
+
+(defun plz--narrow-to-body ()
+  "Narrow to body of HTTP response in current buffer."
+  (goto-char (point-min))
+  (re-search-forward "^\r\n" nil)
+  (narrow-to-region (point) (point-max)))
 
 (defun plz--sentinel (process-or-buffer status)
   "Process buffer of curl output in PROCESS-OR-BUFFER.
@@ -256,13 +305,12 @@ node `(elisp) Sentinels').  Kills the buffer before returning."
         (with-current-buffer buffer
           (pcase status
             ((or 0 "finished\n")
-             ;; Request completed successfully: call success callback with parsed response.
-             (let ((response (plz--response buffer)))
-               (funcall plz-success response)))
+             ;; Request completed successfully: call THEN.
+             (funcall plz-then))
 
+            ;; FIXME: Implement error callback handling.
             ((rx "exited abnormally with code " (group (1+ digit)))
              ;; Error: call error callback.
-             ;; FIXME: Call with an error struct.
              (warn "plz--sentinel: ERROR: %s" (buffer-string))
              ;; (let* ((code (string-to-number (match-string 1 status)))
              ;;        (message (alist-get code plz-curl-errors)))
@@ -270,50 +318,56 @@ node `(elisp) Sentinels').  Kills the buffer before returning."
              )))
       (kill-buffer buffer))))
 
-(defun plz--response (buffer)
-  "Return response struct for HTTP response in BUFFER."
-  (with-current-buffer buffer
-    (save-excursion
-      (goto-char (point-min))
-      ;; Parse HTTP version and status code.
-      (looking-at (rx "HTTP/" (group (1+ (or digit "."))) (1+ blank)
-                      (group (1+ digit))))
-      (let* ((http-version (string-to-number (match-string 1)))
-             (status-code (string-to-number (match-string 2)))
-             (headers (plz--headers buffer))
-             (coding-system (or (when-let* ((it (alist-get "Content-Type" headers nil nil #'string=)))
-                                  (coding-system-from-name it))
-                                'utf-8))
-             (body (plz--decode-body buffer coding-system)))
-        (make-plz-response
-         :version http-version
-         :status status-code
-         :headers headers
-         :body body)))))
+(defun plz--response ()
+  "Return response struct for HTTP response in current buffer."
+  (save-excursion
+    (goto-char (point-min))
+    ;; Parse HTTP version and status code.
+    (looking-at (rx "HTTP/" (group (1+ (or digit "."))) (1+ blank)
+                    (group (1+ digit))))
+    (let* ((http-version (string-to-number (match-string 1)))
+           (status-code (string-to-number (match-string 2)))
+           (headers (plz--headers))
+           (coding-system (or (plz--coding-system headers) 'utf-8)))
+      (plz--narrow-to-body)
+      (decode-coding-region (point) (point-max) coding-system)
+      (make-plz-response
+       :version http-version
+       :status status-code
+       :headers headers
+       :body (buffer-string)))))
 
-(defun plz--headers (buffer)
-  "Return headers alist for HTTP response in BUFFER."
-  (with-current-buffer buffer
-    (save-excursion
-      (goto-char (point-min))
-      (forward-line 1)
-      (let ((limit (save-excursion
-                     (re-search-forward "^\r\n" nil)
-                     (point))))
-        (cl-loop while (re-search-forward (rx bol (group (1+ (not (in ":")))) ":" (1+ blank)
-                                              (group (1+ (not (in "\r\n")))))
-                                          limit t)
-                 collect (cons (match-string 1) (match-string 2)))))))
+(defun plz--coding-system (&optional headers)
+  "Return coding system for HTTP response in current buffer.
+HEADERS may optionally be an alist of parsed HTTP headers to
+refer to rather than the current buffer's unparsed headers."
+  (let* ((headers (or headers (plz--headers)))
+         (content-type (alist-get "Content-Type" headers nil nil #'string=)))
+    (when content-type
+      (coding-system-from-name content-type))))
 
-(defun plz--decode-body (buffer coding-system)
-  "Return decoded body for HTTP response in BUFFER.
-Decodes with `decode-coding-region' according to CODING-SYSTEM."
-  (with-current-buffer buffer
-    (save-excursion
-      (goto-char (point-min))
-      ;; Skip headers.
-      (re-search-forward "^\r\n" nil)
-      (decode-coding-region (point) (point-max) coding-system t))))
+(defun plz--headers ()
+  "Return headers alist for HTTP response in current buffer"
+  (save-excursion
+    (goto-char (point-min))
+    (forward-line 1)
+    (let ((limit (save-excursion
+                   (re-search-forward "^\r\n" nil)
+                   (point))))
+      (cl-loop while (re-search-forward (rx bol (group (1+ (not (in ":")))) ":" (1+ blank)
+                                            (group (1+ (not (in "\r\n")))))
+                                        limit t)
+               collect (cons (match-string 1) (match-string 2))))))
+
+(defun plz--decode-body (coding-system)
+  "Decode body for HTTP response in current buffer.
+Return length of decoded text.  Decodes with
+`decode-coding-region' according to CODING-SYSTEM."
+  (save-excursion
+    (goto-char (point-min))
+    ;; Skip headers.
+    (re-search-forward "^\r\n" nil)
+    (decode-coding-region (point) (point-max) coding-system)))
 
 ;;;; Footer
 

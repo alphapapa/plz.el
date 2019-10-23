@@ -1,0 +1,72 @@
+#+TITLE: plz Notes
+
+* API Design
+
+** Async
+
+Some sample cases that the API should make easy.
+
+*** Body as string
+
+#+BEGIN_SRC elisp
+  (plz-get url
+    :with 'body-string
+    :then (lambda (body-string)
+            (setf something body-string)))
+#+END_SRC
+
+*** Body as buffer
+
+#+BEGIN_SRC elisp
+  ;; Decodes body and narrows buffer to it.
+  (plz-get url
+    :with 'buffer
+    :then (lambda (buffer)
+            (with-current-buffer buffer
+              (setf text (buffer-substring (point-min) (point-max))))))
+#+END_SRC
+
+#+BEGIN_SRC elisp
+  ;; Narrows buffer to undecoded body, e.g. for binary files.
+  (plz-get url
+    :with 'buffer-undecoded  ; `buffer-binary'?
+    :then (lambda (buffer)
+            (with-current-buffer buffer
+              (setf binary-content (buffer-substring (point-min) (point-max))))))
+#+END_SRC
+
+**** Callback with point at body start
+:PROPERTIES:
+:ID:       1795462e-01bc-4f0b-97ab-3c1b2e75485c
+:END:
+
+Assuming that =plz= has already called =decode-coding-region=, this is straightforward, but the caller shouldn't have to do this extra work.
+
+#+BEGIN_SRC elisp
+  (plz-get url
+    :then (lambda (buffer)
+            (buffer-substring (point) (point-max))))
+#+END_SRC
+
+*** Body parsed with function
+
+#+BEGIN_SRC elisp
+  ;; Narrows buffer to body, decodes it, calls callback with result of `json-read'.
+  (plz-get url
+    :with #'json-read
+    :then (lambda (json)
+            (setf something (alist-get 'key json))))
+#+END_SRC
+
+#+BEGIN_SRC elisp
+  ;; Narrows buffer to body, decodes it, parses with
+  ;; `libxml-parse-html-region', calls callback with DOM.
+  (plz-get url
+    :with (lambda ()
+            (libxml-parse-html-region (point-min) (point-max) url))
+    :then (lambda (dom)
+            (with-current-buffer (generate-new-buffer "*plz-browse*")
+              (shr-insert-document dom))))
+#+END_SRC
+
+*** HTTP response with headers
