@@ -217,11 +217,11 @@ HEADERS may be an alist of extra headers to send with the
 request.  CONNECT-TIMEOUT may be a number of seconds to timeout
 the initial connection attempt."
   (declare (indent defun))
-  (plz--request 'get url
-                :headers headers
-                :connect-timeout connect-timeout
-                :decode decode
-                :as as :then then :else else))
+  (plz--curl 'get url
+             :headers headers
+             :connect-timeout connect-timeout
+             :decode decode
+             :as as :then then :else else))
 
 (cl-defun plz-get-sync (url &key headers as
                             (connect-timeout plz-connect-timeout)
@@ -245,11 +245,11 @@ HEADERS may be an alist of extra headers to send with the
 request.  CONNECT-TIMEOUT may be a number of seconds to timeout
 the initial connection attempt."
   (declare (indent defun))
-  (plz--request-sync 'get url
-                     :headers headers
-                     :connect-timeout connect-timeout
-                     :decode decode
-                     :as as))
+  (plz--curl-sync 'get url
+                  :headers headers
+                  :connect-timeout connect-timeout
+                  :decode decode
+                  :as as))
 
 ;;;;; Private
 
@@ -257,8 +257,8 @@ the initial connection attempt."
 
 ;; Functions for calling and handling curl processes.
 
-(cl-defun plz--request (_method url &key headers connect-timeout
-                                decode as then else)
+(cl-defun plz--curl (_method url &key headers connect-timeout
+                             decode as then else)
   "Get HTTP URL with curl.
 
 AS selects the kind of result to pass to the callback function
@@ -321,8 +321,8 @@ the initial connection attempt."
               plz-else else)
         process))))
 
-(cl-defun plz--request-sync (_method url &key headers connect-timeout
-                                     decode as)
+(cl-defun plz--curl-sync (_method url &key headers connect-timeout
+                                  decode as)
   "Return result for HTTP request to URL made synchronously with curl.
 
 AS selects the kind of result to return.  It may be:
@@ -354,7 +354,7 @@ Uses `call-process' to call curl synchronously."
                               (list url)))
            (status (apply #'call-process plz-curl-program nil t nil
                           curl-args))
-           ;; THEn form copied from `plz--request'.
+           ;; THEn form copied from `plz--curl'.
            ;; TODO: DRY this.  Maybe we could use a thread and a condition variable, but...
            (plz-then (pcase-exhaustive as
                        ((or `nil 'string) (lambda ()
