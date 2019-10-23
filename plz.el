@@ -447,7 +447,7 @@ refer to rather than the current buffer's unparsed headers."
       (string-to-number (match-string 2)))))
 
 (defun plz--headers ()
-  "Return headers alist for HTTP response in current buffer"
+  "Return headers alist for HTTP response in current buffer."
   (save-excursion
     (goto-char (point-min))
     (forward-line 1)
