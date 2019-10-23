@@ -109,7 +109,8 @@
 
 (ert-deftest plz-get-sync-string nil
   (should (string-match "curl" (plz-get-sync "https://httpbin.org/get"
-                                 :as 'string))))
+                                 :as 'string)))
+  (should (string-match "curl" (plz-get-sync "https://httpbin.org/get"))))
 
 (ert-deftest plz-get-sync-response nil
   (should (plz-test-get-response (plz-get-sync "https://httpbin.org/get"
@@ -126,6 +127,25 @@
   ;; `buffer' is not a valid type for `plz-get-sync'.
   (should-error (plz-get-sync "https://httpbin.org/get"
                   :as 'buffer)))
+
+;;;;; Errors
+
+(ert-deftest plz-get-curl-error nil
+  (let ((err (should-error (plz-get-sync "https://httpbinnnnnn.org/get/status/404"
+                             :as 'string)
+                           :type 'plz-curl-error)))
+    (should (and (eq 'plz-curl-error (car err))
+                 (plz-error-p (cdr err))
+                 (equal '(6 . "Couldn't resolve host. The given remote host was not resolved.") (plz-error-curl-error (cdr err)))))))
+
+(ert-deftest plz-get-404-error nil
+  (let ((err (should-error (plz-get-sync "https://httpbin.org/get/status/404"
+                             :as 'string)
+                           :type 'plz-http-error)))
+    (should (and (eq 'plz-http-error (car err))
+                 (plz-error-p (cdr err))
+                 (plz-response-p (plz-error-response (cdr err)))
+                 (eq 404 (plz-response-status (plz-error-response (cdr err))))))))
 
 ;;;; Footer
 

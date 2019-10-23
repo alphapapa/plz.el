@@ -51,12 +51,26 @@
 (require 'rx)
 (require 'subr-x)
 
+;;;; Errors
+
+;; FIXME: `condition-case' can't catch these...?
+(define-error 'plz-curl-error "Curl error")
+(define-error 'plz-http-error "HTTP error")
+
 ;;;; Structs
 
 (cl-defstruct plz-response
   version status headers body)
 
+(cl-defstruct plz-error
+  curl-error response)
+
 ;;;; Constants
+
+(defconst plz-http-response-status-line-regexp
+  (rx "HTTP/" (group (1+ (or digit "."))) (1+ blank)
+      (group (1+ digit)))
+  "Regular expression matching HTTP response status line.")
 
 (defconst plz-curl-errors
   ;; Copied from elfeed-curl.el.
@@ -172,7 +186,7 @@
 
 ;;;; Functions
 
-(cl-defun plz-get (url &key headers as then
+(cl-defun plz-get (url &key headers as then else
                        (connect-timeout plz-connect-timeout)
                        (decode t))
   "Get HTTP URL with curl.
@@ -187,7 +201,7 @@ the initial connection attempt."
                 :headers headers
                 :connect-timeout connect-timeout
                 :decode decode
-                :as as :then then))
+                :as as :then then :else else))
 
 (cl-defun plz-get-sync (url &key headers as
                             (connect-timeout plz-connect-timeout)
@@ -207,7 +221,7 @@ the initial connection attempt."
                      :as as))
 
 (cl-defun plz--request (_method url &key headers connect-timeout
-                                decode as then)
+                                decode as then else)
   "Return curl process for HTTP request to URL.
 
 FIXME: Docstring.
@@ -216,9 +230,7 @@ HEADERS may be an alist of extra headers to send with the
 request.  CONNECT-TIMEOUT may be a number of seconds to timeout
 the initial connection attempt."
   ;; Inspired by and copied from `elfeed-curl-retrieve'.
-  (let* ((coding-system-for-read 'binary)
-         (process-connection-type nil)
-         (header-args (cl-loop for (key . value) in headers
+  (let* ((header-args (cl-loop for (key . value) in headers
                                collect (format "--header %s: %s" key value)))
          (curl-args (append plz-curl-default-args header-args
                             (when connect-timeout
@@ -227,6 +239,7 @@ the initial connection attempt."
     (with-current-buffer (generate-new-buffer " *plz-request-curl*")
       (let ((process (make-process :name "plz-request-curl"
                                    :buffer (current-buffer)
+                                   :coding 'binary
                                    :command (append (list plz-curl-program) curl-args)
                                    :connection-type 'pipe
                                    :sentinel #'plz--sentinel
@@ -249,7 +262,8 @@ the initial connection attempt."
                                           (when decode
                                             (decode-coding-region (point) (point-max) coding-system))
                                           (funcall then (funcall as))))))))
-        (setf plz-then then)
+        (setf plz-then then
+              plz-else else)
         process))))
 
 (cl-defun plz--request-sync (_method url &key headers connect-timeout
@@ -305,26 +319,41 @@ node `(elisp) Sentinels').  Kills the buffer before returning."
         (with-current-buffer buffer
           (pcase status
             ((or 0 "finished\n")
-             ;; Request completed successfully: call THEN.
-             (funcall plz-then))
+             ;; Curl exited normally: check HTTP status code.
+             (pcase (plz--http-status)
+               (200 (funcall plz-then))
+               (_ (let ((err (make-plz-error :response (plz--response))))
+                    (pcase-exhaustive plz-else
+                      (`nil (signal 'plz-http-error err))
+                      ((pred functionp) (funcall plz-else err)))))))
 
-            ;; FIXME: Implement error callback handling.
-            ((rx "exited abnormally with code " (group (1+ digit)))
-             ;; Error: call error callback.
-             (warn "plz--sentinel: ERROR: %s" (buffer-string))
-             ;; (let* ((code (string-to-number (match-string 1 status)))
-             ;;        (message (alist-get code plz-curl-errors)))
-             ;;   (funcall plz-error (plz--response buffer)))
-             )))
+            ((or (and (pred numberp) code)
+                 (rx "exited abnormally with code " (let code (group (1+ digit)))))
+             ;; Curl error.
+             (let* ((curl-exit-code (cl-typecase code
+                                      (string (string-to-number code))
+                                      (number code)))
+                    (curl-error-message (alist-get curl-exit-code plz-curl-errors))
+                    (err (make-plz-error :curl-error (cons curl-exit-code curl-error-message))))
+               (pcase-exhaustive plz-else
+                 (`nil (signal 'plz-curl-error err))
+                 ((pred functionp) (funcall plz-else err)))))))
       (kill-buffer buffer))))
+
+(defun plz--http-status ()
+  "Return HTTP status code for HTTP response in current buffer.
+Assumes point is at beginning of buffer."
+  (save-excursion
+    (goto-char (point-min))
+    (when (looking-at plz-http-response-status-line-regexp)
+      (string-to-number (match-string 2)))))
 
 (defun plz--response ()
   "Return response struct for HTTP response in current buffer."
   (save-excursion
     (goto-char (point-min))
     ;; Parse HTTP version and status code.
-    (looking-at (rx "HTTP/" (group (1+ (or digit "."))) (1+ blank)
-                    (group (1+ digit))))
+    (looking-at plz-http-response-status-line-regexp)
     (let* ((http-version (string-to-number (match-string 1)))
            (status-code (string-to-number (match-string 2)))
            (headers (plz--headers))
