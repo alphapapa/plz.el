@@ -221,8 +221,7 @@ the initial connection attempt."
   (plz--curl 'get url
              :headers headers
              :connect-timeout connect-timeout
-             :decode (cond ((and decode-s (not decode)) nil)
-                           (t decode))
+             :decode (if (and decode-s (not decode)) nil decode)
              :as as :then then :else else))
 
 (cl-defun plz-get-sync (url &key headers as
@@ -251,8 +250,7 @@ the initial connection attempt."
   (plz--curl-sync 'get url
                   :headers headers
                   :connect-timeout connect-timeout
-                  :decode (cond ((and decode-s (not decode)) nil)
-                                (t decode))
+                  :decode (if (and decode-s (not decode)) nil decode)
                   :as as))
 
 ;;;;; Private
