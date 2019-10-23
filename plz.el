@@ -190,7 +190,7 @@
 
 (cl-defun plz-get (url &key headers as then else
                        (connect-timeout plz-connect-timeout)
-                       (decode t))
+                       (decode t decode-s))
   "Get HTTP URL with curl.
 
 AS selects the kind of result to pass to the callback function
@@ -203,6 +203,7 @@ THEN.  It may be:
   narrowed to the response body (suitable for, e.g. `json-read').
 
 If DECODE is non-nil, the response body is decoded automatically.
+For binary content, it should be nil.
 
 THEN is a callback function, whose sole argument is selected
 above with AS.
@@ -220,12 +221,13 @@ the initial connection attempt."
   (plz--curl 'get url
              :headers headers
              :connect-timeout connect-timeout
-             :decode decode
+             :decode (cond ((and decode-s (not decode)) nil)
+                           (t decode))
              :as as :then then :else else))
 
 (cl-defun plz-get-sync (url &key headers as
                             (connect-timeout plz-connect-timeout)
-                            (decode t))
+                            (decode t decode-s))
   "Get HTTP URL with curl synchronously.
 
 AS selects the kind of result to return.  It may be:
@@ -236,6 +238,7 @@ AS selects the kind of result to return.  It may be:
   narrowed to the response body (suitable for, e.g. `json-read').
 
 If DECODE is non-nil, the response body is decoded automatically.
+For binary content, it should be nil.
 
 If the request fails, an error is signaled, either
 `plz-curl-error' or `plz-http-error', as appropriate, with a
@@ -248,7 +251,8 @@ the initial connection attempt."
   (plz--curl-sync 'get url
                   :headers headers
                   :connect-timeout connect-timeout
-                  :decode decode
+                  :decode (cond ((and decode-s (not decode)) nil)
+                                (t decode))
                   :as as))
 
 ;;;;; Private

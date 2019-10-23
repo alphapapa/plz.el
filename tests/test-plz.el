@@ -40,6 +40,14 @@
 ;;;; Commands
 
 
+;;;; Macros
+
+(cl-defmacro plz-test-wait (process &optional (seconds 0.1) (times 100))
+  "Wait for SECONDS seconds TIMES times for PROCESS to finish."
+  `(cl-loop for i upto ,times ;; 10 seconds
+            while (equal 'run (process-status ,process))
+            do (sleep-for ,seconds)))
+
 ;;;; Functions
 
 (defun plz-test-get-response (response)
@@ -146,6 +154,22 @@
                  (plz-error-p (cdr err))
                  (plz-response-p (plz-error-response (cdr err)))
                  (eq 404 (plz-response-status (plz-error-response (cdr err))))))))
+
+;;;;; Binary
+
+(ert-deftest plz-test-get-jpeg ()
+  (let ((jpeg (plz-get-sync "https://httpbin.org/image/jpeg"
+                :decode nil)))
+    (should (image-jpeg-p jpeg)))
+
+  (let* ((test-jpeg)
+         (process (plz-get "https://httpbin.org/image/jpeg"
+                    :decode nil
+                    :as 'string
+                    :then (lambda (string)
+                            (setf test-jpeg string)))))
+    (plz-test-wait process)
+    (should (image-jpeg-p test-jpeg))))
 
 ;;;; Footer
 
