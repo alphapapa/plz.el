@@ -354,7 +354,7 @@ Uses `call-process' to call curl synchronously."
                               (list url)))
            (status (apply #'call-process plz-curl-program nil t nil
                           curl-args))
-           ;; THEn form copied from `plz--curl'.
+           ;; THEN form copied from `plz--curl'.
            ;; TODO: DRY this.  Maybe we could use a thread and a condition variable, but...
            (plz-then (pcase-exhaustive as
                        ((or `nil 'string) (lambda ()
