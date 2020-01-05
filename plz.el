@@ -6,7 +6,7 @@
 ;; URL: https://github.com/alphapapa/plz.el
 ;; Version: 0.1-pre
 ;; Package-Requires: ((emacs "26.3"))
-;; Keywords: network, http
+;; Keywords: comm, network, http
 
 ;;; License:
 
