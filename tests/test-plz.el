@@ -107,21 +107,21 @@
 
 ;;;;; Sync
 
-(ert-deftest plz-get-sync-string nil
+(ert-deftest plz-get-string-sync nil
   (should (string-match "curl" (plz-get-sync "https://httpbin.org/get"
                                  :as 'string)))
   (should (string-match "curl" (plz-get-sync "https://httpbin.org/get"))))
 
-(ert-deftest plz-get-sync-response nil
+(ert-deftest plz-get-response-sync nil
   (should (plz-test-get-response (plz-get-sync "https://httpbin.org/get"
                                    :as 'response))))
 
-(ert-deftest plz-get-sync-json nil
+(ert-deftest plz-get-json-sync nil
   (let-alist (plz-get-sync "https://httpbin.org/get"
                :as #'json-read)
     (should (string-match "curl" .headers.User-Agent))))
 
-(ert-deftest plz-get-sync-buffer nil
+(ert-deftest plz-get-buffer-sync nil
   ;; `buffer' is not a valid type for `plz-get-sync'.
   (should-error (plz-get-sync "https://httpbin.org/get"
                   :as 'buffer)))
@@ -172,7 +172,7 @@
 
 ;;;;; Binary
 
-(ert-deftest plz-test-get-jpeg ()
+(ert-deftest plz-get-jpeg ()
   (let* ((test-jpeg)
          (process (plz-get "https://httpbin.org/image/jpeg"
                     :decode nil
@@ -182,7 +182,7 @@
     (plz-test-wait process)
     (should (equal 'jpeg (image-type-from-data test-jpeg)))))
 
-(ert-deftest plz-test-get-jpeg-sync ()
+(ert-deftest plz-get-jpeg-sync ()
   (let ((jpeg (plz-get-sync "https://httpbin.org/image/jpeg"
                 :decode nil)))
     (should (equal 'jpeg (image-type-from-data jpeg)))))
