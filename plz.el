@@ -475,7 +475,12 @@ refer to rather than the current buffer's unparsed headers."
       (cl-loop while (re-search-forward (rx bol (group (1+ (not (in ":")))) ":" (1+ blank)
                                             (group (1+ (not (in "\r\n")))))
                                         limit t)
-               collect (cons (match-string 1) (match-string 2))))))
+               ;; NOTE: Some HTTP servers send all-lowercase header keys, which means an alist
+               ;; lookup with `equal' or `string=' fails when the case differs.  We don't want
+               ;; users to have to worry about this, so for consistency, we downcase the
+               ;; header name.  And while we're at it, we might as well intern it so we can
+               ;; use `alist-get' without having to add "nil nil #'equal" every time.
+               collect (cons (intern (downcase (match-string 1))) (match-string 2))))))
 
 (defun plz--narrow-to-body ()
   "Narrow to body of HTTP response in current buffer."

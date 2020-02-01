@@ -56,7 +56,7 @@
   `(and (should (plz-response-p ,response))
         (should (numberp (plz-response-version ,response)))
         (should (eq 200 (plz-response-status ,response)))
-        (should (equal "application/json" (alist-get "Content-Type" (plz-response-headers ,response) nil nil #'equal)))
+        (should (equal "application/json" (alist-get 'content-type (plz-response-headers ,response))))
         (let* ((json (json-read-from-string (plz-response-body ,response)))
                (headers (alist-get 'headers json))
                (user-agent (alist-get 'User-Agent headers nil nil #'equal)))
