@@ -70,3 +70,12 @@ Assuming that =plz= has already called =decode-coding-region=, this is straightf
 #+END_SRC
 
 *** HTTP response with headers
+
+* References
+
+** Similar projects
+
+*** [[https://github.com/ebpa/fetch.el][GitHub - ebpa/fetch.el: A simple HTTP request library modeled after the web browser API]]
+
+A nice-looking wrapper for =url.el=.
+
