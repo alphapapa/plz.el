@@ -1,5 +1,32 @@
 #+TITLE: plz Notes
 
+* Contents
+:PROPERTIES:
+:TOC:      :include siblings :depth 1 :ignore this
+:END:
+:CONTENTS:
+- [[#tasks][Tasks]]
+- [[#ideas][Ideas]]
+- [[#api-design][API Design]]
+- [[#references][References]]
+  - [[#similar-projects][Similar projects]]
+:END:
+
+* Tasks
+
+** TODO Ensure that secrets are not leaked via command line or temp files
+
+e.g. =request.el= can leak secrets and other data via the command line and [[https://github.com/tkf/emacs-request/blob/431d14343c61bc51a86c9a9e1acb6c26fe9a6298/request.el#L709][leftover temp files]].  We want to handle this safely.
+
+* Ideas
+
+** Name
+
++  =plz=
+     -  The current name.
++  =curly=
+     -  Since the library is based on curl, it wouldn't be a bad idea to have =curl= in the name, and this isn't too long.
+
 * API Design
 
 ** Async
@@ -71,16 +98,10 @@ Assuming that =plz= has already called =decode-coding-region=, this is straightf
 
 *** HTTP response with headers
 
-* Ideas
-
-** Name
-
-+  =plz=
-     -  The current name.
-+  =curly=
-     -  Since the library is based on curl, it wouldn't be a bad idea to have =curl= in the name, and this isn't too long.
-
 * References
+:PROPERTIES:
+:TOC:      :depth 1
+:END:
 
 ** Similar projects
 
