@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # * makem.sh --- Script to aid building and testing Emacs Lisp packages
 
@@ -21,13 +21,11 @@
 # occur.  With increasing verbosity levels, more detail gives positive
 # feedback.  Output is colored by default to make reading easy.
 
-# When desired, emacs-sandbox.sh can be used as a backend, which
-# allows package dependencies to be installed automatically into a
-# clean Emacs "sandbox" configuration without affecting the
-# developer's personal configuration.  This is especially helpful when
+# The script can run Emacs with the developer's local Emacs
+# configuration, or with a clean, "sandbox" configuration that can be
+# optionally removed afterward.  This is especially helpful when
 # upstream dependencies may have released new versions that differ
-# from those installed in the developer's personal configuration.  See
-# <https://github.com/alphapapa/emacs-sandbox.sh>.
+# from those installed in the developer's personal configuration.
 
 # * License:
 
@@ -50,46 +48,60 @@ function usage {
     cat <<EOF
 $0 [OPTIONS] RULES...
 
+Linter- and test-specific rules will error when their linters or tests
+are not found.  With -vv, rules that run multiple rules will show a
+message for unavailable linters or tests.
+
 Rules:
   all      Run all lints and tests.
   compile  Byte-compile source files.
 
-  lint           Run all lints.
+  lint           Run all linters, ignoring unavailable ones.
   lint-checkdoc  Run checkdoc.
   lint-compile   Byte-compile source files with warnings as errors.
+  lint-declare   Run check-declare.
+  lint-indent    Lint indentation.
   lint-package   Run package-lint.
+  lint-regexps   Run relint.
 
-  test, tests     Run all tests.
-  test-buttercup  Run Buttercup tests.
-  test-ert        Run ERT tests.
+  test, tests           Run all tests, ignoring missing test types.
+  test-buttercup        Run Buttercup tests.
+  test-ert              Run ERT tests.
+  test-ert-interactive  Run ERT tests interactively.
+
+  batch        Run Emacs in batch mode, loading project source and test files
+               automatically, with remaining args (after "--") passed to Emacs.
+  interactive  Run Emacs interactively, loading project source and test files
+               automatically, with remaining args (after "--") passed to Emacs.
 
 Options:
   -d, --debug    Print debug info.
   -h, --help     I need somebody!
   -v, --verbose  Increase verbosity, up to -vv.
-  --debug-load-path  Print load-path.
 
-  -f FILE, --file FILE  Check FILE in addition to discovered files.
+  --debug-load-path  Print load-path from inside Emacs.
+
+  -E, --emacs PATH  Run Emacs at PATH.
+
+  -e, --exclude FILE  Exclude FILE from linting and testing.
+  -f, --file FILE     Check FILE in addition to discovered files.
 
   --no-color        Disable color output.
   -C, --no-compile  Don't compile files automatically.
 
 Sandbox options:
-  These require emacs-sandbox.sh to be on your PATH.  Find it at
-  <https://github.com/alphapapa/emacs-sandbox.sh>.
-
-  -s, --sandbox          Run Emacs with emacs-sandbox.sh in a temporary
-                         directory (removing directory on exit).
-  -S, --sandbox-dir DIR  Use DIR for the sandbox directory (leaving it
-                         on exit).  Implies -s.
-  --auto-install         Automatically install package dependencies.
+  -s, --sandbox          Run Emacs with an empty config in a temporary
+                         sandbox directory (removing directory on exit).
+  -S, --sandbox-dir DIR  Run Emacs with DIR as persistent sandbox directory.
+                         Makes an Emacs version-specific subdirectory, which
+                         facilitates testing under multiple Emacs versions.
+  --install-deps         Automatically install package dependencies.
+  --install-linters      Automatically install linters.
   -i, --install PACKAGE  Install PACKAGE before running rules.
 
 Source files are automatically discovered from git, or may be
-specified with options.
-
-Package dependencies are discovered from "Package-Requires" headers in
-source files and from a Cask file.
+specified with options.  Package dependencies are discovered from
+"Package-Requires" headers in source files and from a Cask file.
 EOF
 }
 
@@ -137,9 +149,67 @@ function elisp-checkdoc-file {
     (when makem-checkdoc-errors-p
       (kill-emacs 1))))
 
+(setq checkdoc-spellcheck-documentation-flag t)
 (makem-checkdoc-files-and-exit)
 EOF
     echo $file
+}
+
+function elisp-check-declare-file {
+    # Since check-declare doesn't have a batch function that exits
+    # non-zero when errors are found, we make one.
+    local file=$(mktemp)
+
+    cat >$file <<EOF
+(require 'check-declare)
+
+(defun makem-check-declare-files-and-exit ()
+  "Run check-declare-files on files remaining on command line, exiting non-zero if there are warnings."
+  (let* ((files (mapcar #'expand-file-name command-line-args-left))
+         (errors (apply #'check-declare-files files)))
+    (when errors
+      (with-current-buffer check-declare-warning-buffer
+        (print (buffer-string)))
+      (kill-emacs 1))))
+EOF
+    echo $file
+}
+
+function elisp-lint-indent-file {
+    # This function prints warnings for indentation errors and exits
+    # non-zero when errors are found.
+    local file=$(mktemp)
+
+    cat >"$file" <<EOF
+(require 'cl-lib)
+
+(defun makem-lint-indent-batch-and-exit ()
+  "Print warnings for files which are not indented properly, then exit.
+Exits non-zero if mis-indented lines are found.  Checks files in
+'command-line-args-left'."
+  (let ((errors-p))
+    (cl-labels ((lint-file (file)
+                           (find-file file)
+                           (let ((tick (buffer-modified-tick)))
+                             (let ((inhibit-message t))
+                               (indent-region (point-min) (point-max)))
+                             (when (/= tick (buffer-modified-tick))
+                               ;; Indentation changed: warn for each line.
+                               (dolist (line (undo-lines buffer-undo-list))
+                                 (message "%s:%s: Indentation mismatch" (buffer-name) line))
+                               (setf errors-p t))))
+                (undo-lines (undo-list)
+                            ;; Return list of lines changed in UNDO-LIST.
+                            (nreverse (cl-loop for elt in undo-list
+                                               when (and (consp elt)
+                                                         (numberp (car elt)))
+                                               collect (line-number-at-pos (car elt))))))
+      (mapc #'lint-file (mapcar #'expand-file-name command-line-args-left))
+      (when errors-p
+        (kill-emacs 1)))))
+EOF
+
+    echo "$file"
 }
 
 function elisp-package-initialize-file {
@@ -149,8 +219,8 @@ function elisp-package-initialize-file {
 (require 'package)
 (setq package-archives (list (cons "gnu" "https://elpa.gnu.org/packages/")
                              (cons "melpa" "https://melpa.org/packages/")
-                             (cons "melpa-stable" "https://stable.melpa.org/packages/")
-                             (cons "org" "https://orgmode.org/elpa/")))
+                             (cons "melpa-stable" "https://stable.melpa.org/packages/")))
+$elisp_org_package_archive
 (package-initialize)
 (setq load-prefer-newer t)
 EOF
@@ -160,30 +230,39 @@ EOF
 # ** Emacs
 
 function run_emacs {
-    debug "run_emacs: $emacs_command -Q --batch --load=$package_initialize_file -L \"$load_path\" $@"
-    if [[ $debug_load_path ]]
-    then
-        debug $($emacs_command -Q --batch \
-                               --load=$package_initialize_file \
-                               -L "$load_path" \
-                               --eval "(message \"LOAD-PATH: %s\" load-path)" \
-                               2>&1)
-    fi
+    # NOTE: The sandbox args need to come before the package
+    # initialization so Emacs will use the sandbox's packages.
+    local emacs_command=(
+        "${emacs_command[@]}"
+        -Q
+        "${args_sandbox[@]}"
+        -l $package_initialize_file
+        $arg_batch
+        "${args_load_paths[@]}"
+    )
 
-    output_file=$(mktemp)
-    $emacs_command -Q --batch  \
-                   --load=$package_initialize_file \
-                   -L "$load_path" \
-                   "$@" \
-        &>$output_file
+    # Show debug message with load-path from inside Emacs.
+    [[ $debug_load_path ]] \
+        && debug $("${emacs_command[@]}" \
+                       --batch \
+                       --eval "(message \"LOAD-PATH: %s\" load-path)" \
+                    2>&1)
 
+    # Set output file.
+    output_file=$(mktemp) || die "Unable to make output file."
+    paths_temp+=("$output_file")
+
+    # Run Emacs.
+    debug "run_emacs: ${emacs_command[@]} $@ &>\"$output_file\""
+    "${emacs_command[@]}" "$@" &>"$output_file"
+
+    # Check exit code and output.
     exit=$?
-    [[ $exit != 0 ]] && debug "Emacs exited non-zero: $exit"
-    if [[ $verbose -gt 1 || $exit != 0 ]]
-    then
-        cat $output_file
-    fi
-    rm -f $output_file
+    [[ $exit != 0 ]] \
+        && debug "Emacs exited non-zero: $exit"
+
+    [[ $verbose -gt 1 || $exit != 0 ]] \
+        && cat $output_file
 
     return $exit
 }
@@ -191,7 +270,7 @@ function run_emacs {
 # ** Compilation
 
 function batch-byte-compile {
-    debug "batch-byte-compile: ERROR-ON-WARN:$compile_error_on_warn  FILES:$@"
+    debug "batch-byte-compile: ERROR-ON-WARN:$compile_error_on_warn"
 
     [[ $compile_error_on_warn ]] && local error_on_warn=(--eval "(setq byte-compile-error-on-warn t)")
 
@@ -203,37 +282,74 @@ function batch-byte-compile {
 
 # ** Files
 
-function project-elisp-files {
+function dirs-project {
+    # Echo list of directories to be used in load path.
+    files-project-feature | dirnames
+    files-project-test | dirnames
+}
+
+function files-project-elisp {
     # Echo list of Elisp files in project.
-    git ls-files 2>/dev/null | egrep "\.el$" | exclude-files
+    git ls-files 2>/dev/null \
+        | egrep "\.el$" \
+        | filter-files-exclude-default \
+        | filter-files-exclude-args
 }
 
-function project-source-files {
-    # Echo list of Elisp files that are not tests.
-    project-elisp-files | egrep -v "$test_files_regexp" | feature-files
+function files-project-feature {
+    # Echo list of Elisp files that are not tests and provide a feature.
+    files-project-elisp \
+        | egrep -v "$test_files_regexp" \
+        | filter-files-feature
 }
 
-function project-test-files {
+function files-project-test {
     # Echo list of Elisp test files.
-    project-elisp-files | egrep "$test_files_regexp"
+    files-project-elisp | egrep "$test_files_regexp"
 }
 
-function exclude-files {
+function dirnames {
+    # Echo directory names for files on STDIN.
+    while read file
+    do
+        dirname "$file"
+    done
+}
+
+function filter-files-exclude-default {
     # Filter out paths (STDIN) which should be excluded by default.
     egrep -v "(/\.cask/|-autoloads.el|.dir-locals)"
 }
 
-function feature-files {
+function filter-files-exclude-args {
+    # Filter out paths (STDIN) which are excluded with --exclude.
+    if [[ ${files_exclude[@]} ]]
+    then
+        (
+            # We use a subshell to set IFS temporarily so we can send
+            # the list of files to grep -F.  This is ugly but more
+            # correct than replacing spaces with line breaks.  Note
+            # that, for some reason, using IFS="\n" or IFS='\n' doesn't
+            # work, and a literal line break seems to be required.
+            IFS="
+"
+            grep -Fv "${files_exclude[*]}"
+        )
+    else
+        cat
+    fi
+}
+
+function filter-files-feature {
     # Read paths on STDIN and echo ones that (provide 'a-feature).
     while read path
     do
-        debug "PATH: $path"
         egrep "^\\(provide '" "$path" &>/dev/null \
             && echo "$path"
     done
 }
 
-function load-files-args {
+function args-load-files {
     # For file in $@, echo "--load $file".
     for file in "$@"
     do
@@ -241,17 +357,17 @@ function load-files-args {
     done
 }
 
-function files_args {
-    # For file in STDIN, echo "$file".
-    while read file
+function args-load-path {
+    # Echo load-path arguments.
+    for path in $(dirs-project | sort -u)
     do
-        printf -- '%q ' "$file"
+        printf -- '-L %q ' "$path"
     done
 }
 
 function test-files-p {
-    # Return 0 if $project_test_files is non-empty.
-    [[ "${project_test_files[@]}" ]]
+    # Return 0 if $files_project_test is non-empty.
+    [[ "${files_project_test[@]}" ]]
 }
 
 function buttercup-tests-p {
@@ -259,7 +375,7 @@ function buttercup-tests-p {
     test-files-p || die "No tests found."
     debug "Checking for Buttercup tests..."
 
-    grep "(require 'buttercup)" "${project_test_files[@]}" &>/dev/null
+    grep "(require 'buttercup)" "${files_project_test[@]}" &>/dev/null
 }
 
 function ert-tests-p {
@@ -270,14 +386,14 @@ function ert-tests-p {
     # We check for this rather than "(require 'ert)", because ERT may
     # already be loaded in Emacs and might not be loaded with
     # "require" in a test file.
-    grep "(ert-deftest" "${project_test_files[@]}" &>/dev/null
+    grep "(ert-deftest" "${files_project_test[@]}" &>/dev/null
 }
 
 function dependencies {
     # Echo list of package dependencies.
 
     # Search package headers.
-    egrep '^;; Package-Requires: ' $(project-source-files) $(project-test-files) \
+    egrep '^;; Package-Requires: ' $(files-project-feature) $(files-project-test) \
         | egrep -o '\([^([:space:]][^)]*\)' \
         | egrep -o '^[^[:space:])]+' \
         | sed -r 's/\(//g' \
@@ -291,12 +407,77 @@ function dependencies {
     fi
 }
 
+# ** Sandbox
+
+function sandbox {
+    # Initialize sandbox.
+
+    # *** Sandbox arguments
+
+    # Check or make user-emacs-directory.
+    if [[ $sandbox_dir ]]
+    then
+        # Directory given as argument: ensure it exists.
+        [[ -d $sandbox_dir ]] || die "Directory doesn't exist: $sandbox_dir"
+
+        # Add Emacs version-specific subdirectory, creating if necessary.
+        sandbox_dir="$sandbox_dir/$(emacs-version)"
+        if ! [[ -d $sandbox_dir ]]
+        then
+            mkdir "$sandbox_dir" || die "Unable to make sandbox subdir: $sandbox_dir"
+        fi
+    else
+        # Not given: make temp directory, and delete it on exit.
+        local sandbox_dir=$(mktemp -d) || die "Unable to make sandbox dir."
+        paths_temp+=("$sandbox_dir")
+    fi
+
+    # Make argument to load init file if it exists.
+    init_file="$sandbox_dir/init.el"
+    [[ -r $init_file ]] \
+        && local args_load_init_file=(--load "$init_file")
+
+    # Set sandbox args.  This is a global variable used by the run_emacs function.
+    args_sandbox=(
+        --eval "(setq user-emacs-directory (file-truename \"$sandbox_dir\"))"
+        --eval "(setq user-init-file (file-truename \"$init_file\"))"
+        "${args_load_init_file[@]}"
+    )
+
+    # Add package-install arguments for dependencies.
+    if [[ $install_deps ]]
+    then
+        local deps=($(dependencies))
+        debug "Installing dependencies: ${deps[@]}"
+
+        for package in "${deps[@]}"
+        do
+            args_sandbox_package_install+=(--eval "(package-install '$package)")
+        done
+    fi
+
+    # *** Install packages into sandbox
+
+    if [[ ${args_sandbox_package_install[@]} ]]
+    then
+        # Initialize the sandbox (installs packages once rather than for every rule).
+        debug "Initializing sandbox..."
+
+        run_emacs \
+            --eval "(package-refresh-contents)" \
+            "${args_sandbox_package_install[@]}" \
+            || die "Unable to initialize sandbox."
+    fi
+
+    debug "Sandbox initialized."
+}
+
 # ** Utility
 
 function cleanup {
-    # Remove temporary paths (${temp_paths[@]}).
+    # Remove temporary paths (${paths_temp[@]}).
 
-    for path in "${temp_paths[@]}"
+    for path in "${paths_temp[@]}"
     do
         if [[ $debug ]]
         then
@@ -308,6 +489,52 @@ function cleanup {
             debug "Temporary path doesn't exist, not deleting: $path"
         fi
     done
+}
+
+function echo-unset-p {
+    # Echo 0 if $1 is set, otherwise 1.  IOW, this returns the exit
+    # code of [[ $1 ]] as STDOUT.
+    [[ $1 ]]
+    echo $?
+}
+
+function ensure-package-available {
+    # If package $1 is available, return 0.  Otherwise, return 1, and
+    # if $2 is set, give error otherwise verbose.  Outputting messages
+    # here avoids repetition in callers.
+    local package=$1
+    local direct_p=$2
+
+    if ! run_emacs --load $package &>/dev/null
+    then
+        if [[ $direct_p ]]
+        then
+            error "$package not available."
+        else
+            verbose 2 "$package not available."
+        fi
+        return 1
+    fi
+}
+
+function ensure-tests-available {
+    # If tests of type $1 (like "ERT") are available, return 0.  Otherwise, if
+    # $2 is set, give an error and return 1; otherwise give verbose message.  $1
+    # should have a corresponding predicate command, like ert-tests-p for ERT.
+    local test_name=$1
+    local test_command="${test_name,,}-tests-p"  # Converts name to lowercase.
+    local direct_p=$2
+
+    if ! $test_command
+    then
+        if [[ $direct_p ]]
+        then
+            error "$test_name tests not found."
+        else
+            verbose 2 "$test_name tests not found."
+        fi
+        return 1
+    fi
 }
 
 function echo_color {
@@ -349,9 +576,9 @@ function log {
     echo "LOG ($(ts)): $@" >&2
 }
 function log_color {
-    local color=$1
+    local color_name=$1
     shift
-    echo_color $color "LOG ($(ts)): $@" >&2
+    echo_color $color_name "LOG ($(ts)): $@" >&2
 }
 function success {
     if [[ $verbose -ge 2 ]]
@@ -363,11 +590,11 @@ function verbose {
     # $1 is the verbosity level, rest are echoed when appropriate.
     if [[ $verbose -ge $1 ]]
     then
-        [[ $1 -eq 1 ]] && local color=blue
-        [[ $1 -ge 2 ]] && local color=cyan
+        [[ $1 -eq 1 ]] && local color_name=blue
+        [[ $1 -ge 2 ]] && local color_name=cyan
 
         shift
-        log_color $color "$@" >&2
+        log_color $color_name "$@" >&2
     fi
 }
 
@@ -375,9 +602,17 @@ function ts {
     date "+%Y-%m-%d %H:%M:%S"
 }
 
+function emacs-version {
+    # Echo Emacs version number.
+    run_emacs --eval "(princ emacs-version)" || die "Unable to get Emacs version."
+}
+
 # * Rules
 
 # These functions are intended to be called as rules, like a Makefile.
+# Some rules test $1 to determine whether the rule is being called
+# directly or from a meta-rule; if directly, an error is given if the
+# rule can't be run, otherwise it's skipped.
 
 function all {
     verbose 1 "Running all rules..."
@@ -391,11 +626,29 @@ function compile {
     unset compile  # Only compile once.
 
     verbose 1 "Compiling..."
-    debug "Byte-compile files: ${project_byte_compile_files[@]}"
+    debug "Byte-compile files: ${files_project_byte_compile[@]}"
 
-    batch-byte-compile "${project_byte_compile_files[@]}" \
+    batch-byte-compile "${files_project_byte_compile[@]}" \
         && success "Compiling finished without errors." \
             || error "Compilation failed."
+}
+
+function batch {
+    # Run Emacs with $args_batch and with project source and test files loaded.
+    verbose 1 "Executing Emacs with arguments: ${args_batch[@]}"
+
+    run_emacs \
+        $(args-load-files "${files_project_feature[@]}" "${files_project_test[@]}") \
+        "${args_batch_interactive[@]}"
+}
+
+function interactive {
+    # Run Emacs interactively.  Most useful with --sandbox and --install-deps.
+    unset arg_batch
+    run_emacs \
+        $(args-load-files "${files_project_feature[@]}" "${files_project_test[@]}") \
+        "${args_batch_interactive[@]}"
+    arg_batch="--batch"
 }
 
 function lint {
@@ -403,18 +656,21 @@ function lint {
 
     lint-checkdoc
     lint-compile
+    lint-declare
+    lint-indent
     lint-package
+    lint-regexps
 }
 
 function lint-checkdoc {
     verbose 1 "Linting checkdoc..."
 
     local checkdoc_file="$(elisp-checkdoc-file)"
-    temp_paths+=("$checkdoc_file")
+    paths_temp+=("$checkdoc_file")
 
     run_emacs \
         --load="$checkdoc_file" \
-        "${project_source_files[@]}" \
+        "${files_project_feature[@]}" \
         && success "Linting checkdoc finished without errors." \
             || error "Linting checkdoc failed."
 }
@@ -423,21 +679,66 @@ function lint-compile {
     verbose 1 "Linting compilation..."
 
     compile_error_on_warn=true
-    batch-byte-compile "${project_byte_compile_files[@]}" \
+    batch-byte-compile "${files_project_byte_compile[@]}" \
         && success "Linting compilation finished without errors." \
             || error "Linting compilation failed."
     unset compile_error_on_warn
 }
 
+function lint-declare {
+    verbose 1 "Linting declarations..."
+
+    local check_declare_file="$(elisp-check-declare-file)"
+    paths_temp+=("$check_declare_file")
+
+    run_emacs \
+        --load "$check_declare_file" \
+        -f makem-check-declare-files-and-exit \
+        "${files_project_feature[@]}" \
+        && success "Linting declarations finished without errors." \
+            || error "Linting declarations failed."
+}
+
+function lint-indent {
+    verbose 1 "Linting indentation..."
+
+    # We load project source files as well, because they may contain
+    # macros with (declare (indent)) rules which must be loaded to set
+    # indentation.
+
+    run_emacs \
+        --load "$(elisp-lint-indent-file)" \
+        $(args-load-files "${files_project_feature[@]}" "${files_project_test[@]}") \
+        --funcall makem-lint-indent-batch-and-exit \
+        "${files_project_feature[@]}" "${files_project_test[@]}" \
+        && success "Linting indentation finished without errors." \
+            || error "Linting indentation failed."
+}
+
 function lint-package {
+    ensure-package-available package-lint $1 || return $(echo-unset-p $1)
+
     verbose 1 "Linting package..."
 
     run_emacs \
         --load package-lint \
         --funcall package-lint-batch-and-exit \
-        "${project_source_files[@]}" \
+        "${files_project_feature[@]}" \
         && success "Linting package finished without errors." \
             || error "Linting package failed."
+}
+
+function lint-regexps {
+    ensure-package-available relint $1 || return $(echo-unset-p $1)
+
+    verbose 1 "Linting regexps..."
+
+    run_emacs \
+        --load relint \
+        --funcall relint-batch \
+        "${files_project_source[@]}" \
+        && success "Linting regexps finished without errors." \
+            || error "Linting regexps failed."
 }
 
 function tests {
@@ -447,14 +748,24 @@ function tests {
     test-buttercup
 }
 
+function test-ert-interactive {
+    verbose 1 "Running ERT tests interactively..."
+
+    unset arg_batch
+    run_emacs \
+        $(args-load-files "${files_project_test[@]}") \
+        --eval "(ert-run-tests-interactively t)"
+    arg_batch="--batch"
+}
+
 function test-buttercup {
-    buttercup-tests-p || return 0
+    ensure-tests-available Buttercup $1 || return $(echo-unset-p $1)
     compile || die
 
     verbose 1 "Running Buttercup tests..."
 
     local buttercup_file="$(elisp-buttercup-file)"
-    temp_paths+=("$buttercup_file")
+    paths_temp+=("$buttercup_file")
 
     run_emacs \
         --load buttercup \
@@ -465,14 +776,14 @@ function test-buttercup {
 }
 
 function test-ert {
-    ert-tests-p || return 0
+    ensure-tests-available ERT $1 || return $(echo-unset-p $1)
     compile || die
 
     verbose 1 "Running ERT tests..."
-    debug "Test files: ${project_test_files[@]}"
+    debug "Test files: ${files_project_test[@]}"
 
     run_emacs \
-        $(load-files-args "${project_test_files[@]}") \
+        $(args-load-files "${files_project_test[@]}") \
         -f ert-run-tests-batch-and-exit \
         && success "ERT tests finished without errors." \
             || error "ERT tests failed."
@@ -480,11 +791,13 @@ function test-ert {
 
 # * Defaults
 
-test_files_regexp='^(tests?|t)/'
-emacs_command="emacs"
+test_files_regexp='^((tests?|t)/)|-test.el$|^test-'
+
+emacs_command=("emacs")
 errors=0
 verbose=0
 compile=true
+arg_batch="--batch"
 
 # MAYBE: Disable color if not outputting to a terminal.  (OTOH, the
 # colorized output is helpful in CI logs, and I don't know if,
@@ -510,7 +823,6 @@ color=true
 # something, which seems like getting too smart for our own good.
 
 # TODO: Emit a warning if .ELC files that don't match any .EL files are detected.
-load_path="."
 
 # ** Colors
 
@@ -524,22 +836,28 @@ COLOR_purple='\e[0;35m'
 COLOR_cyan='\e[0;36m'
 COLOR_white='\e[0;37m'
 
-# * Project files
+# ** Package system args
 
-# MAYBE: Option to not byte-compile test files.  (OTOH, byte-compiling reveals many
-# errors that would otherwise go unnoticed, so it's worth it to fix the warnings.)
-project_source_files=($(project-source-files))
-project_test_files=($(project-test-files))
-project_byte_compile_files=("${project_source_files[@]}" "${project_test_files[@]}")
+args_package_archives=(
+    --eval "(add-to-list 'package-archives '(\"gnu\" . \"https://elpa.gnu.org/packages/\") t)"
+    --eval "(add-to-list 'package-archives '(\"melpa\" . \"https://melpa.org/packages/\") t)"
+)
 
-package_initialize_file="$(elisp-package-initialize-file)"
-temp_paths+=("$package_initialize_file")
+args_org_package_archives=(
+    --eval "(add-to-list 'package-archives '(\"org\" . \"https://orgmode.org/elpa/\") t)"
+)
+
+args_package_init=(
+    --eval "(package-initialize)"
+)
+
+elisp_org_package_archive="(add-to-list 'package-archives '(\"org\" . \"https://orgmode.org/elpa/\") t)"
 
 # * Args
 
 args=$(getopt -n "$0" \
-              -o dhi:sS:vf:C \
-              -l auto-install,debug,debug-load-path,help,install:,verbose,file:,no-color,no-compile,sandbox,sandbox-dir: \
+              -o dhe:E:i:sS:vf:CO \
+              -l exclude:,emacs:,install-deps,install-linters,debug,debug-load-path,help,install:,verbose,file:,no-color,no-compile,no-org-repo,sandbox,sandbox-dir: \
               -- "$@") \
     || { usage; exit 1; }
 eval set -- "$args"
@@ -547,8 +865,12 @@ eval set -- "$args"
 while true
 do
     case "$1" in
-        --auto-install)
-            auto_install=true
+        --install-deps)
+            install_deps=true
+            ;;
+        --install-linters)
+            args_sandbox_package_install+=(--eval "(package-install 'package-lint)"
+                                           --eval "(package-install 'relint)")
             ;;
         -d|--debug)
             debug=true
@@ -561,9 +883,13 @@ do
             usage
             exit
             ;;
+        -E|--emacs)
+            shift
+            emacs_command=($1)
+            ;;
         -i|--install)
             shift
-            sandbox_install_packages_args+=(--install "$1")
+            args_sandbox_package_install+=(--eval "(package-install '$1)")
             ;;
         -s|--sandbox)
             sandbox=true
@@ -576,10 +902,18 @@ do
         -v|--verbose)
             ((verbose++))
             ;;
+        -e|--exclude)
+            shift
+            debug "Excluding file: $1"
+            files_exclude+=("$1")
+            ;;
         -f|--file)
             shift
             project_source_files+=("$1")
             project_byte_compile_files+=("$1")
+            ;;
+        -O|--no-org-repo)
+            unset elisp_org_package_archive
             ;;
         --no-color)
             unset color
@@ -601,67 +935,59 @@ done
 debug "ARGS: $args"
 debug "Remaining args: ${rest[@]}"
 
+# Set package elisp (which depends on --no-org-repo arg).
+package_initialize_file="$(elisp-package-initialize-file)"
+paths_temp+=("$package_initialize_file")
+
 # * Main
 
 trap cleanup EXIT INT TERM
 
-if ! [[ ${project_source_files[@]} ]]
+# Discover project files.
+files_project_feature=($(files-project-feature))
+files_project_test=($(files-project-test))
+files_project_byte_compile=("${files_project_feature[@]}" "${files_project_test[@]}")
+
+debug "EXCLUDING FILES: ${files_exclude[@]}"
+debug "FEATURE FILES: ${files_project_feature[@]}"
+debug "TEST FILES: ${files_project_test[@]}"
+debug "BYTE-COMPILE FILES: ${files_project_byte_compile[@]}"
+
+if ! [[ ${files_project_feature[@]} ]]
 then
     error "No files specified and not in a git repo."
     exit 1
 fi
 
-if [[ $sandbox ]]
-then
-    # Setup sandbox.
-    type emacs-sandbox.sh &>/dev/null || die "emacs-sandbox.sh not found."
+# Set load path.
+args_load_paths=($(args-load-path))
+debug "LOAD PATH ARGS: ${args_load_paths[@]}"
 
-    if ! [[ $sandbox_dir ]]
-    then
-        # No sandbox dir specified: make temp dir and remove it on exit.
-        sandbox_dir=$(mktemp -d) || die "Unable to make temp dir."
-        temp_paths+=("$sandbox_dir")
-    fi
-
-    sandbox_basic_args=(
-        -d "$sandbox_dir"
-    )
-    [[ $debug ]] && sandbox_basic_args+=(--debug)
-
-    if [[ $auto_install ]]
-    then
-        # Add dependencies to package install list.
-        deps=($(dependencies))
-        debug "Installing dependencies: ${deps[@]}"
-
-        for package in "${deps[@]}"
-        do
-            sandbox_install_packages_args+=(--install $package)
-        done
-    fi
-
-    if [[ ${sandbox_install_packages_args[@]} ]]
-    then
-        # Initialize the sandbox (installs packages once rather than for every rule).
-        emacs_command="emacs-sandbox.sh ${sandbox_basic_args[@]} ${sandbox_install_packages_args[@]} -- "
-        debug "Initializing sandbox..."
-
-        run_emacs || die "Unable to initialize sandbox."
-    fi
-
-    # After the sandbox is initialized and packages are installed, set the command
-    # to prevent the package lists from being refreshed on each invocation.
-    emacs_command="emacs-sandbox.sh ${sandbox_basic_args[@]} --no-refresh-packages -- "
-
-    debug "Sandbox initialized."
-fi
+# Initialize sandbox.
+[[ $sandbox ]] && sandbox
 
 # Run rules.
 for rule in "${rest[@]}"
 do
-    if type "$rule" 2>/dev/null | grep "$rule is a function" &>/dev/null
+    if [[ $batch || $interactive ]]
     then
-        $rule
+        debug "Adding batch/interactive argument: $rule"
+        args_batch_interactive+=("$rule")
+
+    elif [[ $rule = batch ]]
+    then
+        # Remaining arguments are passed to Emacs.
+        batch=true
+    elif [[ $rule = interactive ]]
+    then
+        # Remaining arguments are passed to Emacs.
+        interactive=true
+
+    elif type -t "$rule" 2>/dev/null | grep function &>/dev/null
+    then
+        # Pass called-directly as $1 to indicate that the rule is
+        # being called directly rather than from a meta-rule.
+        $rule called-directly
     elif [[ $rule = test ]]
     then
         # Allow the "tests" rule to be called as "test".  Since "test"
@@ -671,6 +997,10 @@ do
         error "Invalid rule: $rule"
     fi
 done
+
+# Batch/interactive rules.
+[[ $batch ]] && batch
+[[ $interactive ]] && interactive
 
 if [[ $errors -gt 0 ]]
 then
