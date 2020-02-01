@@ -51,16 +51,16 @@
 
 ;;;; Functions
 
-(defun plz-test-get-response (response)
-  "Return non-nil if RESPONSE seems to be a correct GET response."
-  (and (plz-response-p response)
-       (numberp (plz-response-version response))
-       (eq 200 (plz-response-status response))
-       (equal "application/json" (alist-get "Content-Type" (plz-response-headers response) nil nil #'equal))
-       (let* ((json (json-read-from-string (plz-response-body response)))
-              (headers (alist-get 'headers json))
-              (user-agent (alist-get 'User-Agent headers nil nil #'equal)))
-         (string-match "curl" user-agent))))
+(defmacro plz-test-get-response (response)
+  "Test parts of RESPONSE with `should'."
+  `(and (should (plz-response-p ,response))
+        (should (numberp (plz-response-version ,response)))
+        (should (eq 200 (plz-response-status ,response)))
+        (should (equal "application/json" (alist-get "Content-Type" (plz-response-headers ,response) nil nil #'equal)))
+        (let* ((json (json-read-from-string (plz-response-body ,response)))
+               (headers (alist-get 'headers json))
+               (user-agent (alist-get 'User-Agent headers nil nil #'equal)))
+          (should (string-match "curl" user-agent)))))
 
 ;;;; Tests
 
@@ -93,7 +93,7 @@
                     :then (lambda (response)
                             (setf test-response response)))))
     (plz-test-wait process)
-    (should (plz-test-get-response test-response))))
+    (plz-test-get-response test-response)))
 
 (ert-deftest plz-get-json nil
   (let* ((test-json)
@@ -113,8 +113,8 @@
   (should (string-match "curl" (plz-get-sync "https://httpbin.org/get"))))
 
 (ert-deftest plz-get-response-sync nil
-  (should (plz-test-get-response (plz-get-sync "https://httpbin.org/get"
-                                   :as 'response))))
+  (plz-test-get-response (plz-get-sync "https://httpbin.org/get"
+                           :as 'response)))
 
 (ert-deftest plz-get-json-sync nil
   (let-alist (plz-get-sync "https://httpbin.org/get"
