@@ -197,13 +197,15 @@ AS selects the kind of result to pass to the callback function
 THEN.  It may be:
 
 - `buffer' to pass the response buffer.
-- `string' to pass the response body as a string.
+- `binary' to pass the response body as an undecoded string.
+- `string' to pass the response body as a decoded string.
 - `response' to pass a `plz-response' struct.
 - A function, which is called in the response buffer with it
   narrowed to the response body (suitable for, e.g. `json-read').
 
 If DECODE is non-nil, the response body is decoded automatically.
-For binary content, it should be nil.
+For binary content, it should be nil.  When AS is `binary',
+DECODE is automatically set to nil.
 
 THEN is a callback function, whose sole argument is selected
 above with AS.
@@ -231,13 +233,15 @@ the initial connection attempt."
 
 AS selects the kind of result to return.  It may be:
 
-- `string' to pass the response body as a string.
+- `binary' to pass the response body as an undecoded string.
+- `string' to pass the response body as a decoded string.
 - `response' to pass a `plz-response' struct.
 - A function, which is called in the response buffer with it
   narrowed to the response body (suitable for, e.g. `json-read').
 
 If DECODE is non-nil, the response body is decoded automatically.
-For binary content, it should be nil.
+For binary content, it should be nil.  When AS is `binary',
+DECODE is automatically set to nil.
 
 If the request fails, an error is signaled, either
 `plz-curl-error' or `plz-http-error' as appropriate, with a
@@ -267,7 +271,8 @@ AS selects the kind of result to pass to the callback function
 THEN.  It may be:
 
 - `buffer' to pass the response buffer.
-- `string' to pass the response body as a string.
+- `binary' to pass the response body as an undecoded string.
+- `string' to pass the response body as a decoded string.
 - `response' to pass a `plz-response' struct.
 - A function, which is called in the response buffer with it
   narrowed to the response body (suitable for, e.g. `json-read').
@@ -292,7 +297,10 @@ the initial connection attempt."
          (curl-args (append plz-curl-default-args header-args
                             (when connect-timeout
                               (list "--connect-timeout" (number-to-string connect-timeout)))
-                            (list url))))
+                            (list url)))
+         (decode (pcase as
+                   ('binary nil)
+                   (_ decode))))
     (with-current-buffer (generate-new-buffer " *plz-request-curl*")
       (let ((process (make-process :name "plz-request-curl"
                                    :buffer (current-buffer)
@@ -303,16 +311,17 @@ the initial connection attempt."
                                    :stderr (current-buffer)))
             ;; The THEN function is called in the response buffer.
             (then (pcase-exhaustive as
-                    ('string (lambda ()
-                               (let ((coding-system (or (plz--coding-system) 'utf-8)))
-                                 (plz--narrow-to-body)
-                                 (when decode
-                                   (decode-coding-region (point) (point-max) coding-system))
-                                 (funcall then (buffer-string)))))
+                    ((or 'binary 'string)
+                     (lambda ()
+                       (let ((coding-system (or (plz--coding-system) 'utf-8)))
+                         (plz--narrow-to-body)
+                         (when decode
+                           (decode-coding-region (point) (point-max) coding-system))
+                         (funcall then (buffer-string)))))
                     ('buffer (lambda ()
                                (funcall then (current-buffer))))
                     ('response (lambda ()
-                                 (funcall then (plz--response))))
+                                 (funcall then (plz--response :decode-p decode))))
                     ((pred functionp) (lambda ()
                                         (let ((coding-system (or (plz--coding-system) 'utf-8)))
                                           (plz--narrow-to-body)
@@ -354,24 +363,30 @@ Uses `call-process' to call curl synchronously."
                               (when connect-timeout
                                 (list "--connect-timeout" (number-to-string connect-timeout)))
                               (list url)))
+           (decode (pcase as
+                     ('binary nil)
+                     (_ decode)))
            (status (apply #'call-process plz-curl-program nil t nil
                           curl-args))
            ;; THEN form copied from `plz--curl'.
            ;; TODO: DRY this.  Maybe we could use a thread and a condition variable, but...
            (plz-then (pcase-exhaustive as
-                       ((or `nil 'string) (lambda ()
-                                            (let ((coding-system (or (plz--coding-system) 'utf-8)))
-                                              (plz--narrow-to-body)
-                                              (when decode
-                                                (decode-coding-region (point) (point-max) coding-system))
-                                              (buffer-string))))
-                       ('response #'plz--response)
-                       ((pred functionp) (lambda ()
-                                           (let ((coding-system (or (plz--coding-system) 'utf-8)))
-                                             (plz--narrow-to-body)
-                                             (when decode
-                                               (decode-coding-region (point) (point-max) coding-system))
-                                             (funcall as)))))))
+                       ((or `nil 'string 'binary)
+                        (lambda ()
+                          (let ((coding-system (or (plz--coding-system) 'utf-8)))
+                            (plz--narrow-to-body)
+                            (when decode
+                              (decode-coding-region (point) (point-max) coding-system))
+                            (buffer-string))))
+                       ('response
+                        (apply-partially #'plz--response :decode-p decode))
+                       ((pred functionp)
+                        (lambda ()
+                          (let ((coding-system (or (plz--coding-system) 'utf-8)))
+                            (plz--narrow-to-body)
+                            (when decode
+                              (decode-coding-region (point) (point-max) coding-system))
+                            (funcall as)))))))
       (plz--sentinel (current-buffer) status))))
 
 (defun plz--sentinel (process-or-buffer status)
@@ -412,8 +427,10 @@ node `(elisp) Sentinels').  Kills the buffer before returning."
 
 ;; Functions for parsing HTTP responses.
 
-(defun plz--response ()
-  "Return response struct for HTTP response in current buffer."
+(cl-defun plz--response (&key (decode-p t))
+  "Return response struct for HTTP response in current buffer.
+When DECODE-P is non-nil, decode the response body automatically
+according to the apparent coding system."
   (save-excursion
     (goto-char (point-min))
     ;; Parse HTTP version and status code.
@@ -423,7 +440,8 @@ node `(elisp) Sentinels').  Kills the buffer before returning."
            (headers (plz--headers))
            (coding-system (or (plz--coding-system headers) 'utf-8)))
       (plz--narrow-to-body)
-      (decode-coding-region (point) (point-max) coding-system)
+      (when decode-p
+        (decode-coding-region (point) (point-max) coding-system))
       (make-plz-response
        :version http-version
        :status status-code

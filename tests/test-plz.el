@@ -175,8 +175,7 @@
 (ert-deftest plz-get-jpeg ()
   (let* ((test-jpeg)
          (process (plz-get "https://httpbin.org/image/jpeg"
-                    :decode nil
-                    :as 'string
+                    :as 'binary
                     :then (lambda (string)
                             (setf test-jpeg string)))))
     (plz-test-wait process)
@@ -184,7 +183,7 @@
 
 (ert-deftest plz-get-jpeg-sync ()
   (let ((jpeg (plz-get-sync "https://httpbin.org/image/jpeg"
-                :decode nil)))
+                :as 'binary)))
     (should (equal 'jpeg (image-type-from-data jpeg)))))
 
 ;;;; Footer
