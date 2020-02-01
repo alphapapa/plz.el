@@ -71,6 +71,15 @@ Assuming that =plz= has already called =decode-coding-region=, this is straightf
 
 *** HTTP response with headers
 
+* Ideas
+
+** Name
+
++  =plz=
+     -  The current name.
++  =curly=
+     -  Since the library is based on curl, it wouldn't be a bad idea to have =curl= in the name, and this isn't too long.
+
 * References
 
 ** Similar projects
