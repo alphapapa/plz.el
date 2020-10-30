@@ -20,6 +20,15 @@ e.g. =request.el= can leak secrets and other data via the command line and [[htt
 
 * Ideas
 
+** TODO Use finalizers to clean up response buffers
+:LOGBOOK:
+-  State "TODO"       from              [2020-10-30 Fri 12:58]
+:END:
+
++  [[info:elisp#Finalizer%20Type][info:elisp#Finalizer Type]]
+
+This might allow us to avoid or delay putting the response body in a string, which could improve performance.
+
 ** Name
 
 +  =plz=
