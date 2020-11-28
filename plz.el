@@ -293,7 +293,7 @@ request.  CONNECT-TIMEOUT may be a number of seconds to timeout
 the initial connection attempt."
   ;; Inspired by and copied from `elfeed-curl-retrieve'.
   (let* ((header-args (cl-loop for (key . value) in headers
-                               collect (format "--header %s: %s" key value)))
+                               append (list "--header" (format "%s: %s" key value))))
          (curl-args (append plz-curl-default-args header-args
                             (when connect-timeout
                               (list "--connect-timeout" (number-to-string connect-timeout)))
