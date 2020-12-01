@@ -105,6 +105,21 @@
     (let-alist test-json
       (should (string-match "curl" .headers.User-Agent)))))
 
+(ert-deftest plz-put-json-string nil
+  (let* ((json-string (json-encode (list (cons "key" "value"))))
+         (response-json)
+         (process (plz-put "https://httpbin.org/put" json-string
+                    :headers '(("Content-Type" . "application/json"))
+                    :as #'json-read
+                    :then (lambda (json)
+                            (setf response-json json)))))
+    (plz-test-wait process)
+    (let-alist response-json
+      (should (string-match "curl" .headers.User-Agent))
+      (should (string= "value" (alist-get 'key (json-read-from-string .data)))))))
+
+;; TODO: Put JSON buffer.
+
 ;;;;; Sync
 
 (ert-deftest plz-get-string-sync nil

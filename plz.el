@@ -226,6 +226,45 @@ the initial connection attempt."
              :decode (if (and decode-s (not decode)) nil decode)
              :as as :then then :else else))
 
+(cl-defun plz-put (url body &key headers as then else
+                       (connect-timeout plz-connect-timeout)
+                       (decode t decode-s))
+  "PUT BODY to URL with curl.
+
+AS selects the kind of result to pass to the callback function
+THEN.  It may be:
+
+- `buffer' to pass the response buffer.
+- `binary' to pass the response body as an undecoded string.
+- `string' to pass the response body as a decoded string.
+- `response' to pass a `plz-response' struct.
+- A function, which is called in the response buffer with it
+  narrowed to the response body (suitable for, e.g. `json-read').
+
+If DECODE is non-nil, the response body is decoded automatically.
+For binary content, it should be nil.  When AS is `binary',
+DECODE is automatically set to nil.
+
+THEN is a callback function, whose sole argument is selected
+above with AS.
+
+ELSE is an optional callback function called when the request
+fails with one argument, a `plz-error' struct.  If ELSE is nil,
+an error is signaled when the request fails, either
+`plz-curl-error' or `plz-http-error' as appropriate, with a
+`plz-error' struct as the error data.
+
+HEADERS may be an alist of extra headers to send with the
+request.  CONNECT-TIMEOUT may be a number of seconds to timeout
+the initial connection attempt."
+  (declare (indent defun))
+  (plz--curl 'put url
+             :body body
+             :headers headers
+             :connect-timeout connect-timeout
+             :decode (if (and decode-s (not decode)) nil decode)
+             :as as :then then :else else))
+
 (cl-defun plz-get-sync (url &key headers as
                             (connect-timeout plz-connect-timeout)
                             (decode t decode-s))
@@ -263,9 +302,9 @@ the initial connection attempt."
 
 ;; Functions for calling and handling curl processes.
 
-(cl-defun plz--curl (_method url &key headers connect-timeout
-                             decode as then else)
-  "Get HTTP URL with curl.
+(cl-defun plz--curl (method url &key body headers connect-timeout
+                            decode as then else)
+  "Make HTTP METHOD request to URL with curl.
 
 AS selects the kind of result to pass to the callback function
 THEN.  It may be:
@@ -288,6 +327,8 @@ an error is signaled when the request fails, either
 `plz-curl-error' or `plz-http-error' as appropriate, with a
 `plz-error' struct as the error data.
 
+BODY may be a string or buffer to send as the request body.
+
 HEADERS may be an alist of extra headers to send with the
 request.  CONNECT-TIMEOUT may be a number of seconds to timeout
 the initial connection attempt."
@@ -297,6 +338,9 @@ the initial connection attempt."
          (curl-args (append plz-curl-default-args header-args
                             (when connect-timeout
                               (list "--connect-timeout" (number-to-string connect-timeout)))
+                            (when (eq 'put method)
+                              (cl-assert body)
+                              (list "--data" "@-" "--request" "PUT"))
                             (list url)))
          (decode (pcase as
                    ('binary nil)
@@ -330,6 +374,13 @@ the initial connection attempt."
                                           (funcall then (funcall as))))))))
         (setf plz-then then
               plz-else else)
+        (when body
+          (cl-typecase body
+            (string (process-send-string process body)
+                    (process-send-eof process))
+            (buffer (with-current-buffer body
+                      (process-send-region process (point-min) (point-max))
+                      (process-send-eof process)))))
         process))))
 
 (cl-defun plz--curl-sync (_method url &key headers connect-timeout
