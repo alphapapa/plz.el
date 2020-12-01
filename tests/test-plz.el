@@ -68,7 +68,7 @@
 
 (ert-deftest plz-get-string nil
   (let* ((test-string)
-         (process (plz-get "https://httpbin.org/get"
+         (process (plz 'get "https://httpbin.org/get"
                     :as 'string
                     :then (lambda (string)
                             (setf test-string string)))))
@@ -78,7 +78,7 @@
 (ert-deftest plz-get-buffer nil
   ;; The sentinel kills the buffer, so we get the buffer as a string.
   (let* ((test-buffer-string)
-         (process (plz-get "https://httpbin.org/get"
+         (process (plz 'get "https://httpbin.org/get"
                     :as 'buffer
                     :then (lambda (buffer)
                             (with-current-buffer buffer
@@ -88,7 +88,7 @@
 
 (ert-deftest plz-get-response nil
   (let* ((test-response)
-         (process (plz-get "https://httpbin.org/get"
+         (process (plz 'get "https://httpbin.org/get"
                     :as 'response
                     :then (lambda (response)
                             (setf test-response response)))))
@@ -97,7 +97,7 @@
 
 (ert-deftest plz-get-json nil
   (let* ((test-json)
-         (process (plz-get "https://httpbin.org/get"
+         (process (plz 'get "https://httpbin.org/get"
                     :as #'json-read
                     :then (lambda (json)
                             (setf test-json json)))))
@@ -105,11 +105,28 @@
     (let-alist test-json
       (should (string-match "curl" .headers.User-Agent)))))
 
+(ert-deftest plz-post-json-string nil
+  (let* ((json-string (json-encode (list (cons "key" "value"))))
+         (response-json)
+         (process (plz 'post "https://httpbin.org/post"
+                    :headers '(("Content-Type" . "application/json"))
+                    :body json-string
+                    :as #'json-read
+                    :then (lambda (json)
+                            (setf response-json json)))))
+    (plz-test-wait process)
+    (let-alist response-json
+      (should (string-match "curl" .headers.User-Agent))
+      (should (string= "value" (alist-get 'key (json-read-from-string .data)))))))
+
+;; TODO: POST JSON buffer.
+
 (ert-deftest plz-put-json-string nil
   (let* ((json-string (json-encode (list (cons "key" "value"))))
          (response-json)
-         (process (plz-put "https://httpbin.org/put" json-string
+         (process (plz 'put "https://httpbin.org/put"
                     :headers '(("Content-Type" . "application/json"))
+                    :body json-string
                     :as #'json-read
                     :then (lambda (json)
                             (setf response-json json)))))
@@ -146,7 +163,7 @@
 (ert-deftest plz-get-curl-error nil
   ;; Async.
   (let* ((err)
-         (process (plz-get "https://httpbinnnnnn.org/get/status/404"
+         (process (plz 'get "https://httpbinnnnnn.org/get/status/404"
                     :as 'string
                     :else (lambda (e)
                             (setf err e)))))
@@ -167,7 +184,7 @@
 (ert-deftest plz-get-404-error nil
   ;; Async.
   (let* ((err)
-         (process (plz-get "https://httpbin.org/get/status/404"
+         (process (plz 'get "https://httpbin.org/get/status/404"
                     :as 'string
                     :else (lambda (e)
                             (setf err e)))))
@@ -189,7 +206,7 @@
 
 (ert-deftest plz-get-jpeg ()
   (let* ((test-jpeg)
-         (process (plz-get "https://httpbin.org/image/jpeg"
+         (process (plz 'get "https://httpbin.org/image/jpeg"
                     :as 'binary
                     :then (lambda (string)
                             (setf test-jpeg string)))))
