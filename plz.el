@@ -451,7 +451,7 @@ node `(elisp) Sentinels').  Kills the buffer before returning."
                   (buffer process-or-buffer))))
     (unwind-protect
         (with-current-buffer buffer
-          (pcase status
+          (pcase-exhaustive status
             ((or 0 "finished\n")
              ;; Curl exited normally: check HTTP status code.
              (pcase (plz--http-status)
