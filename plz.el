@@ -63,7 +63,7 @@
   version status headers body)
 
 (cl-defstruct plz-error
-  curl-error response)
+  curl-error response message)
 
 ;;;; Constants
 
@@ -509,6 +509,13 @@ node `(elisp) Sentinels').  Kills the buffer before returning."
                                       (number code)))
                     (curl-error-message (alist-get curl-exit-code plz-curl-errors))
                     (err (make-plz-error :curl-error (cons curl-exit-code curl-error-message))))
+               (pcase-exhaustive plz-else
+                 (`nil (signal 'plz-curl-error err))
+                 ((pred functionp) (funcall plz-else err)))))
+
+            ("killed\n"
+             ;; Curl process killed.
+             (let ((err (make-plz-error :message "curl process killed")))
                (pcase-exhaustive plz-else
                  (`nil (signal 'plz-curl-error err))
                  ((pred functionp) (funcall plz-else err)))))))

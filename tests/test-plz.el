@@ -170,16 +170,35 @@
     (plz-test-wait process)
     (should (and (plz-error-p err)
                  (equal '(6 . "Couldn't resolve host. The given remote host was not resolved.")
-                        (plz-error-curl-error err)))))
+                        (plz-error-curl-error err))))))
 
+;; FIXME: This test works interactively but not in batch mode: it
+;; stalls the Emacs process indefinitely, using either sleep-for or
+;; sit-for.
+
+;; (ert-deftest plz-get-killed-error nil
+;;   ;; Async.
+;;   (let* ((err)
+;;          (process (plz 'get "https://httpbinnnnnn.org/get/status/404"
+;;                     :as 'string
+;;                     :else (lambda (e)
+;;                             (setf err e)))))
+;;     (sit-for 0.01)
+;;     (delete-process process)
+;;     (should (not (process-live-p process)))
+;;     (should (plz-error-p err))
+;;     (should (equal "curl process killed"
+;;                    (plz-error-message err)))))
+
+(ert-deftest plz-get-curl-error-sync nil
   ;; Sync.
   (let ((err (should-error (plz-get-sync "https://httpbinnnnnn.org/get/status/404"
                              :as 'string)
                            :type 'plz-curl-error)))
-    (should (and (eq 'plz-curl-error (car err))
-                 (plz-error-p (cdr err))
-                 (equal '(6 . "Couldn't resolve host. The given remote host was not resolved.")
-                        (plz-error-curl-error (cdr err)))))))
+    (should (eq 'plz-curl-error (car err)))
+    (should (plz-error-p (cdr err)))
+    (should (equal '(6 . "Couldn't resolve host. The given remote host was not resolved.")
+                   (plz-error-curl-error (cdr err))))))
 
 (ert-deftest plz-get-404-error nil
   ;; Async.
