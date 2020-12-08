@@ -221,6 +221,18 @@
                  (plz-response-p (plz-error-response (cdr err)))
                  (eq 404 (plz-response-status (plz-error-response (cdr err))))))))
 
+;;;;; Finally
+
+(ert-deftest plz-get-finally nil
+  (let* ((finally-null t)
+         (process (plz 'get "https://httpbin.org/get"
+                    :as 'string
+                    :then #'ignore
+                    :finally (lambda ()
+                               (setf finally-null nil)))))
+    (plz-test-wait process)
+    (should-not finally-null)))
+
 ;;;;; Binary
 
 (ert-deftest plz-get-jpeg ()
