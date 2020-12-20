@@ -1,6 +1,9 @@
 # * test.yml --- Test Emacs packages using makem.sh on GitHub Actions
 
-# https://github.com/alphapapa/makem.sh
+# URL: https://github.com/alphapapa/makem.sh
+# Version: 0.5
+
+# * Commentary:
 
 # Based on Steve Purcell's examples at
 # <https://github.com/purcell/setup-emacs/blob/master/.github/workflows/test.yml>,
@@ -28,8 +31,8 @@ on:
   pull_request:
   push:
     # Comment out this section to enable testing of all branches.
-    # branches:
-    #   - master
+    branches:
+      - master
 
 jobs:
   build:
@@ -39,6 +42,7 @@ jobs:
       matrix:
         emacs_version:
           - 26.3
+          - 27.1
           - snapshot
     steps:
     - uses: purcell/setup-emacs@master
@@ -50,8 +54,8 @@ jobs:
     - name: Initialize sandbox
       run: |
         SANDBOX_DIR=$(mktemp -d) || exit 1
-        echo ::set-env name=SANDBOX_DIR::$SANDBOX_DIR
-        ./makem.sh -vv --sandbox-dir=$SANDBOX_DIR --install-deps --install-linters
+        echo "SANDBOX_DIR=$SANDBOX_DIR" >> $GITHUB_ENV
+        ./makem.sh -vv --sandbox=$SANDBOX_DIR --install-deps --install-linters
 
     # The "all" rule is not used, because it treats compilation warnings
     # as failures, so linting and testing are run as separate steps.
@@ -60,11 +64,11 @@ jobs:
       # NOTE: Uncomment this line to treat lint failures as passing
       #       so the job doesn't show failure.
       # continue-on-error: true
-      run: ./makem.sh -vv --sandbox-dir=$SANDBOX_DIR lint
+      run: ./makem.sh -vv --sandbox=$SANDBOX_DIR lint
 
     - name: Test
       if: always()  # Run test even if linting fails.
-      run: ./makem.sh -vv --sandbox-dir=$SANDBOX_DIR test
+      run: ./makem.sh -vv --sandbox=$SANDBOX_DIR test
 
 # Local Variables:
 # eval: (outline-minor-mode)
