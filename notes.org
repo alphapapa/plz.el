@@ -112,6 +112,12 @@ Assuming that =plz= has already called =decode-coding-region=, this is straightf
 :TOC:      :depth 1
 :END:
 
+** Discussions
+
+*** [[https://lists.gnu.org/archive/html/emacs-devel/2016-12/msg01070.html][with-url]]
+
+[2020-12-20 Sun 08:11]  At the end of 2016, Lars Ingebrigtsen [[https://lists.gnu.org/archive/html/emacs-devel/2016-12/msg01070.html][proposed]] a ~with-url~ macro that improves on ~url-retrieve~ and ~url-retrieve-synchronously~.  It was [[https://lists.gnu.org/archive/html/emacs-devel/2020-12/msg01220.html][mentioned]] by David Engster in [[https://lists.gnu.org/archive/html/emacs-devel/2020-12/msg01217.html][this thread]] from 2020.  It looks like it has a nice API.  Unfortunately it hasn't been merged.
+
 ** Similar projects
 
 *** [[https://github.com/ebpa/fetch.el][GitHub - ebpa/fetch.el: A simple HTTP request library modeled after the web browser API]]
