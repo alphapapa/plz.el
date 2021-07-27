@@ -417,6 +417,8 @@ NOQUERY is passed to `make-process', which see."
                     ((or 'binary 'string)
                      (lambda ()
                        (let ((coding-system (or (plz--coding-system) 'utf-8)))
+                         (pcase as
+                           ('binary (set-buffer-multibyte nil)))
                          (plz--narrow-to-body)
                          (when decode
                            (decode-coding-region (point) (point-max) coding-system))
@@ -485,6 +487,8 @@ Uses `call-process' to call curl synchronously."
                        ((or `nil 'string 'binary)
                         (lambda ()
                           (let ((coding-system (or (plz--coding-system) 'utf-8)))
+                            (pcase as
+                              ('binary (set-buffer-multibyte nil)))
                             (plz--narrow-to-body)
                             (when decode
                               (decode-coding-region (point) (point-max) coding-system))
