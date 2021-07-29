@@ -390,6 +390,13 @@ the initial connection attempt.
 
 NOQUERY is passed to `make-process', which see."
   ;; Inspired by and copied from `elfeed-curl-retrieve'.
+
+  ;; NOTE: By default, for PUT requests and POST requests >1KB, curl sends an
+  ;; "Expect:" header, which causes servers to send a "100 Continue" response, which
+  ;; we don't want to have to deal with, so we disable it by setting the header to
+  ;; the empty string.  See <https://gms.tf/when-curl-sends-100-continue.html>.
+  ;; TODO: Handle "100 Continue" responses and remove this workaround.
+  (push (cons "Expect" "") headers)
   (let* ((header-args (cl-loop for (key . value) in headers
                                append (list "--header" (format "%s: %s" key value))))
          (curl-args (append plz-curl-default-args header-args
