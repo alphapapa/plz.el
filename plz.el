@@ -68,7 +68,7 @@
 ;;;; Constants
 
 (defconst plz-http-response-status-line-regexp
-  (rx "HTTP/" (group (1+ (or digit "."))) (1+ blank)
+  (rx bol "HTTP/" (group (1+ (or digit "."))) (1+ blank)
       (group (1+ digit)))
   "Regular expression matching HTTP response status line.")
 
