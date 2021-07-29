@@ -119,6 +119,22 @@
       (should (string-match "curl" .headers.User-Agent))
       (should (string= "value" (alist-get 'key (json-read-from-string .data)))))))
 
+(ert-deftest plz-post-jpeg-string nil
+  (let* ((jpeg-string (plz-get-sync "https://httpbin.org/image/jpeg"
+                        :as 'binary))
+         (response-jpeg)
+         (process (plz 'post "https://httpbin.org/post"
+                    :headers '(("Content-Type" . "image/jpeg"))
+                    :body jpeg-string
+                    :as #'json-read
+                    :then (lambda (json)
+                            (setf response-jpeg
+                                  (base64-decode-string
+                                   (string-remove-prefix "data:application/octet-stream;base64,"
+                                                         (alist-get 'data json))))))))
+    (plz-test-wait process)
+    (should (equal 'jpeg (image-type-from-data response-jpeg)))))
+
 ;; TODO: POST JSON buffer.
 
 (ert-deftest plz-put-json-string nil
