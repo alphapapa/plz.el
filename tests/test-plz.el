@@ -120,20 +120,23 @@
       (should (string= "value" (alist-get 'key (json-read-from-string .data)))))))
 
 (ert-deftest plz-post-jpeg-string nil
-  (let* ((jpeg-string (plz-get-sync "https://httpbin.org/image/jpeg"
-                        :as 'binary))
+  (let* ((jpeg-to-upload (plz-get-sync "https://httpbin.org/image/jpeg"
+                           :as 'binary))
          (response-jpeg)
          (process (plz 'post "https://httpbin.org/post"
                     :headers '(("Content-Type" . "image/jpeg"))
-                    :body jpeg-string
+                    :body jpeg-to-upload :body-type 'binary
                     :as #'json-read
                     :then (lambda (json)
                             (setf response-jpeg
                                   (base64-decode-string
                                    (string-remove-prefix "data:application/octet-stream;base64,"
                                                          (alist-get 'data json))))))))
+    (should (equal 'jpeg (image-type-from-data jpeg-to-upload)))
     (plz-test-wait process)
-    (should (equal 'jpeg (image-type-from-data response-jpeg)))))
+    (should (equal 'jpeg (image-type-from-data response-jpeg)))
+    (should (equal (length jpeg-to-upload) (length response-jpeg)))
+    (should (equal jpeg-to-upload response-jpeg))))
 
 ;; TODO: POST JSON buffer.
 

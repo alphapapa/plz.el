@@ -274,6 +274,7 @@ NOQUERY is passed to `make-process', which see."
              :as as :then then :else else :noquery noquery))
 
 (cl-defun plz (method url &key headers body as then else finally noquery
+                      (body-type 'text)
                       (connect-timeout plz-connect-timeout)
                       (decode t decode-s))
   "Request BODY with METHOD to URL with curl.
@@ -308,10 +309,13 @@ HEADERS may be an alist of extra headers to send with the
 request.  CONNECT-TIMEOUT may be a number of seconds to timeout
 the initial connection attempt.
 
+BODY-TYPE may be `text' to send BODY as text, or `binary' to send
+it as binary.
+
 NOQUERY is passed to `make-process', which see."
   (declare (indent defun))
   (plz--curl method url
-             :body body
+             :body body :body-type body-type
              :headers headers
              :connect-timeout connect-timeout
              :decode (if (and decode-s (not decode)) nil decode)
@@ -355,7 +359,8 @@ the initial connection attempt."
 ;; Functions for calling and handling curl processes.
 
 (cl-defun plz--curl (method url &key body headers connect-timeout
-                            decode as then else finally noquery)
+                            decode as then else finally noquery
+                            (body-type 'text))
   "Make HTTP METHOD request to URL with curl.
 
 AS selects the kind of result to pass to the callback function
@@ -383,6 +388,8 @@ FINALLY is an optional function called without argument after
 THEN or ELSE, as appropriate.
 
 BODY may be a string or buffer to send as the request body.
+BODY-TYPE may be `text' to send BODY as text, or `binary' to send
+it as binary.
 
 HEADERS may be an alist of extra headers to send with the
 request.  CONNECT-TIMEOUT may be a number of seconds to timeout
@@ -399,13 +406,16 @@ NOQUERY is passed to `make-process', which see."
   (push (cons "Expect" "") headers)
   (let* ((header-args (cl-loop for (key . value) in headers
                                append (list "--header" (format "%s: %s" key value))))
+         (data-arg (pcase-exhaustive body-type
+                     ('binary "--data-binary")
+                     ('text "--data")))
          (curl-args (append plz-curl-default-args header-args
                             (when connect-timeout
                               (list "--connect-timeout" (number-to-string connect-timeout)))
                             (pcase method
                               ((or 'put 'post)
                                (cl-assert body)
-                               (list "--data" "@-" "--request" (upcase (symbol-name method)))))
+                               (list data-arg "@-" "--request" (upcase (symbol-name method)))))
                             (list url)))
          (decode (pcase as
                    ('binary nil)
