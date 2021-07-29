@@ -559,9 +559,7 @@ according to the apparent coding system."
   (save-excursion
     (goto-char (point-min))
     ;; Parse HTTP version and status code.
-    (unless (looking-at plz-http-response-status-line-regexp)
-      (error "Unable to parse HTTP response status line: %S"
-             (substring-no-properties (buffer-string))))
+    (looking-at plz-http-response-status-line-regexp)
     (let* ((http-version (string-to-number (match-string 1)))
            (status-code (string-to-number (match-string 2)))
            (headers (plz--headers))
@@ -586,14 +584,10 @@ refer to rather than the current buffer's unparsed headers."
 
 (defun plz--http-status ()
   "Return HTTP status code for HTTP response in current buffer."
-  ;; This function is used in the sentinel to get the HTTP response
-  ;; code without parsing the whole response.
   (save-excursion
     (goto-char (point-min))
-    (unless (looking-at plz-http-response-status-line-regexp)
-      (error "Unable to parse HTTP response status line: %S"
-             (substring-no-properties (buffer-string))))
-    (string-to-number (match-string 2))))
+    (when (looking-at plz-http-response-status-line-regexp)
+      (string-to-number (match-string 2)))))
 
 (defun plz--headers ()
   "Return headers alist for HTTP response in current buffer."
@@ -601,7 +595,7 @@ refer to rather than the current buffer's unparsed headers."
     (goto-char (point-min))
     (forward-line 1)
     (let ((limit (save-excursion
-                   (plz--skip-headers)
+                   (re-search-forward "^\r\n" nil)
                    (point))))
       (cl-loop while (re-search-forward (rx bol (group (1+ (not (in ":")))) ":" (1+ blank)
                                             (group (1+ (not (in "\r\n")))))
@@ -613,30 +607,10 @@ refer to rather than the current buffer's unparsed headers."
                ;; use `alist-get' without having to add "nil nil #'equal" every time.
                collect (cons (intern (downcase (match-string 1))) (match-string 2))))))
 
-(defun plz--skip-headers ()
-  "Move point past headers in current HTTP response buffer.
-It seems that some misbehaving HTTP servers use only LF line
-endings rather than the RFC 2616-mandated CRLF endings, so we
-must try to handle either."
-  ;; It seems that this is happening with some Cloudflare responses.   :(
-  ;; NOTE: For debugging purposes, I'm inserting these warnings for now.  If this is a solvable
-  ;; bug, or if I come to understand the issue better, they could be removed or disabled.
-  (condition-case _err
-      (re-search-forward "^\r\n" nil)
-    (search-failed ;; Try LF-only.
-     (condition-case _err
-         (progn
-           (re-search-forward "^\n" nil)
-           (display-warning 'plz (format "Only LF used after headers in HTTP response: %S"
-                                         (substring-no-properties (buffer-string)))))
-       (search-failed
-        (signal 'search-failed (format "Can't find end-of-headers in HTTP response: %S"
-                                       (substring-no-properties (buffer-string)))))))))
-
 (defun plz--narrow-to-body ()
   "Narrow to body of HTTP response in current buffer."
   (goto-char (point-min))
-  (plz--skip-headers)
+  (re-search-forward "^\r\n" nil)
   (narrow-to-region (point) (point-max)))
 
 ;;;; Footer
