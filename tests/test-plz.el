@@ -220,6 +220,8 @@
                    (plz-error-curl-error (cdr err))))))
 
 (ert-deftest plz-get-404-error nil
+  ;; FIXME: Wrap each test expression in `should' rather than using `should-and'.
+
   ;; Async.
   (let* ((err)
          (process (plz 'get "https://httpbin.org/get/status/404"

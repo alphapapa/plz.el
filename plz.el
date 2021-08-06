@@ -495,6 +495,7 @@ node `(elisp) Sentinels').  Kills the buffer before returning."
                     (curl-error-message (alist-get curl-exit-code plz-curl-errors))
                     (err (make-plz-error :curl-error (cons curl-exit-code curl-error-message))))
                (pcase-exhaustive plz-else
+                 ;; FIXME: Returning a plz-error struct which has a curl-error slot, wrapped in a plz-curl-error, is confusing.
                  (`nil (signal 'plz-curl-error err))
                  ((pred functionp) (funcall plz-else err)))))
 
