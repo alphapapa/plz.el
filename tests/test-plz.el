@@ -240,6 +240,32 @@
                  (plz-response-p (plz-error-response (cdr err)))
                  (eq 404 (plz-response-status (plz-error-response (cdr err))))))))
 
+(ert-deftest plz-get-timeout-error nil
+  ;; Async.
+  (let* ((start-time (current-time))
+         (end-time)
+         (plz-error)
+         (process (plz 'get "https://httpbin.org/delay/5"
+                    :as 'response :timeout 1
+                    :else (lambda (e)
+                            (setf end-time (current-time)
+                                  plz-error e)))))
+    (plz-test-wait process)
+    (should (eq 28 (car (plz-error-curl-error plz-error))))
+    (should (equal "Operation timeout." (cdr (plz-error-curl-error plz-error))))
+    (should (< (time-to-seconds (time-subtract end-time start-time)) 1.1)))
+
+  ;; Sync.
+  (let ((start-time (current-time))
+        (err (cdr
+              (should-error (plz-get-sync "https://httpbin.org/delay/5"
+                              :as 'string :timeout 1)
+                            :type 'plz-curl-error)))
+        (end-time (current-time)))
+    (should (eq 28 (car (plz-error-curl-error err))))
+    (should (equal "Operation timeout." (cdr (plz-error-curl-error err))))
+    (should (< (time-to-seconds (time-subtract end-time start-time)) 1.1))))
+
 ;;;;; Finally
 
 (ert-deftest plz-get-finally nil

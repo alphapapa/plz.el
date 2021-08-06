@@ -185,7 +185,16 @@ It is called without arguments outside the curl process buffer.")
   :type '(repeat string))
 
 (defcustom plz-connect-timeout 5
-  "Default connection timeout in seconds."
+  "Default connection timeout in seconds.
+This limits how long the connection phase may last (the
+\"--connect-timeout\" argument to curl)."
+  :type 'number)
+
+(defcustom plz-timeout 60
+  "Default request timeout in seconds.
+This limits how long an entire request may take, including the
+connection phase and waiting to receive the response (the
+\"--max-time\" argument to curl)."
   :type 'number)
 
 ;;;; Functions
@@ -193,9 +202,8 @@ It is called without arguments outside the curl process buffer.")
 ;;;;; Public
 
 (cl-defun plz (method url &key headers body as then else finally noquery
-                      (body-type 'text)
-                      (connect-timeout plz-connect-timeout)
-                      (decode t decode-s))
+                      (body-type 'text) (decode t decode-s)
+                      (connect-timeout plz-connect-timeout) (timeout plz-timeout))
   "Request BODY with METHOD to URL with curl.
 
 AS selects the kind of result to pass to the callback function
@@ -225,24 +233,27 @@ FINALLY is an optional function called without argument after
 THEN or ELSE, as appropriate.
 
 HEADERS may be an alist of extra headers to send with the
-request.  CONNECT-TIMEOUT may be a number of seconds to timeout
-the initial connection attempt.
+request.
 
 BODY-TYPE may be `text' to send BODY as text, or `binary' to send
 it as binary.
 
-NOQUERY is passed to `make-process', which see."
+NOQUERY is passed to `make-process', which see.
+
+CONNECT-TIMEOUT and TIMEOUT are a number of seconds that limit
+how long it takes to connect to a host and to receive a response
+from a host, respectively."
   (declare (indent defun))
   (plz--curl method url
              :body body :body-type body-type
              :headers headers
-             :connect-timeout connect-timeout
+             :connect-timeout connect-timeout :timeout timeout
              :decode (if (and decode-s (not decode)) nil decode)
              :as as :then then :else else :finally finally :noquery noquery))
 
 (cl-defun plz-get-sync (url &key headers as
-                            (connect-timeout plz-connect-timeout)
-                            (decode t decode-s))
+                            (decode t decode-s)
+                            (connect-timeout plz-connect-timeout) (timeout plz-timeout))
   "Get HTTP URL with curl synchronously.
 
 AS selects the kind of result to return.  It may be:
@@ -262,12 +273,15 @@ If the request fails, an error is signaled, either
 `plz-error' struct as the error data.
 
 HEADERS may be an alist of extra headers to send with the
-request.  CONNECT-TIMEOUT may be a number of seconds to timeout
-the initial connection attempt."
+request.
+
+CONNECT-TIMEOUT and TIMEOUT are a number of seconds that limit
+how long it takes to connect to a host and to receive a response
+from a host, respectively."
   (declare (indent defun))
   (plz--curl-sync 'get url
                   :headers headers
-                  :connect-timeout connect-timeout
+                  :connect-timeout connect-timeout :timeout timeout
                   :decode (if (and decode-s (not decode)) nil decode)
                   :as as))
 
@@ -277,7 +291,7 @@ the initial connection attempt."
 
 ;; Functions for calling and handling curl processes.
 
-(cl-defun plz--curl (method url &key body headers connect-timeout
+(cl-defun plz--curl (method url &key body headers connect-timeout timeout
                             decode as then else finally noquery
                             (body-type 'text))
   "Make HTTP METHOD request to URL with curl.
@@ -311,8 +325,11 @@ BODY-TYPE may be `text' to send BODY as text, or `binary' to send
 it as binary.
 
 HEADERS may be an alist of extra headers to send with the
-request.  CONNECT-TIMEOUT may be a number of seconds to timeout
-the initial connection attempt.
+request.
+
+CONNECT-TIMEOUT and TIMEOUT are a number of seconds that limit
+how long it takes to connect to a host and to receive a response
+from a host, respectively.
 
 NOQUERY is passed to `make-process', which see."
   ;; Inspired by and copied from `elfeed-curl-retrieve'.
@@ -331,6 +348,8 @@ NOQUERY is passed to `make-process', which see."
          (curl-args (append plz-curl-default-args header-args
                             (when connect-timeout
                               (list "--connect-timeout" (number-to-string connect-timeout)))
+                            (when timeout
+                              (list "--max-time" (number-to-string timeout)))
                             (pcase method
                               ((or 'put 'post)
                                (cl-assert body)
@@ -381,7 +400,7 @@ NOQUERY is passed to `make-process', which see."
                       (process-send-eof process)))))
         process))))
 
-(cl-defun plz--curl-sync (_method url &key headers connect-timeout
+(cl-defun plz--curl-sync (_method url &key headers connect-timeout timeout
                                   decode as)
   "Return result for HTTP request to URL made synchronously with curl.
 
@@ -395,8 +414,11 @@ AS selects the kind of result to return.  It may be:
 If DECODE is non-nil, the response body is decoded automatically.
 
 HEADERS may be an alist of extra headers to send with the
-request.  CONNECT-TIMEOUT may be a number of seconds to timeout
-the initial connection attempt.
+request.
+
+CONNECT-TIMEOUT and TIMEOUT are a number of seconds that limit
+how long it takes to connect to a host and to receive a response
+from a host, respectively.
 
 If the request fails, an error is signaled, either
 `plz-curl-error' or `plz-http-error' as appropriate, with a
@@ -411,6 +433,8 @@ Uses `call-process' to call curl synchronously."
            (curl-args (append plz-curl-default-args header-args
                               (when connect-timeout
                                 (list "--connect-timeout" (number-to-string connect-timeout)))
+                              (when timeout
+                                (list "--max-time" (number-to-string timeout)))
                               (list url)))
            (decode (pcase as
                      ('binary nil)
