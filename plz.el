@@ -156,14 +156,17 @@
 ;;;; Variables
 
 (defvar-local plz-else nil
-  "Callback function for errored completion of request in current curl process buffer.")
+  "Callback function for errored completion of request.
+Called in current curl process buffer.")
 
 (defvar-local plz-then nil
-  "Callback function for successful completion of request in current curl process buffer.")
+  "Callback function for successful completion of request.
+Called in current curl process buffer.")
 
 (defvar-local plz-finally nil
-  "Function called unconditionally after completion of request, after the then/else function.
-It is called without arguments outside the curl process buffer.")
+  "Function called unconditionally after completion of request.
+Called after the then/else function, without arguments, outside
+the curl process buffer.")
 
 ;;;; Customization
 
