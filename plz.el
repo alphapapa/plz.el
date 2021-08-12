@@ -362,7 +362,11 @@ NOQUERY is passed to `make-process', which see."
                    ('binary nil)
                    (_ decode))))
     (with-current-buffer (generate-new-buffer " *plz-request-curl*")
-      (let ((process (make-process :name "plz-request-curl"
+      ;; Avoid making process in a nonexistent directory (in case the current
+      ;; default-directory has since been removed).  It's unclear what the best
+      ;; directory is, but this seems to make sense, and it should still exist.
+      (let ((default-directory temporary-file-directory)
+            (process (make-process :name "plz-request-curl"
                                    :buffer (current-buffer)
                                    :coding 'binary
                                    :command (append (list plz-curl-program) curl-args)
