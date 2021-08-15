@@ -184,7 +184,9 @@ the curl process buffer.")
     "--compressed"
     "--location"
     "--dump-header" "-")
-  "Default arguments to curl."
+  "Default arguments to curl.
+Note that these arguments are passed on the command line, which
+may be visible to other users on the local system."
   :type '(repeat string))
 
 (defcustom plz-connect-timeout 5
@@ -336,76 +338,86 @@ from a host, respectively.
 
 NOQUERY is passed to `make-process', which see."
   ;; Inspired by and copied from `elfeed-curl-retrieve'.
-
-  ;; NOTE: By default, for PUT requests and POST requests >1KB, curl sends an
-  ;; "Expect:" header, which causes servers to send a "100 Continue" response, which
-  ;; we don't want to have to deal with, so we disable it by setting the header to
-  ;; the empty string.  See <https://gms.tf/when-curl-sends-100-continue.html>.
-  ;; TODO: Handle "100 Continue" responses and remove this workaround.
-  (push (cons "Expect" "") headers)
-  (let* ((header-args (cl-loop for (key . value) in headers
-                               append (list "--header" (format "%s: %s" key value))))
-         (data-arg (pcase-exhaustive body-type
-                     ('binary "--data-binary")
-                     ('text "--data")))
-         (curl-args (append plz-curl-default-args header-args
-                            (when connect-timeout
-                              (list "--connect-timeout" (number-to-string connect-timeout)))
-                            (when timeout
-                              (list "--max-time" (number-to-string timeout)))
-                            (pcase method
-                              ((or 'put 'post)
-                               (cl-assert body)
-                               (list data-arg "@-" "--request" (upcase (symbol-name method)))))
-                            (list url)))
-         (decode (pcase as
-                   ('binary nil)
-                   (_ decode))))
-    (with-current-buffer (generate-new-buffer " *plz-request-curl*")
-      ;; Avoid making process in a nonexistent directory (in case the current
-      ;; default-directory has since been removed).  It's unclear what the best
-      ;; directory is, but this seems to make sense, and it should still exist.
-      (let ((default-directory temporary-file-directory)
-            (process (make-process :name "plz-request-curl"
-                                   :buffer (current-buffer)
-                                   :coding 'binary
-                                   :command (append (list plz-curl-program) curl-args)
-                                   :connection-type 'pipe
-                                   :sentinel #'plz--sentinel
-                                   :stderr (current-buffer)
-                                   :noquery noquery))
-            ;; The THEN function is called in the response buffer.
-            (then (pcase-exhaustive as
-                    ((or 'binary 'string)
-                     (lambda ()
-                       (let ((coding-system (or (plz--coding-system) 'utf-8)))
-                         (pcase as
-                           ('binary (set-buffer-multibyte nil)))
-                         (plz--narrow-to-body)
-                         (when decode
-                           (decode-coding-region (point) (point-max) coding-system))
-                         (funcall then (buffer-string)))))
-                    ('buffer (lambda ()
-                               (funcall then (current-buffer))))
-                    ('response (lambda ()
-                                 (funcall then (plz--response :decode-p decode))))
-                    ((pred functionp) (lambda ()
-                                        (let ((coding-system (or (plz--coding-system) 'utf-8)))
-                                          (plz--narrow-to-body)
-                                          (when decode
-                                            (decode-coding-region (point) (point-max) coding-system))
-                                          (funcall then (funcall as))))))))
-        (setf plz-then then
-              plz-else else
-              plz-finally finally)
-        (when body
-          (cl-typecase body
-            (string (process-send-string process body)
-                    (process-send-eof process))
-            (buffer (with-current-buffer body
-                      (process-send-region process (point-min) (point-max))
-                      (process-send-eof process)))))
-        process))))
+  (cl-labels ((format-args (alist)
+                           (cl-loop for (key . value) in alist
+                                    concat (format "%s \"%s\"\n" key value))))
+    ;; NOTE: By default, for PUT requests and POST requests >1KB, curl sends an
+    ;; "Expect:" header, which causes servers to send a "100 Continue" response, which
+    ;; we don't want to have to deal with, so we disable it by setting the header to
+    ;; the empty string.  See <https://gms.tf/when-curl-sends-100-continue.html>.
+    ;; TODO: Handle "100 Continue" responses and remove this workaround.
+    (push (cons "Expect" "") headers)
+    (let* ((data-arg (pcase-exhaustive body-type
+                       ('binary "--data-binary")
+                       ('text "--data")))
+           (curl-command-line-args (append plz-curl-default-args
+                                           (list "--config" "-")))
+           (curl-config-header-args (cl-loop for (key . value) in headers
+                                             collect (cons "--header" (format "%s: %s" key value))))
+           (curl-config-args (append curl-config-header-args
+                                     (list (cons "--url" url))
+                                     (when connect-timeout
+                                       (list (cons "--connect-timeout"
+                                                   (number-to-string connect-timeout))))
+                                     (when timeout
+                                       (list (cons "--max-time" (number-to-string timeout))))
+                                     (pcase method
+                                       ((or 'put 'post)
+                                        (cl-assert body)
+                                        (list (cons "--request" (upcase (symbol-name method)))
+                                              ;; It appears that this must be the last argument
+                                              ;; in order to pass data on the rest of STDIN.
+                                              (cons data-arg "@-"))))))
+           (curl-config (format-args curl-config-args))
+           (decode (pcase as
+                     ('binary nil)
+                     (_ decode))))
+      (with-current-buffer (generate-new-buffer " *plz-request-curl*")
+        ;; Avoid making process in a nonexistent directory (in case the current
+        ;; default-directory has since been removed).  It's unclear what the best
+        ;; directory is, but this seems to make sense, and it should still exist.
+        (let ((default-directory temporary-file-directory)
+              (process (make-process :name "plz-request-curl"
+                                     :buffer (current-buffer)
+                                     :coding 'binary
+                                     :command (append (list plz-curl-program) curl-command-line-args)
+                                     :connection-type 'pipe
+                                     :sentinel #'plz--sentinel
+                                     :stderr (current-buffer)
+                                     :noquery noquery))
+              ;; The THEN function is called in the response buffer.
+              (then (pcase-exhaustive as
+                      ((or 'binary 'string)
+                       (lambda ()
+                         (let ((coding-system (or (plz--coding-system) 'utf-8)))
+                           (pcase as
+                             ('binary (set-buffer-multibyte nil)))
+                           (plz--narrow-to-body)
+                           (when decode
+                             (decode-coding-region (point) (point-max) coding-system))
+                           (funcall then (buffer-string)))))
+                      ('buffer (lambda ()
+                                 (funcall then (current-buffer))))
+                      ('response (lambda ()
+                                   (funcall then (plz--response :decode-p decode))))
+                      ((pred functionp) (lambda ()
+                                          (let ((coding-system (or (plz--coding-system) 'utf-8)))
+                                            (plz--narrow-to-body)
+                                            (when decode
+                                              (decode-coding-region (point) (point-max) coding-system))
+                                            (funcall then (funcall as))))))))
+          (setf plz-then then
+                plz-else else
+                plz-finally finally)
+          ;; Send --config arguments.
+          (process-send-string process curl-config)
+          (when body
+            (cl-typecase body
+              (string (process-send-string process body))
+              (buffer (with-current-buffer body
+                        (process-send-region process (point-min) (point-max))))))
+          (process-send-eof process)
+          process)))))
 
 (cl-defun plz--curl-sync (_method url &key headers connect-timeout timeout
                                   decode as)
