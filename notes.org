@@ -14,9 +14,15 @@
 
 * Tasks
 
-** TODO Ensure that secrets are not leaked via command line or temp files
+** DONE Ensure that secrets are not leaked via command line or temp files
+CLOSED: [2021-08-15 Sun 15:34]
+:LOGBOOK:
+-  State "DONE"       from "TODO"       [2021-08-15 Sun 15:34]
+:END:
 
 e.g. =request.el= can leak secrets and other data via the command line and [[https://github.com/tkf/emacs-request/blob/431d14343c61bc51a86c9a9e1acb6c26fe9a6298/request.el#L709][leftover temp files]].  We want to handle this safely.
+
+[2021-08-15 Sun 15:33]  Finally figured out how to do this using ~--config~.  It required some trial-and-error, since the curl man page doesn't explain how to pass request bodies over STDIN after the arguments.  But it works!
 
 * Ideas
 

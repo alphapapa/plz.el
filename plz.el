@@ -184,7 +184,9 @@ the curl process buffer.")
     "--compressed"
     "--location"
     "--dump-header" "-")
-  "Default arguments to curl."
+  "Default arguments to curl.
+Note that these arguments are passed on the command line, which
+may be visible to other users on the local system."
   :type '(repeat string))
 
 (defcustom plz-connect-timeout 5
@@ -336,28 +338,35 @@ from a host, respectively.
 
 NOQUERY is passed to `make-process', which see."
   ;; Inspired by and copied from `elfeed-curl-retrieve'.
-
   ;; NOTE: By default, for PUT requests and POST requests >1KB, curl sends an
   ;; "Expect:" header, which causes servers to send a "100 Continue" response, which
   ;; we don't want to have to deal with, so we disable it by setting the header to
   ;; the empty string.  See <https://gms.tf/when-curl-sends-100-continue.html>.
   ;; TODO: Handle "100 Continue" responses and remove this workaround.
   (push (cons "Expect" "") headers)
-  (let* ((header-args (cl-loop for (key . value) in headers
-                               append (list "--header" (format "%s: %s" key value))))
-         (data-arg (pcase-exhaustive body-type
+  (let* ((data-arg (pcase-exhaustive body-type
                      ('binary "--data-binary")
                      ('text "--data")))
-         (curl-args (append plz-curl-default-args header-args
-                            (when connect-timeout
-                              (list "--connect-timeout" (number-to-string connect-timeout)))
-                            (when timeout
-                              (list "--max-time" (number-to-string timeout)))
-                            (pcase method
-                              ((or 'put 'post)
-                               (cl-assert body)
-                               (list data-arg "@-" "--request" (upcase (symbol-name method)))))
-                            (list url)))
+         (curl-command-line-args (append plz-curl-default-args
+                                         (list "--config" "-")))
+         (curl-config-header-args (cl-loop for (key . value) in headers
+                                           collect (cons "--header" (format "%s: %s" key value))))
+         (curl-config-args (append curl-config-header-args
+                                   (list (cons "--url" url))
+                                   (when connect-timeout
+                                     (list (cons "--connect-timeout"
+                                                 (number-to-string connect-timeout))))
+                                   (when timeout
+                                     (list (cons "--max-time" (number-to-string timeout))))
+                                   (pcase method
+                                     ((or 'put 'post)
+                                      (cl-assert body)
+                                      (list (cons "--request" (upcase (symbol-name method)))
+                                            ;; It appears that this must be the last argument
+                                            ;; in order to pass data on the rest of STDIN.
+                                            (cons data-arg "@-"))))))
+         (curl-config (cl-loop for (key . value) in curl-config-args
+                               concat (format "%s \"%s\"\n" key value)))
          (decode (pcase as
                    ('binary nil)
                    (_ decode))))
@@ -369,7 +378,7 @@ NOQUERY is passed to `make-process', which see."
             (process (make-process :name "plz-request-curl"
                                    :buffer (current-buffer)
                                    :coding 'binary
-                                   :command (append (list plz-curl-program) curl-args)
+                                   :command (append (list plz-curl-program) curl-command-line-args)
                                    :connection-type 'pipe
                                    :sentinel #'plz--sentinel
                                    :stderr (current-buffer)
@@ -398,13 +407,14 @@ NOQUERY is passed to `make-process', which see."
         (setf plz-then then
               plz-else else
               plz-finally finally)
+        ;; Send --config arguments.
+        (process-send-string process curl-config)
         (when body
           (cl-typecase body
-            (string (process-send-string process body)
-                    (process-send-eof process))
+            (string (process-send-string process body))
             (buffer (with-current-buffer body
-                      (process-send-region process (point-min) (point-max))
-                      (process-send-eof process)))))
+                      (process-send-region process (point-min) (point-max))))))
+        (process-send-eof process)
         process))))
 
 (cl-defun plz--curl-sync (_method url &key headers connect-timeout timeout

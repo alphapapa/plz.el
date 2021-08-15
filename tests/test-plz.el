@@ -122,18 +122,21 @@
 (ert-deftest plz-post-jpeg-string nil
   (let* ((jpeg-to-upload (plz-get-sync "https://httpbin.org/image/jpeg"
                            :as 'binary))
+         (response-json)
          (response-jpeg)
          (process (plz 'post "https://httpbin.org/post"
                     :headers '(("Content-Type" . "image/jpeg"))
                     :body jpeg-to-upload :body-type 'binary
                     :as #'json-read
                     :then (lambda (json)
-                            (setf response-jpeg
+                            (setf response-json json
+                                  response-jpeg
                                   (base64-decode-string
                                    (string-remove-prefix "data:application/octet-stream;base64,"
                                                          (alist-get 'data json))))))))
     (should (equal 'jpeg (image-type-from-data jpeg-to-upload)))
     (plz-test-wait process)
+    (should response-json)
     (should (equal 'jpeg (image-type-from-data response-jpeg)))
     (should (equal (length jpeg-to-upload) (length response-jpeg)))
     (should (equal jpeg-to-upload response-jpeg))))
@@ -176,6 +179,44 @@
   ;; `buffer' is not a valid type for `plz-get-sync'.
   (should-error (plz-get-sync "https://httpbin.org/get"
                   :as 'buffer)))
+
+;;;;; Headers
+
+;; These tests were added when plz--curl was changed to send headers
+;; with "--config" rather than on the command line.
+
+(ert-deftest plz-get-with-headers ()
+  (let* ((response-json)
+         (process (plz 'get "https://httpbin.org/get"
+                    :headers '(("X-Plz-Test-Header" . "plz-test-header-value"))
+                    :as #'json-read
+                    :then (lambda (json)
+                            (setf response-json json)))))
+    (plz-test-wait process)
+    (let-alist response-json
+      (should (equal "plz-test-header-value" .headers.X-Plz-Test-Header)))))
+
+(ert-deftest plz-post-with-headers ()
+  (let* ((alist (list (cons "key" "value")))
+         (response-json)
+         (process (plz 'post "https://httpbin.org/post"
+                    :headers '(("Content-Type" . "application/json")
+                               ("X-Plz-Test-Header" . "plz-test-header-value"))
+                    :body (json-encode alist)
+                    :as #'json-read
+                    :then (lambda (json)
+                            (setf response-json json)))))
+    (plz-test-wait process)
+    (let-alist response-json
+      (should (equal "plz-test-header-value" .headers.X-Plz-Test-Header))
+      (should (equal "value" (alist-get 'key (json-read-from-string .data)))))))
+
+(ert-deftest plz-get-json-with-headers-sync ()
+  (let-alist (plz-get-sync "https://httpbin.org/get"
+               :headers '(("X-Plz-Test-Header" . "plz-test-header-value"))
+               :as #'json-read)
+    (should (string-match "curl" .headers.User-Agent))
+    (should (equal "plz-test-header-value" .headers.X-Plz-Test-Header))))
 
 ;;;;; Errors
 
