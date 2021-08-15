@@ -206,7 +206,7 @@ connection phase and waiting to receive the response (the
 
 ;;;;; Public
 
-(cl-defun plz (method url &key headers body as then else finally noquery
+(cl-defun plz (method url &key headers body as then else finally noquery sync
                       (body-type 'text) (decode t decode-s)
                       (connect-timeout plz-connect-timeout) (timeout plz-timeout))
   "Request BODY with METHOD to URL with curl.
@@ -249,7 +249,7 @@ CONNECT-TIMEOUT and TIMEOUT are a number of seconds that limit
 how long it takes to connect to a host and to receive a response
 from a host, respectively."
   (declare (indent defun))
-  (plz--curl method url
+  (plz--curl method url :sync sync
              :body body :body-type body-type
              :headers headers
              :connect-timeout connect-timeout :timeout timeout
@@ -296,8 +296,15 @@ from a host, respectively."
 
 ;; Functions for calling and handling curl processes.
 
+(defvar-local plz-result nil
+  "FIXME: Docstring.")
+(defvar-local plz-mutex nil
+  "FIXME: Docstring.")
+(defvar-local plz-cond-var nil
+  "FIXME: Docstring.")
+
 (cl-defun plz--curl (method url &key body headers connect-timeout timeout
-                            decode as then else finally noquery
+                            decode as then else finally noquery sync
                             (body-type 'text))
   "Make HTTP METHOD request to URL with curl.
 
@@ -371,7 +378,11 @@ NOQUERY is passed to `make-process', which see."
            (curl-config (format-args curl-config-args))
            (decode (pcase as
                      ('binary nil)
-                     (_ decode))))
+                     (_ decode)))
+           (mutex (when sync
+                    (make-mutex)))
+           (cond-var (when sync
+                       (make-condition-variable mutex))))
       (with-current-buffer (generate-new-buffer " *plz-request-curl*")
         ;; Avoid making process in a nonexistent directory (in case the current
         ;; default-directory has since been removed).  It's unclear what the best
@@ -382,7 +393,24 @@ NOQUERY is passed to `make-process', which see."
                                      :coding 'binary
                                      :command (append (list plz-curl-program) curl-command-line-args)
                                      :connection-type 'pipe
-                                     :sentinel #'plz--sentinel
+                                     :sentinel (lambda (process-or-buffer status)
+                                                 (message "In sentinel lambda")
+                                                 (redisplay)
+                                                 (let ((thread (make-thread (lambda ()
+                                                                              (plz--sentinel process-or-buffer status)))))
+                                                   (message "In sentinel lambda, after make-thread, before thread-join")
+                                                   (redisplay)
+                                                   (thread-join thread)
+                                                   (message "In sentinel lambda, after thread-join, before condition-notify")
+                                                   (redisplay)
+                                                   ;; (with-mutex mutex
+                                                   ;;   (message "In sentinel lambda, in with-mutex, before condition-notify")
+                                                   ;;   (redisplay)
+                                                   ;;   (condition-notify cond-var 'all)
+                                                   ;;   (message "In sentinel lambda, in with-mutex, after condition-notify")
+                                                   ;;   (redisplay))
+                                                   ))
+                                     ;; #'plz--sentinel
                                      :stderr (current-buffer)
                                      :noquery noquery))
               ;; The THEN function is called in the response buffer.
@@ -417,7 +445,10 @@ NOQUERY is passed to `make-process', which see."
               (buffer (with-current-buffer body
                         (process-send-region process (point-min) (point-max))))))
           (process-send-eof process)
-          process)))))
+          (if sync
+              (list (setq-local plz-mutex mutex)
+                    (setq-local plz-cond-var cond-var))
+            process))))))
 
 (cl-defun plz--curl-sync (_method url &key headers connect-timeout timeout
                                   decode as)
@@ -499,7 +530,7 @@ node `(elisp) Sentinels').  Kills the buffer before returning."
             ((or 0 "finished\n")
              ;; Curl exited normally: check HTTP status code.
              (pcase (plz--http-status)
-               (200 (funcall plz-then))
+               (200 (setq-local plz-result (funcall plz-then)))
                (_ (let ((err (make-plz-error :response (plz--response))))
                     (pcase-exhaustive plz-else
                       (`nil (signal 'plz-http-error err))
@@ -526,6 +557,21 @@ node `(elisp) Sentinels').  Kills the buffer before returning."
                  ((pred functionp) (funcall plz-else err)))))))
       (when finally
         (funcall finally))
+      (message "In sentinel")
+      (redisplay)
+      (when plz-cond-var
+        (message "In sentinel cond-var block")
+        (redisplay)
+        (with-current-buffer buffer
+          (message "In sentinel, in process buffer")
+          (redisplay)
+          (with-mutex plz-mutex
+            (message "In sentinel, in process buffer, in mutex, before condition-notify")
+            (redisplay)
+            (condition-notify plz-cond-var 'all)
+            (message "In sentinel, in process buffer, in mutex, after condition-notify")
+            (redisplay)))
+        )
       (kill-buffer buffer))))
 
 ;;;;;; HTTP Responses
