@@ -120,8 +120,8 @@
       (should (string= "value" (alist-get 'key (json-read-from-string .data)))))))
 
 (ert-deftest plz-post-jpeg-string nil
-  (let* ((jpeg-to-upload (plz-get-sync "https://httpbin.org/image/jpeg"
-                           :as 'binary))
+  (let* ((jpeg-to-upload (plz 'get "https://httpbin.org/image/jpeg"
+                           :as 'binary :then 'sync))
          (response-json)
          (response-jpeg)
          (process (plz 'post "https://httpbin.org/post"
@@ -162,23 +162,25 @@
 ;;;;; Sync
 
 (ert-deftest plz-get-string-sync nil
-  (should (string-match "curl" (plz-get-sync "https://httpbin.org/get"
-                                 :as 'string)))
-  (should (string-match "curl" (plz-get-sync "https://httpbin.org/get"))))
+  (let-alist (json-read-from-string (plz 'get "https://httpbin.org/get"
+                                      :as 'string :then 'sync))
+    (should (equal "https://httpbin.org/get" .url))))
 
 (ert-deftest plz-get-response-sync nil
-  (plz-test-get-response (plz-get-sync "https://httpbin.org/get"
-                           :as 'response)))
+  (plz-test-get-response (plz 'get "https://httpbin.org/get"
+                           :as 'response :then 'sync)))
 
 (ert-deftest plz-get-json-sync nil
-  (let-alist (plz-get-sync "https://httpbin.org/get"
-               :as #'json-read)
+  (let-alist (plz 'get "https://httpbin.org/get"
+               :as #'json-read :then 'sync)
     (should (string-match "curl" .headers.User-Agent))))
 
 (ert-deftest plz-get-buffer-sync nil
-  ;; `buffer' is not a valid type for `plz-get-sync'.
-  (should-error (plz-get-sync "https://httpbin.org/get"
-                  :as 'buffer)))
+  (let ((buffer (plz 'get "https://httpbin.org/get"
+                  :as 'buffer :then 'sync)))
+    (unwind-protect
+        (should (buffer-live-p buffer))
+      (kill-buffer buffer))))
 
 ;;;;; Headers
 
@@ -212,9 +214,9 @@
       (should (equal "value" (alist-get 'key (json-read-from-string .data)))))))
 
 (ert-deftest plz-get-json-with-headers-sync ()
-  (let-alist (plz-get-sync "https://httpbin.org/get"
+  (let-alist (plz 'get "https://httpbin.org/get"
                :headers '(("X-Plz-Test-Header" . "plz-test-header-value"))
-               :as #'json-read)
+               :as #'json-read :then 'sync)
     (should (string-match "curl" .headers.User-Agent))
     (should (equal "plz-test-header-value" .headers.X-Plz-Test-Header))))
 
@@ -252,8 +254,8 @@
 
 (ert-deftest plz-get-curl-error-sync nil
   ;; Sync.
-  (let ((err (should-error (plz-get-sync "https://httpbinnnnnn.org/get/status/404"
-                             :as 'string)
+  (let ((err (should-error (plz 'get "https://httpbinnnnnn.org/get/status/404"
+                             :as 'string :then 'sync)
                            :type 'plz-curl-error)))
     (should (eq 'plz-curl-error (car err)))
     (should (plz-error-p (cdr err)))
@@ -275,8 +277,8 @@
                  (eq 404 (plz-response-status (plz-error-response err))))))
 
   ;; Sync.
-  (let ((err (should-error (plz-get-sync "https://httpbin.org/get/status/404"
-                             :as 'string)
+  (let ((err (should-error (plz 'get "https://httpbin.org/get/status/404"
+                             :as 'string :then 'sync)
                            :type 'plz-http-error)))
     (should (and (eq 'plz-http-error (car err))
                  (plz-error-p (cdr err))
@@ -301,8 +303,8 @@
   ;; Sync.
   (let ((start-time (current-time))
         (err (cdr
-              (should-error (plz-get-sync "https://httpbin.org/delay/5"
-                              :as 'string :timeout 1)
+              (should-error (plz 'get "https://httpbin.org/delay/5"
+                              :as 'string :then 'sync :timeout 1)
                             :type 'plz-curl-error)))
         (end-time (current-time)))
     (should (eq 28 (car (plz-error-curl-error err))))
@@ -333,8 +335,8 @@
     (should (equal 'jpeg (image-type-from-data test-jpeg)))))
 
 (ert-deftest plz-get-jpeg-sync ()
-  (let ((jpeg (plz-get-sync "https://httpbin.org/image/jpeg"
-                :as 'binary)))
+  (let ((jpeg (plz 'get "https://httpbin.org/image/jpeg"
+                :as 'binary :then 'sync)))
     (should (equal 'jpeg (image-type-from-data jpeg)))))
 
 ;;;; Footer
