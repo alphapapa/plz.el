@@ -334,24 +334,25 @@
 
 (ert-deftest plz-get-jpeg-sync ()
   (let ((jpeg (plz-get-sync "https://httpbin.org/image/jpeg"
-                :as 'binary)))
+                            :as 'binary)))
     (should (equal 'jpeg (image-type-from-data jpeg)))))
 
 (ert-deftest plz-get-jpeg-sync ()
-  (let ((thread (make-thread (lambda ()
-                               (pcase-let ((`(,mutex ,cond-var)
-                                            (plz 'get "https://httpbin.org/image/jpeg" :sync t
-                                                 :as 'binary)))
-                                 (message "In plz-get thread, after plz")
-                                 (redisplay)
-                                 (with-mutex mutex
-                                   (message "In plz-get thread, in with-mutex")
-                                   (redisplay)
-                                   (condition-wait cond-var)
-                                   (message "In plz-get thread, in with-mutex, after condition-wait")
-                                   (redisplay)))))))
+  (pcase-let* ((`(,process ,mutex ,cond-var)
+                (plz 'get "https://httpbin.org/image/jpeg" :sync t
+                     :as 'binary))
+               (thread (make-thread (lambda ()
+                                      (message "In plz-get thread, after plz")
+                                      (redisplay)
+                                      (with-mutex mutex
+                                        (message "In plz-get thread, in with-mutex")
+                                        (redisplay)
+                                        (condition-wait cond-var)
+                                        (message "In plz-get thread, in with-mutex, after condition-wait")
+                                        (redisplay))))))
     (message "In plz-get, before thread-join")
     (redisplay)
+    (set-process-thread process nil)
     (thread-join thread)
     (message "In plz-get, after thread-join")
     (redisplay)

@@ -446,7 +446,7 @@ NOQUERY is passed to `make-process', which see."
                         (process-send-region process (point-min) (point-max))))))
           (process-send-eof process)
           (if sync
-              (list (setq-local plz-mutex mutex)
+              (list process (setq-local plz-mutex mutex)
                     (setq-local plz-cond-var cond-var))
             process))))))
 
