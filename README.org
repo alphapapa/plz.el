@@ -46,11 +46,21 @@ The only public function is ~plz~, which sends an HTTP request and returns eithe
 
 ** Examples
 
+Synchronously =GET= a URL and return the response body as a decoded string (here, raw JSON):
+
+#+BEGIN_SRC elisp :exports both :results value code
+  (plz 'get "https://httpbin.org/user-agent")
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC elisp
+  "{\n \"user-agent\": \"curl/7.35.0\"\n}\n"
+#+END_SRC
+
 Synchronously =GET= a URL that returns a JSON object, and parse and return it as an alist:
 
 #+BEGIN_SRC elisp :exports both :results value code
-  (plz 'get "https://httpbin.org/get"
-    :as #'json-read :then 'sync)
+  (plz 'get "https://httpbin.org/get" :as #'json-read)
 #+END_SRC
 
 #+RESULTS:
@@ -81,8 +91,7 @@ Asynchronously =POST= a JSON object in the request body, then parse a JSON objec
 Synchronously download a JPEG file, then create an Emacs image object from the data:
 
 #+BEGIN_SRC elisp :exports both
-  (let ((jpeg-data (plz 'get "https://httpbin.org/image/jpeg"
-                     :as 'binary :then 'sync)))
+  (let ((jpeg-data (plz 'get "https://httpbin.org/image/jpeg" :as 'binary)))
     (create-image jpeg-data nil 'data))
 #+END_SRC
 
@@ -91,7 +100,7 @@ Synchronously download a JPEG file, then create an Emacs image object from the d
 
 ** Functions
 
-+ ~plz~ :: /(method url &key headers body as then else finally noquery (body-type 'text) (decode t decode-s) (connect-timeout plz-connect-timeout) (timeout plz-timeout))/
++ ~plz~ :: /(method url &key headers body else finally noquery (as 'string) (then 'sync) (body-type 'text) (decode t decode-s) (connect-timeout plz-connect-timeout) (timeout plz-timeout))/
 
   Request ~METHOD~ from ~URL~ with curl.  Return the curl process object or, for a synchronous request, the selected result.
 

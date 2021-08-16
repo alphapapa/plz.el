@@ -212,7 +212,8 @@ connection phase and waiting to receive the response (the
 
 ;;;;; Public
 
-(cl-defun plz (method url &key headers body as then else finally noquery
+(cl-defun plz (method url &key headers body else finally noquery
+                      (as 'string) (then 'sync)
                       (body-type 'text) (decode t decode-s)
                       (connect-timeout plz-connect-timeout) (timeout plz-timeout))
   "Request METHOD from URL with curl.
