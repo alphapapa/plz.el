@@ -241,7 +241,7 @@ For binary content, it should be nil.  When AS is `binary',
 DECODE is automatically set to nil.
 
 THEN is a callback function, whose sole argument is selected
-above with AS.  Or it may be `sync' to make a synchronous
+above with AS.  Or THEN may be `sync' to make a synchronous
 request, in which case the result is returned directly.
 
 ELSE is an optional callback function called when the request
