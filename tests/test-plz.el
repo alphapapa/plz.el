@@ -43,11 +43,18 @@
 
 ;;;; Macros
 
-(cl-defmacro plz-test-wait (process &optional (seconds 0.1) (times 100))
+(cl-defun plz-test-wait (process &optional (seconds 0.1) (times 100))
   "Wait for SECONDS seconds TIMES times for PROCESS to finish."
-  `(cl-loop for i upto ,times ;; 10 seconds
-            while (equal 'run (process-status ,process))
-            do (sleep-for ,seconds)))
+  (when process
+    ;; Sometimes it seems that the process is killed, the THEN
+    ;; function called by its sentinel, and its buffer killed, all
+    ;; before this function gets called with the process argument;
+    ;; when that happens, tests that use this can fail.  Testing
+    ;; whether PROCESS is non-nil seems to fix it, but it's possible
+    ;; that something funny is going on...
+    (cl-loop for i upto times ;; 10 seconds
+             while (equal 'run (process-status process))
+             do (sleep-for seconds))))
 
 ;;;; Functions
 
