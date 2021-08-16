@@ -1,0 +1,161 @@
+#+TITLE: plz.el
+
+#+PROPERTY: LOGGING nil
+
+# Note: This readme works with the org-make-toc <https://github.com/alphapapa/org-make-toc> package, which automatically updates the table of contents.
+
+# [[https://melpa.org/#/package-name][file:https://melpa.org/packages/plz-badge.svg]] [[https://stable.melpa.org/#/package-name][file:https://stable.melpa.org/packages/plz-badge.svg]]
+
+~plz~ is an HTTP library for Emacs.  It uses ~curl~ as a backend, which avoids some of the issues with using Emacs's built-in ~url~ library.  It supports both synchronous and asynchronous requests.  Its API is intended to be simple, natural, and expressive.  Its code is intended to be simple and well-organized.  Every feature is tested against [[httpbin.org/][httpbin]].
+
+* Contents                                                         :noexport:
+:PROPERTIES:
+:TOC:      :include siblings
+:END:
+:CONTENTS:
+- [[#installation][Installation]]
+- [[#usage][Usage]]
+  - [[#examples][Examples]]
+  - [[#functions][Functions]]
+- [[#changelog][Changelog]]
+- [[#credits][Credits]]
+- [[#development][Development]]
+:END:
+
+* Installation
+:PROPERTIES:
+:TOC:      :depth 0
+:END:
+
+** MELPA
+
+# If you installed from MELPA, you're done.
+
+This library isn't on MELPA yet.
+
+** Manual
+
+ ~plz~ has no dependencies other than Emacs and ~curl~.  It's known to work on Emacs 26.3 or later.  Simply place =plz.el= in your ~load-path~ and ~(require 'plz)~.
+
+* Usage
+:PROPERTIES:
+:TOC:      :depth 1
+:END:
+
+The only public function is ~plz~, which sends an HTTP request and returns either the result of the specified type (for a synchronous request), or the ~curl~ process object (for asynchronous requests).  For asynchronous requests, callback, error-handling, and finalizer functions may be specified, as well as various other options.
+
+** Examples
+
+Synchronously =GET= a URL that returns a JSON object, and parse and return it as an alist:
+
+#+BEGIN_SRC elisp :exports both :results value code
+  (plz 'get "https://httpbin.org/get"
+    :as #'json-read :then 'sync)
+#+END_SRC
+
+#+RESULTS:
+#+BEGIN_SRC elisp
+  ((args)
+   (headers
+    (Accept . "*/*")
+    (Accept-Encoding . "deflate, gzip")
+    (Host . "httpbin.org")
+    (User-Agent . "curl/7.35.0"))
+   (url . "https://httpbin.org/get"))
+#+END_SRC
+
+Asynchronously =POST= a JSON object in the request body, then parse a JSON object from the response body, and call a function with the result:
+
+#+BEGIN_SRC elisp :exports both
+  (plz 'post "https://httpbin.org/post"
+    :headers '(("Content-Type" . "application/json"))
+    :body (json-encode '(("key" . "value")))
+    :as #'json-read
+    :then (lambda (alist)
+            (message "Result: %s" (alist-get 'data alist))))
+#+END_SRC
+
+#+RESULTS:
+: Result: {"key":"value"}
+
+Synchronously download a JPEG file, then create an Emacs image object from the data:
+
+#+BEGIN_SRC elisp :exports both
+  (let ((jpeg-data (plz 'get "https://httpbin.org/image/jpeg"
+                     :as 'binary :then 'sync)))
+    (create-image jpeg-data nil 'data))
+#+END_SRC
+
+#+RESULTS:
+: (image :type jpeg :data ""ÿØÿà^@^PJFIF...")
+
+** Functions
+
++ ~plz~ :: /(method url &key headers body as then else finally noquery (body-type 'text) (decode t decode-s) (connect-timeout plz-connect-timeout) (timeout plz-timeout))/
+
+  Request ~METHOD~ from ~URL~ with curl.  Return the curl process object or, for a synchronous request, the selected result.
+
+  ~HEADERS~ may be an alist of extra headers to send with the request.
+
+  ~BODY-TYPE~ may be ~text~ to send ~BODY~ as text, or ~binary~ to send it as binary.
+
+  ~AS~ selects the kind of result to pass to the callback function ~THEN~, or the kind of result to return for synchronous requests.  It may be:
+
+    - ~buffer~ to pass the response buffer.
+    - ~binary~ to pass the response body as an undecoded string.
+    - ~string~ to pass the response body as a decoded string.
+    - ~response~ to pass a ~plz-response~ struct.
+    - A function, which is called in the response buffer with it narrowed to the response body (suitable for, e.g. ~json-read~).
+
+  If ~DECODE~ is non-nil, the response body is decoded automatically.  For binary content, it should be nil.  When ~AS~ is ~binary~, ~DECODE~ is automatically set to nil.
+
+  ~THEN~ is a callback function, whose sole argument is selected above with ~AS~.  Or ~THEN~ may be ~sync~ to make a synchronous request, in which case the result is returned directly.
+
+  ~ELSE~ is an optional callback function called when the request fails with one argument, a ~plz-error~ struct.  If ~ELSE~ is nil, an error is signaled when the request fails, either ~plz-curl-error~ or ~plz-http-error~ as appropriate, with a ~plz-error~ struct as the error data.  For synchronous requests, this argument is ignored.
+
+  ~FINALLY~ is an optional function called without argument after ~THEN~ or ~ELSE~, as appropriate.  For synchronous requests, this argument is ignored.
+
+  ~CONNECT-TIMEOUT~ and ~TIMEOUT~ are a number of seconds that limit how long it takes to connect to a host and to receive a response from a host, respectively.
+
+  ~NOQUERY~ is passed to ~make-process~, which see.
+
+** Tips
+:PROPERTIES:
+:TOC:      :ignore (this)
+:END:
+
++ You can customize settings in the =plz= group, but this can only be used to adjust a few defaults.  It's not intended that changing or binding global variables be necessary for normal operation.
+
+* Changelog
+:PROPERTIES:
+:TOC:      :depth 0
+:END:
+
+** 0.1-pre
+
+Not tagged yet.
+
+* Credits
+
++  Thanks to [[https://github.com/skeeto][Chris Wellons]], author of the [[https://github.com/skeeto/elfeed][Elfeed]] feed reader and the popular blog [[https://nullprogram.com/][null program]], for his invaluable advice, review, and encouragement.
+
+* Development
+
+Bug reports, feature requests, suggestions — /oh my/!
+
+~plz~ is a young library, and its only client so far is [[https://github.com/alphapapa/ement.el][Ement.el]].  There are a variety of HTTP and ~curl~ features it does not yet support, since they have not yet been needed by the author.  Patches are welcome, as long as they include passing tests.
+
+* License
+:PROPERTIES:
+:TOC:      :ignore (this)
+:END:
+
+GPLv3
+
+# Local Variables:
+# eval: (require 'org-make-toc)
+# before-save-hook: org-make-toc
+# org-export-with-properties: ()
+# org-export-with-title: t
+# End:
+
