@@ -100,35 +100,35 @@ Synchronously download a JPEG file, then create an Emacs image object from the d
 
 ** Functions
 
-+ ~plz~ :: /(method url &key headers body else finally noquery (as 'string) (then 'sync) (body-type 'text) (decode t decode-s) (connect-timeout plz-connect-timeout) (timeout plz-timeout))/
++  ~plz~ :: /(method url &key headers body else finally noquery (as 'string) (then 'sync) (body-type 'text) (decode t decode-s) (connect-timeout plz-connect-timeout) (timeout plz-timeout))/
 
-  Request ~METHOD~ from ~URL~ with curl.  Return the curl process object or, for a synchronous request, the selected result.
+   Request ~METHOD~ from ~URL~ with curl.  Return the curl process object or, for a synchronous request, the selected result.
 
-  ~HEADERS~ may be an alist of extra headers to send with the request.
+   ~HEADERS~ may be an alist of extra headers to send with the request.
 
-  ~BODY-TYPE~ may be ~text~ to send ~BODY~ as text, or ~binary~ to send it as binary.
+   ~BODY-TYPE~ may be ~text~ to send ~BODY~ as text, or ~binary~ to send it as binary.
 
-  ~AS~ selects the kind of result to pass to the callback function ~THEN~, or the kind of result to return for synchronous requests.  It may be:
+   ~AS~ selects the kind of result to pass to the callback function ~THEN~, or the kind of result to return for synchronous requests.  It may be:
 
-    - ~buffer~ to pass the response buffer.
-    - ~binary~ to pass the response body as an undecoded string.
-    - ~string~ to pass the response body as a decoded string.
-    - ~response~ to pass a ~plz-response~ struct.
-    - A function, to pass its return value; it is called in the response buffer, which is narrowed to the response body (suitable for, e.g. ~json-read~).
-    - ~file~ to pass a temporary filename to which the response body has been saved without decoding.
-    - ~(file FILENAME)~ to pass ~FILENAME~ after having saved the response body to it without decoding.  ~FILENAME~ must be a non-existent file; if it exists, it will not be overwritten, and an error will be signaled.
+   -  ~buffer~ to pass the response buffer.
+   -  ~binary~ to pass the response body as an undecoded string.
+   -  ~string~ to pass the response body as a decoded string.
+   -  ~response~ to pass a ~plz-response~ struct.
+   -  A function, to pass its return value; it is called in the response buffer, which is narrowed to the response body (suitable for, e.g. ~json-read~).
+   -  ~file~ to pass a temporary filename to which the response body has been saved without decoding.
+   -  ~(file FILENAME)~ to pass ~FILENAME~ after having saved the response body to it without decoding.  ~FILENAME~ must be a non-existent file; if it exists, it will not be overwritten, and an error will be signaled.
 
-  If ~DECODE~ is non-nil, the response body is decoded automatically.  For binary content, it should be nil.  When ~AS~ is ~binary~, ~DECODE~ is automatically set to nil.
+   If ~DECODE~ is non-nil, the response body is decoded automatically.  For binary content, it should be nil.  When ~AS~ is ~binary~, ~DECODE~ is automatically set to nil.
 
-  ~THEN~ is a callback function, whose sole argument is selected above with ~AS~.  Or ~THEN~ may be ~sync~ to make a synchronous request, in which case the result is returned directly.
+   ~THEN~ is a callback function, whose sole argument is selected above with ~AS~.  Or ~THEN~ may be ~sync~ to make a synchronous request, in which case the result is returned directly.
 
-  ~ELSE~ is an optional callback function called when the request fails with one argument, a ~plz-error~ struct.  If ~ELSE~ is nil, an error is signaled when the request fails, either ~plz-curl-error~ or ~plz-http-error~ as appropriate, with a ~plz-error~ struct as the error data.  For synchronous requests, this argument is ignored.
+   ~ELSE~ is an optional callback function called when the request fails with one argument, a ~plz-error~ struct.  If ~ELSE~ is nil, an error is signaled when the request fails, either ~plz-curl-error~ or ~plz-http-error~ as appropriate, with a ~plz-error~ struct as the error data.  For synchronous requests, this argument is ignored.
 
-  ~FINALLY~ is an optional function called without argument after ~THEN~ or ~ELSE~, as appropriate.  For synchronous requests, this argument is ignored.
+   ~FINALLY~ is an optional function called without argument after ~THEN~ or ~ELSE~, as appropriate.  For synchronous requests, this argument is ignored.
 
-  ~CONNECT-TIMEOUT~ and ~TIMEOUT~ are a number of seconds that limit how long it takes to connect to a host and to receive a response from a host, respectively.
+   ~CONNECT-TIMEOUT~ and ~TIMEOUT~ are a number of seconds that limit how long it takes to connect to a host and to receive a response from a host, respectively.
 
-  ~NOQUERY~ is passed to ~make-process~, which see.
+   ~NOQUERY~ is passed to ~make-process~, which see.
 
 ** Tips
 :PROPERTIES:
