@@ -129,6 +129,8 @@
 (ert-deftest plz-post-jpeg-string nil
   (let* ((jpeg-to-upload (plz 'get "https://httpbin.org/image/jpeg"
                            :as 'binary :then 'sync))
+         (_ (unless jpeg-to-upload
+              (error "jpeg-to-upload is nil")))
          (response-json)
          (response-jpeg)
          (process (plz 'post "https://httpbin.org/post"
