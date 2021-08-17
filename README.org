@@ -115,6 +115,8 @@ Synchronously download a JPEG file, then create an Emacs image object from the d
     - ~string~ to pass the response body as a decoded string.
     - ~response~ to pass a ~plz-response~ struct.
     - A function, to pass its return value; it is called in the response buffer, which is narrowed to the response body (suitable for, e.g. ~json-read~).
+    - ~file~ to pass a temporary filename to which the response body has been saved without decoding.
+    - ~(file FILENAME)~ to pass ~FILENAME~ after having saved the response body to it without decoding.  ~FILENAME~ must be a non-existent file; if it exists, it will not be overwritten, and an error will be signaled.
 
   If ~DECODE~ is non-nil, the response body is decoded automatically.  For binary content, it should be nil.  When ~AS~ is ~binary~, ~DECODE~ is automatically set to nil.
 

@@ -231,9 +231,21 @@ THEN, or the kind of result to return for synchronous requests.
 It may be:
 
 - `buffer' to pass the response buffer.
+
 - `binary' to pass the response body as an undecoded string.
+
 - `string' to pass the response body as a decoded string.
+
 - `response' to pass a `plz-response' struct.
+
+- `file' to pass a temporary filename to which the response body
+  has been saved without decoding.
+
+- `(file FILENAME)' to pass FILENAME after having saved the
+  response body to it without decoding.  FILENAME must be a
+  non-existent file; if it exists, it will not be overwritten,
+  and an error will be signaled.
+
 - A function, which is called in the response buffer with it
   narrowed to the response body (suitable for, e.g. `json-read').
 
@@ -330,6 +342,33 @@ NOQUERY is passed to `make-process', which see."
                                (funcall then (current-buffer))))
                     ('response (lambda ()
                                  (funcall then (plz--response :decode-p decode))))
+                    ('file (lambda ()
+                             (set-buffer-multibyte nil)
+                             (plz--narrow-to-body)
+                             (let ((filename (make-temp-file "plz-")))
+                               (condition-case err
+                                   (write-region (point-min) (point-max) filename)
+                                 ;; In case of an error writing to the file, delete the temp file
+                                 ;; and signal the error.  Ignore any errors encountered while
+                                 ;; deleting the file, which would obscure the original error.
+                                 (error (ignore-errors
+                                          (delete-file filename))
+                                        (signal (car err) (cdr err))))
+                               (funcall then filename))))
+                    (`(file ,(and (pred stringp) filename))
+                     (lambda ()
+                       (set-buffer-multibyte nil)
+                       (plz--narrow-to-body)
+                       (condition-case err
+                           (write-region (point-min) (point-max) filename nil nil nil 'excl)
+                         ;; Since we are creating the file, it seems sensible to delete it in case of an
+                         ;; error while writing to it (e.g. a disk-full error).  And we ignore any errors
+                         ;; encountered while deleting the file, which would obscure the original error.
+                         (error (ignore-errors
+                                  (when (file-exists-p filename)
+                                    (delete-file filename)))
+                                (signal (car err) (cdr err))))
+                       (funcall then filename)))
                     ((pred functionp) (lambda ()
                                         (let ((coding-system (or (plz--coding-system) 'utf-8)))
                                           (plz--narrow-to-body)

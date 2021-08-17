@@ -346,6 +346,36 @@
                 :as 'binary :then 'sync)))
     (should (equal 'jpeg (image-type-from-data jpeg)))))
 
+;;;;; Downloading to files
+
+(ert-deftest plz-get-temp-file ()
+  (let ((filename (plz 'get "https://httpbin.org/image/jpeg"
+                    :as 'file :then 'sync)))
+    (unwind-protect
+        (let ((jpeg-data (with-temp-buffer
+                           (insert-file-contents filename)
+                           (buffer-string))))
+          (should (equal 'jpeg (image-type-from-data jpeg-data))))
+      ;; It's a temp file, so it should always be deleted.
+      (delete-file filename))))
+
+(ert-deftest plz-get-named-file ()
+  (let ((filename (make-temp-file "plz-")))
+    ;; HACK: Delete the temp file and reuse its name, because
+    ;; `make-temp-name' is less convenient to use.
+    (delete-file filename)
+    (unwind-protect
+        (progn
+          (plz 'get "https://httpbin.org/image/jpeg"
+            :as `(file ,filename) :then 'sync)
+          (let ((jpeg-data (with-temp-buffer
+                             (insert-file-contents filename)
+                             (buffer-string))))
+            (should (equal 'jpeg (image-type-from-data jpeg-data)))))
+      ;; It's a temp file, so it should always be deleted.
+      (when (file-exists-p filename)
+        (delete-file filename)))))
+
 ;;;; Footer
 
 (provide 'test-plz)
