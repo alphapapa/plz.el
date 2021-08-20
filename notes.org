@@ -124,6 +124,17 @@ Assuming that =plz= has already called =decode-coding-region=, this is straightf
 
 [2020-12-20 Sun 08:11]  At the end of 2016, Lars Ingebrigtsen [[https://lists.gnu.org/archive/html/emacs-devel/2016-12/msg01070.html][proposed]] a ~with-url~ macro that improves on ~url-retrieve~ and ~url-retrieve-synchronously~.  It was [[https://lists.gnu.org/archive/html/emacs-devel/2020-12/msg01220.html][mentioned]] by David Engster in [[https://lists.gnu.org/archive/html/emacs-devel/2020-12/msg01217.html][this thread]] from 2020.  It looks like it has a nice API.  Unfortunately it hasn't been merged.
 
+*** TODO Feedback from Chris Wellons
+:PROPERTIES:
+:ID:       975f77fa-5233-4b26-970b-e0d64f2aa950
+:END:
+:LOGBOOK:
+-  State "TODO"       from              [2021-08-20 Fri 05:37]
+:END:
+
++  [[https://github.com/alphapapa/plz.el/commit/7c27e4bdcd747f0bfc5a6298040739562a941e08#r55075010][Change: Sync with accept-process-output · alphapapa/plz.el@7c27e4b · GitHub]]
++  [[https://github.com/alphapapa/plz.el/commit/0a860d94dcbb103d05f3ee006772a568904fa4de#commitcomment-55151841][Tests: "There be dragons." · alphapapa/plz.el@0a860d9 · GitHub]]
+
 ** Similar projects
 
 *** [[https://github.com/ebpa/fetch.el][GitHub - ebpa/fetch.el: A simple HTTP request library modeled after the web browser API]]
