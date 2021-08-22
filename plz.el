@@ -479,7 +479,7 @@ according to the apparent coding system."
 HEADERS may optionally be an alist of parsed HTTP headers to
 refer to rather than the current buffer's unparsed headers."
   (let* ((headers (or headers (plz--headers)))
-         (content-type (alist-get "Content-Type" headers nil nil #'string=)))
+         (content-type (alist-get 'content-type headers)))
     (when content-type
       (coding-system-from-name content-type))))
 
