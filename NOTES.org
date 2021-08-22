@@ -135,6 +135,18 @@ Assuming that =plz= has already called =decode-coding-region=, this is straightf
 +  [[https://github.com/alphapapa/plz.el/commit/7c27e4bdcd747f0bfc5a6298040739562a941e08#r55075010][Change: Sync with accept-process-output · alphapapa/plz.el@7c27e4b · GitHub]]
 +  [[https://github.com/alphapapa/plz.el/commit/0a860d94dcbb103d05f3ee006772a568904fa4de#commitcomment-55151841][Tests: "There be dragons." · alphapapa/plz.el@0a860d9 · GitHub]]
 
+** Bug reports
+
+*** Emacs Process-related bugs
+
+**** [[https://debbugs.gnu.org/cgi/bugreport.cgi?bug=49897][#49897 - 28.0.50; {PATCH} Make sense of url-retrieve-synchronously - GNU bug report logs]]
+
+**** [[https://debbugs.gnu.org/cgi/bugreport.cgi?bug=49682][#49682 - 27.2.50; accept-process-output within accept-process-output hangs emacs - GNU bug report logs]]
+
+**** [[https://debbugs.gnu.org/cgi/bugreport.cgi?bug=33018][#33018 - 26.1.50; thread starvation with async processes and accept-process-output - GNU bug report logs]]
+
+**** [[https://debbugs.gnu.org/cgi/bugreport.cgi?bug=24201][#24201 - 25.1.50; TLS connections sometimes hang - GNU bug report logs]]
+
 ** Similar projects
 
 *** [[https://github.com/ebpa/fetch.el][GitHub - ebpa/fetch.el: A simple HTTP request library modeled after the web browser API]]
