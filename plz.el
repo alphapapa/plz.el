@@ -459,7 +459,8 @@ according to the apparent coding system."
   (save-excursion
     (goto-char (point-min))
     ;; Parse HTTP version and status code.
-    (looking-at plz-http-response-status-line-regexp)
+    (unless (looking-at plz-http-response-status-line-regexp)
+      (error "Unable to parse HTTP response"))
     (let* ((http-version (string-to-number (match-string 1)))
            (status-code (string-to-number (match-string 2)))
            (headers (plz--headers))
