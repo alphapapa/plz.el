@@ -303,7 +303,9 @@ NOQUERY is passed to `make-process', which see."
                                       (list (cons "--request" (upcase (symbol-name method)))
                                             ;; It appears that this must be the last argument
                                             ;; in order to pass data on the rest of STDIN.
-                                            (cons data-arg "@-"))))))
+                                            (cons data-arg "@-")))
+                                     ('delete
+                                      (list (cons "--request" (upcase (symbol-name method))))))))
          (curl-config (cl-loop for (key . value) in curl-config-args
                                concat (format "%s \"%s\"\n" key value)))
          (decode (pcase as
