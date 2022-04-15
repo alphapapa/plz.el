@@ -5,7 +5,7 @@
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; URL: https://github.com/alphapapa/plz.el
 ;; Version: 0.1-pre
-;; Package-Requires: ((emacs "26.3"))
+;; Package-Requires: ((emacs "26.3") (queue "0.2"))
 ;; Keywords: comm, network, http
 
 ;;; License:
@@ -51,6 +51,8 @@
 (require 'rx)
 (require 'subr-x)
 
+(require 'queue)
+
 ;;;; Errors
 
 ;; FIXME: `condition-case' can't catch these...?
@@ -64,6 +66,16 @@
 
 (cl-defstruct plz-error
   curl-error response message)
+
+(cl-defstruct plz-queue
+  "A queue of `plz' requests.
+Use `plz-queue' to enqueue requests, `plz-run' to start making a
+queue's requests, `plz-clear' to empty a queue, and `plz-reset'
+to reset it."
+  (limit 1 :documentation "Number of simultaneous connections to allow." :type integer)
+  (active nil :documentation "(internal) List of active requests." :type list)
+  (requests (make-queue) :documentation "A `queue' of lists of `plz' arguments (which effectively define a request)."
+            :type queue))
 
 ;;;; Constants
 
@@ -399,6 +411,87 @@ NOQUERY is passed to `make-process', which see."
                 (unless (eq as 'buffer)
                   (kill-buffer))))
           process)))))
+
+;;;;; Queue
+
+;; A simple queue system.
+
+(defun plz-queue (queue &rest args)
+  "Enqueue request for ARGS on QUEUE and return QUEUE.
+QUEUE is a `plz-request' queue.  ARGS are those passed to `plz',
+which see.  Use `plz-run' to start making QUEUE's requests.
+
+Request is added with `queue-append'; the list of ARGS may
+instead be manually prepended to the `plz-queue' struct's
+`requests' slot with `queue-prepend'.
+
+Note that any errors signaled in the processing of a request's
+THEN or ELSE functions may cause the queue to abort processing;
+if this is not desired, the THEN and ELSE functions given should
+handle any errors signaled in their bodies."
+  (declare (indent defun))
+  (let ((then (plist-get (cddr args) :then))
+        (else (plist-get (cddr args) :else)))
+    (plist-put (cddr args) :then
+               ;; Set the THEN function to one that also runs the queue.
+               (lambda (response)
+                 (funcall then response)
+                 ;; Remove request from queue and run rest of queue.
+                 (setf (plz-queue-active queue)
+                       (delete args (plz-queue-active queue)))
+                 (plz-run queue)))
+    (plist-put (cddr args) :else
+               ;; Set the ELSE function to one that also runs the queue.
+               (lambda (arg)
+                 (funcall else arg)
+                 ;; Remove request from queue and run rest of queue.
+                 (setf (plz-queue-active queue)
+                       (delete args (plz-queue-active queue)))
+                 (plz-run queue))))
+  (queue-enqueue (plz-queue-requests queue) args)
+  queue)
+
+(defun plz-run (queue)
+  "Process requests in QUEUE.
+QUEUE should be a `plz-queue' struct."
+  (cond ((queue-empty (plz-queue-requests queue))
+         ;; Queue empty: do nothing.
+         nil)
+        ((>= (length (plz-queue-active queue)) (plz-queue-limit queue))
+         ;; Queue already at limit: do nothing.
+         nil)
+        (t
+         ;; Queue not at limit: process requests.
+         (let ((request (queue-dequeue (plz-queue-requests queue))))
+           (push request (plz-queue-active queue))
+           (apply #'plz request))
+         ;; Keep going until limit is reached.
+         (plz-run queue))))
+
+(defun plz-clear (queue)
+  "Clear QUEUE and return it.
+Removes any active or pending requests."
+  ;; TODO: Track process associated with each request and kill it.
+  ;; (Otherwise this is likely to cause errors.)
+  (setf (plz-queue-active queue) nil)
+  (queue-clear (plz-queue-requests queue))
+  queue)
+
+(defun plz-reset (queue)
+  "Reset QUEUE and return it.
+Moves any active requests back into the queue."
+  ;; TODO: Track process associated with each request and kill it.
+  (let ((active (plz-queue-active queue)))
+    (setf (plz-queue-active queue) nil)
+    (dolist (request active)
+      (queue-enqueue (plz-queue-requests queue) request)))
+  queue)
+
+(defun plz-length (queue)
+  "Return number of of QUEUE's outstanding requests.
+Includes active and queued requests."
+  (+ (length (plz-queue-active queue))
+     (queue-length (plz-queue-requests queue))))
 
 ;;;;; Private
 

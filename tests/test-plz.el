@@ -438,6 +438,29 @@
       (when (file-exists-p filename)
         (delete-file filename)))))
 
+;;;;; Queue
+
+;; TODO: Test that limit is enforced (though it seems to work fine).
+
+(ert-deftest plz-queue ()
+  (let ((queue (make-plz-queue :limit 2))
+        (urls '("https://httpbin.org/get?foo=0"
+                "https://httpbin.org/get?foo=1"))
+        completed-urls)
+    (dolist (url urls)
+      (plz-queue queue
+        'get url :then (lambda (string)
+                         (push url completed-urls))))
+    (plz-run queue)
+    (cl-loop with waits = 0
+             while (and (plz-queue-active queue) (< waits 20))
+             do (progn
+                  (sleep-for 0.1)
+                  (cl-incf waits)))
+    (and (seq-set-equal-p urls completed-urls)
+         (queue-empty (plz-queue-requests queue))
+         (zerop (length (plz-queue-active queue))))))
+
 ;;;; Footer
 
 (provide 'test-plz)
