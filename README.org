@@ -22,6 +22,7 @@
 - [[#changelog][Changelog]]
 - [[#credits][Credits]]
 - [[#development][Development]]
+  - [[#copyright-assignment][Copyright assignment]]
 :END:
 
 * Installation
@@ -50,7 +51,7 @@ The only public function is ~plz~, which sends an HTTP request and returns eithe
 
 Synchronously =GET= a URL and return the response body as a decoded string (here, raw JSON):
 
-#+BEGIN_SRC elisp :exports both :results value code
+#+BEGIN_SRC elisp :exports both :results value code :cache yes
   (plz 'get "https://httpbin.org/user-agent")
 #+END_SRC
 
@@ -61,7 +62,7 @@ Synchronously =GET= a URL and return the response body as a decoded string (here
 
 Synchronously =GET= a URL that returns a JSON object, and parse and return it as an alist:
 
-#+BEGIN_SRC elisp :exports both :results value code
+#+BEGIN_SRC elisp :exports both :results value code :cache yes
   (plz 'get "https://httpbin.org/get" :as #'json-read)
 #+END_SRC
 
@@ -78,7 +79,7 @@ Synchronously =GET= a URL that returns a JSON object, and parse and return it as
 
 Asynchronously =POST= a JSON object in the request body, then parse a JSON object from the response body, and call a function with the result:
 
-#+BEGIN_SRC elisp :exports both
+#+BEGIN_SRC elisp :exports both :cache yes
   (plz 'post "https://httpbin.org/post"
     :headers '(("Content-Type" . "application/json"))
     :body (json-encode '(("key" . "value")))
@@ -92,7 +93,7 @@ Asynchronously =POST= a JSON object in the request body, then parse a JSON objec
 
 Synchronously download a JPEG file, then create an Emacs image object from the data:
 
-#+BEGIN_SRC elisp :exports both
+#+BEGIN_SRC elisp :exports both :cache yes
   (let ((jpeg-data (plz 'get "https://httpbin.org/image/jpeg" :as 'binary)))
     (create-image jpeg-data nil 'data))
 #+END_SRC
@@ -144,9 +145,9 @@ Synchronously download a JPEG file, then create an Emacs image object from the d
 :TOC:      :depth 0
 :END:
 
-** 0.1-pre
+** 0.1
 
-Not tagged yet.
+Initial release.
 
 * Credits
 
@@ -156,7 +157,11 @@ Not tagged yet.
 
 Bug reports, feature requests, suggestions — /oh my/!
 
-~plz~ is a young library, and its only client so far is [[https://github.com/alphapapa/ement.el][Ement.el]].  There are a variety of HTTP and ~curl~ features it does not yet support, since they have not yet been needed by the author.  Patches are welcome, as long as they include passing tests.
+Note that ~plz~ is a young library, and its only client so far is [[https://github.com/alphapapa/ement.el][Ement.el]].  There are a variety of HTTP and ~curl~ features it does not yet support, since they have not been needed by the author.  Patches are welcome, as long as they include passing tests.
+
+** Copyright assignment
+
+This package is part of [[https://www.gnu.org/software/emacs/][GNU Emacs]], being distributed in [[https://elpa.gnu.org/][GNU ELPA]].  Contributions to this project must follow GNU guidelines, which means that, as with other parts of Emacs, patches of more than a few lines must be accompanied by having assigned copyright for the contribution to the FSF.  Contributors who wish to do so may contact [[mailto:emacs-devel@gnu.org][emacs-devel@gnu.org]] to request the assignment form.
 
 * License
 :PROPERTIES:
@@ -165,10 +170,35 @@ Bug reports, feature requests, suggestions — /oh my/!
 
 GPLv3
 
+* COMMENT Export setup                                             :noexport:
+:PROPERTIES:
+:TOC:      :ignore (this descendants)
+:END:
+
+# Copied from org-super-agenda's readme, in which much was borrowed from Org's =org-manual.org=.
+
+#+OPTIONS: broken-links:t *:t
+
+** Info export options
+
+#+TEXINFO_DIR_CATEGORY: Emacs
+#+TEXINFO_DIR_TITLE: Plz: (plz)
+#+TEXINFO_DIR_DESC: HTTP library using Curl as a backend
+
+# NOTE: We could use these, but that causes a pointless error, "org-compile-file: File "..README.info" wasn't produced...", so we just rename the files in the after-save-hook instead.
+# #+TEXINFO_FILENAME: plz.info
+# #+EXPORT_FILE_NAME: plz.texi
+
+** File-local variables
+
+# NOTE: Setting org-comment-string buffer-locally is a nasty hack to work around GitHub's org-ruby's HTML rendering, which does not respect noexport tags.  The only way to hide this tree from its output is to use the COMMENT keyword, but that prevents Org from processing the export options declared in it.  So since these file-local variables don't affect org-ruby, wet set org-comment-string to an unused keyword, which prevents Org from deleting this tree from the export buffer, which allows it to find the export options in it.  And since org-export does respect the noexport tag, the tree is excluded from the info page.
+
 # Local Variables:
 # eval: (require 'org-make-toc)
+# after-save-hook: (lambda nil (when (and (require 'ox-texinfo nil t) (org-texinfo-export-to-info)) (delete-file "README.texi") (rename-file "README.info" "plz.info" t)))
 # before-save-hook: org-make-toc
 # org-export-with-properties: ()
 # org-export-with-title: t
+# org-export-initial-scope: buffer
+# org-comment-string: "NOTCOMMENT"
 # End:
-

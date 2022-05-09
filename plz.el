@@ -5,7 +5,7 @@
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Maintainer: Adam Porter <adam@alphapapa.net>
 ;; URL: https://github.com/alphapapa/plz.el
-;; Version: 0.1-pre
+;; Version: 0.1
 ;; Package-Requires: ((emacs "26.3"))
 ;; Keywords: comm, network, http
 
@@ -43,6 +43,43 @@
 ;; 1.  There's already a package called `http'.
 ;; 2.  There's already a package called `request'.
 ;; 3.  Naming things is hard.
+
+;;;; Usage:
+
+;; Call function `plz' to make an HTTP request.  Its docstring
+;; explains its arguments.  `plz' also supports other HTTP methods,
+;; uploading and downloading binary files, sending URL parameters and
+;; HTTP headers, configurable timeouts, error-handling "else" and
+;; always-called "finally" functions, and more.
+
+;; Basic usage is simple.  For example, to make a synchronous request
+;; and return the HTTP response body as a string:
+;;
+;;   (plz 'get "https://httpbin.org/get")
+;;
+;; Which returns the JSON object as a string:
+;;
+;;   "{
+;;     \"args\": {},
+;;     \"headers\": {
+;;       \"Accept\": \"*/*\",
+;;       \"Accept-Encoding\": \"deflate, gzip\",
+;;       \"Host\": \"httpbin.org\",
+;;       \"User-Agent\": \"curl/7.35.0\"
+;;     },
+;;     \"origin\": \"xxx.xxx.xxx.xxx\",
+;;     \"url\": \"https://httpbin.org/get\"
+;;   }"
+;;
+;; To make the same request asynchronously, decoding the JSON and
+;; printing a message with a value from it:
+;;
+;;   (plz 'get "https://httpbin.org/get" :as #'json-read
+;;     :then (lambda (alist) (message "URL: %s" (alist-get 'url alist))))
+;;
+;; Which, after the request returns, prints:
+;;
+;;   URL: https://httpbin.org/get
 
 ;;;; Credits:
 
