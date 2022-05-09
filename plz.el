@@ -1,12 +1,15 @@
 ;;; plz.el --- HTTP library                         -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019  Adam Porter
+;; Copyright (C) 2019-2022  Free Software Foundation, Inc.
 
 ;; Author: Adam Porter <adam@alphapapa.net>
+;; Maintainer: Adam Porter <adam@alphapapa.net>
 ;; URL: https://github.com/alphapapa/plz.el
 ;; Version: 0.1-pre
 ;; Package-Requires: ((emacs "26.3"))
 ;; Keywords: comm, network, http
+
+;; This file is part of GNU Emacs.
 
 ;;; License:
 
@@ -30,10 +33,8 @@
 ;;
 ;; Why this package?
 ;;
-;; 1.  `url' works well for many things, but it has some issues (and have
-;;     you seen its code?).
-;; 2.  `request' works well for many things, but it has some issues (and
-;;     have you seen its code?).
+;; 1.  `url' works well for many things, but it has some issues.
+;; 2.  `request' works well for many things, but it has some issues.
 ;; 3.  Chris Wellons doesn't have time to factor his excellent
 ;;     elfeed-curl.el library out of Elfeed.  This will have to do.
 ;;
@@ -42,6 +43,10 @@
 ;; 1.  There's already a package called `http'.
 ;; 2.  There's already a package called `request'.
 ;; 3.  Naming things is hard.
+
+;;;; Credits:
+
+;; Thanks to Chris Wellons for inspiration, encouragement, and advice.
 
 ;;; Code:
 
