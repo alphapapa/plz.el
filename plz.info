@@ -11,12 +11,15 @@ File: README.info,  Node: Top,  Next: Installation,  Up: (dir)
 plz.el
 ******
 
-‘plz’ is an HTTP library for Emacs.  It uses ‘curl’ as a backend, which
-avoids some of the issues with using Emacs’s built-in ‘url’ library.  It
-supports both synchronous and asynchronous requests.  Its API is
-intended to be simple, natural, and expressive.  Its code is intended to
-be simple and well-organized.  Every feature is tested against httpbin
-(https://httpbin.org/).
+file:http://elpa.gnu.org/packages/plz.svg
+(http://elpa.gnu.org/packages/plz.html)
+
+   ‘plz’ is an HTTP library for Emacs.  It uses ‘curl’ as a backend,
+which avoids some of the issues with using Emacs’s built-in ‘url’
+library.  It supports both synchronous and asynchronous requests.  Its
+API is intended to be simple, natural, and expressive.  Its code is
+intended to be simple and well-organized.  Every feature is tested
+against httpbin (https://httpbin.org/).
 
 * Menu:
 
@@ -31,7 +34,7 @@ be simple and well-organized.  Every feature is tested against httpbin
 
 Installation
 
-* MELPA::
+* GNU ELPA::
 * Manual::
 
 Usage
@@ -57,26 +60,27 @@ File: README.info,  Node: Installation,  Next: Usage,  Prev: Top,  Up: Top
 
 * Menu:
 
-* MELPA::
+* GNU ELPA::
 * Manual::
 
 
-File: README.info,  Node: MELPA,  Next: Manual,  Up: Installation
+File: README.info,  Node: GNU ELPA,  Next: Manual,  Up: Installation
 
-1.1 MELPA
-=========
+1.1 GNU ELPA
+============
 
-This library isn’t on MELPA yet.
+‘plz’ is available in GNU ELPA (http://elpa.gnu.org/packages/plz.html).
+It may be installed in Emacs using the ‘package-install’ command.
 
 
-File: README.info,  Node: Manual,  Prev: MELPA,  Up: Installation
+File: README.info,  Node: Manual,  Prev: GNU ELPA,  Up: Installation
 
 1.2 Manual
 ==========
 
 ‘plz’ has no dependencies other than Emacs and ‘curl’.  It’s known to
-work on Emacs 26.3 or later.  Simply place ‘plz.el’ in your ‘load-path’
-and ‘(require 'plz)’.
+work on Emacs 26.3 or later.  To install it manually, simply place
+‘plz.el’ in your ‘load-path’ and ‘(require 'plz)’.
 
 
 File: README.info,  Node: Usage,  Next: Changelog,  Prev: Installation,  Up: Top
@@ -288,19 +292,19 @@ GPLv3
 
 Tag Table:
 Node: Top199
-Node: Installation943
-Node: MELPA1083
-Node: Manual1209
-Node: Usage1488
-Node: Examples1976
-Node: Functions3343
-Node: Tips6234
-Node: Changelog6536
-Node: 016662
-Node: Credits6745
-Node: Development7111
-Node: Copyright assignment7625
-Node: License8213
+Node: Installation1032
+Node: GNU ELPA1175
+Node: Manual1421
+Node: Usage1727
+Node: Examples2215
+Node: Functions3582
+Node: Tips6473
+Node: Changelog6775
+Node: 016901
+Node: Credits6984
+Node: Development7350
+Node: Copyright assignment7864
+Node: License8452
 
 End Tag Table
 
