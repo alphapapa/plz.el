@@ -175,7 +175,8 @@ You may also clear a queue with ~plz-clear~, which cancels any active or queued 
 
 ** 0.2
 
-Nothing new yet.
+*Added*
++ Simple request queueing.
 
 ** 0.1
 
