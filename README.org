@@ -19,6 +19,7 @@
 - [[#usage][Usage]]
   - [[#examples][Examples]]
   - [[#functions][Functions]]
+  - [[#queueing][Queueing]]
 - [[#changelog][Changelog]]
 - [[#credits][Credits]]
 - [[#development][Development]]
@@ -43,7 +44,7 @@
 :TOC:      :depth 1
 :END:
 
-The only public function is ~plz~, which sends an HTTP request and returns either the result of the specified type (for a synchronous request), or the ~curl~ process object (for asynchronous requests).  For asynchronous requests, callback, error-handling, and finalizer functions may be specified, as well as various other options.
+The main public function is ~plz~, which sends an HTTP request and returns either the result of the specified type (for a synchronous request), or the ~curl~ process object (for asynchronous requests).  For asynchronous requests, callback, error-handling, and finalizer functions may be specified, as well as various other options.
 
 ** Examples
 
@@ -130,6 +131,35 @@ Synchronously download a JPEG file, then create an Emacs image object from the d
    ~CONNECT-TIMEOUT~ and ~TIMEOUT~ are a number of seconds that limit how long it takes to connect to a host and to receive a response from a host, respectively.
 
    ~NOQUERY~ is passed to ~make-process~, which see.
+
+** Queueing
+
+~plz~ provides a simple system for queueing HTTP requests.  First, make a ~plz-queue~ struct by calling ~make-plz-queue~.  Then call ~plz-queue~ with the struct as the first argument, and the rest of the arguments being the same as those passed to ~plz~.  Then call ~plz-run~ to run the queued requests.
+
+All of the queue-related functions return the queue as their value, making them easy to use.  For example:
+
+#+begin_src elisp
+  (defvar my-queue (make-plz-queue :limit 2))
+
+  (plz-run
+   (plz-queue my-queue
+     'get "https://httpbin.org/get?foo=0"
+     :then (lambda (body) (message "%s" body))))
+#+end_src
+
+Or:
+
+#+begin_src elisp
+  (let ((queue (make-plz-queue :limit 2))
+        (urls '("https://httpbin.org/get?foo=0"
+                "https://httpbin.org/get?foo=1")))
+    (plz-run
+     (dolist (url urls queue)
+       (plz-queue queue 'get url
+         :then (lambda (body) (message "%s" body))))))
+#+end_src
+
+You may also clear a queue with ~plz-clear~, which cancels any active or queued requests and calls their ~:else~ functions.  And ~plz-length~ returns the number of a queue's active and queued requests.
 
 ** Tips
 :PROPERTIES:

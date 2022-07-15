@@ -442,6 +442,179 @@ NOQUERY is passed to `make-process', which see."
                   (kill-buffer))))
           process)))))
 
+;;;;; Queue
+
+;; A simple queue system.
+
+(cl-defstruct plz-queued-request
+  "Struct representing a queued `plz' HTTP request.
+For more details on these slots, see arguments to the function
+`plz'."
+  method url headers body else finally noquery
+  as then body-type decode
+  connect-timeout timeout
+  next previous process)
+
+(cl-defstruct plz-queue
+  "Struct forming a queue for `plz' requests.
+The queue may be appended to (the default) and prepended to, and
+items may be removed from the front of the queue (i.e. by
+default, it's FIFO).  Use functions `plz-queue', `plz-run', and
+`plz-clear' to queue, run, and clear requests, respectively."
+  (limit 1
+         :documentation "Number of simultaneous requests.")
+  (active nil
+          :documentation "Active requests.")
+  (requests nil
+            :documentation "Queued requests.")
+  (canceled-p nil
+              :documentation "Non-nil when queue has been canceled.")
+  first-active last-active
+  first-request last-request)
+
+(defun plz-queue (queue &rest args)
+  "Enqueue request for ARGS on QUEUE and return QUEUE.
+To prepend to QUEUE rather than append, it may be a list of the
+form (`prepend' QUEUE).  QUEUE is a `plz-request' queue.  ARGS
+are those passed to `plz', which see.  Use `plz-run' to start
+making QUEUE's requests."
+  (declare (indent defun))
+  (cl-assert (not (equal 'sync (plist-get (cddr args) :then))) nil
+             "Only async requests may be queued")
+  (pcase-let* ((`(,method ,url . ,rest) args)
+               (args `(:method ,method :url ,url ,@rest))
+               (request (apply #'make-plz-queued-request args)))
+    (pcase queue
+      (`(prepend ,queue) (plz--queue-prepend request queue))
+      (_ (plz--queue-append request queue))))
+  queue)
+
+(defun plz--queue-append (request queue)
+  "Append REQUEST to QUEUE and return QUEUE."
+  (cl-check-type request plz-queued-request
+                 "REQUEST must be a `plz-queued-request' struct.")
+  (cl-check-type queue plz-queue
+                 "QUEUE must be a `plz-queue' struct.")
+  (when (plz-queue-last-request queue)
+    (setf (plz-queued-request-next (plz-queue-last-request queue)) request))
+  (setf (plz-queued-request-previous request) (plz-queue-last-request queue)
+        (plz-queue-last-request queue) request)
+  (unless (plz-queue-first-request queue)
+    (setf (plz-queue-first-request queue) request))
+  (unless (plz-queue-last-request queue)
+    (setf (plz-queue-last-request queue) request))
+  (push request (plz-queue-requests queue))
+  queue)
+
+(defun plz--queue-prepend (request queue)
+  "Prepend REQUEST to QUEUE and return QUEUE."
+  (cl-check-type request plz-queued-request
+                 "REQUEST must be a `plz-queued-request' struct.")
+  (cl-check-type queue plz-queue
+                 "QUEUE must be a `plz-queue' struct.")
+  (when (plz-queue-requests queue)
+    (setf (plz-queued-request-next request) (car (plz-queue-requests queue))
+          (plz-queued-request-previous (plz-queued-request-next request)) request))
+  (setf (plz-queue-first-request queue) request)
+  (unless (plz-queue-first-request queue)
+    (setf (plz-queue-first-request queue) request))
+  (unless (plz-queue-last-request queue)
+    (setf (plz-queue-last-request queue) request))
+  (push request (plz-queue-requests queue))
+  queue)
+
+(defun plz--queue-pop (queue)
+  "Return the first queued request on QUEUE and remove it from QUEUE."
+  (let* ((request (plz-queue-first-request queue))
+         (next (plz-queued-request-next request)))
+    (when next
+      (setf (plz-queued-request-previous next) nil))
+    (setf (plz-queue-first-request queue) next
+          (plz-queue-requests queue) (delq request (plz-queue-requests queue)))
+    (when (eq request (plz-queue-last-request queue))
+      (setf (plz-queue-last-request queue) nil))
+    request))
+
+(defun plz-run (queue)
+  "Process requests in QUEUE and return QUEUE.
+Return when QUEUE is at limit or has no more queued requests.
+
+QUEUE should be a `plz-queue' struct."
+  (cl-labels ((readyp
+               (queue) (and (not (plz-queue-canceled-p queue))
+                            (plz-queue-requests queue)
+                            ;; With apologies to skeeto...
+                            (< (length (plz-queue-active queue)) (plz-queue-limit queue)))))
+    (while (readyp queue)
+      (pcase-let* ((request (plz--queue-pop queue))
+                   ((cl-struct plz-queued-request method url
+                               headers body finally noquery as body-type decode connect-timeout timeout
+                               (else orig-else) (then orig-then))
+                    request)
+                   (then (lambda (response)
+                           (unwind-protect
+                               ;; Ensure any errors in the THEN function don't abort the queue.
+                               (funcall orig-then response)
+                             (setf (plz-queue-active queue) (delq request (plz-queue-active queue)))
+                             (plz-run queue))))
+                   (else (lambda (arg)
+                           (unwind-protect
+                               ;; Ensure any errors in the THEN function don't abort the queue.
+                               (when orig-else
+                                 (funcall orig-else arg))
+                             (setf (plz-queue-active queue) (delq request (plz-queue-active queue)))
+                             (plz-run queue))))
+                   (args (list method url
+                               ;; Omit arguments for which `plz' has defaults so as not to nil them.
+                               :headers headers :body body :finally finally :noquery noquery
+                               :connect-timeout connect-timeout :timeout timeout)))
+        ;; Add arguments which override defaults.
+        (when as
+          (setf args (plist-put args :as as)))
+        (when else
+          (setf args (plist-put args :else else)))
+        (when then
+          (setf args (plist-put args :then then)))
+        (when decode
+          (setf args (plist-put args :decode decode)))
+        (when body-type
+          (setf args (plist-put args :body-type body-type)))
+        (when connect-timeout
+          (setf args (plist-put args :connect-timeout connect-timeout)))
+        (when timeout
+          (setf args (plist-put args :timeout timeout)))
+        (setf (plz-queued-request-process request) (apply #'plz args))
+        (push request (plz-queue-active queue))))
+    queue))
+
+(defun plz-clear (queue)
+  "Clear QUEUE and return it.
+Cancels any active or pending requests.  For pending requests,
+their ELSE functions will be called with a `plz-error' struct
+with the message, \"`plz' queue cleared; request canceled.\";
+active requests will have their curl processes killed and their
+ELSE functions called with the corresponding data."
+  (setf (plz-queue-canceled-p queue) t)
+  (dolist (request (plz-queue-active queue))
+    (kill-process (plz-queued-request-process request))
+    (setf (plz-queue-active queue) (delq request (plz-queue-active queue))))
+  (dolist (request (plz-queue-requests queue))
+    (funcall (plz-queued-request-else request)
+             (make-plz-error :message "`plz' queue cleared; request canceled."))
+    (setf (plz-queue-requests queue) (delq request (plz-queue-requests queue))))
+  (setf (plz-queue-first-active queue) nil
+        (plz-queue-last-active queue) nil
+        (plz-queue-first-request queue) nil
+        (plz-queue-last-request queue) nil
+        (plz-queue-canceled-p queue) nil)
+  queue)
+
+(defun plz-length (queue)
+  "Return number of of QUEUE's outstanding requests.
+Includes active and queued requests."
+  (+ (length (plz-queue-active queue))
+     (length (plz-queue-requests queue))))
+
 ;;;;; Private
 
 (defun plz--sentinel (process-or-buffer status)
