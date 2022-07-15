@@ -547,11 +547,11 @@ QUEUE should be a `plz-queue' struct."
 
 (defun plz-clear (queue)
   "Clear QUEUE and return it.
-Cancels any active or pending requests (for pending requests,
+Cancels any active or pending requests.  For pending requests,
 their ELSE functions will be called with a `plz-error' struct
 with the message, \"`plz' queue cleared; request canceled.\";
-active requests will have their curl processes killed, their ELSE
-functions being called with the corresponding data)."
+active requests will have their curl processes killed and their
+ELSE functions called with the corresponding data."
   (setf (plz-queue-canceled-p queue) t)
   (dolist (request (plz-queue-active queue))
     (kill-process (plz-queued-request-process request))
