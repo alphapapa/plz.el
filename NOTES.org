@@ -13,6 +13,9 @@
 :END:
 
 * Tasks
+:PROPERTIES:
+:ID:       bc93ae30-b483-4113-977f-16bb55e6c73c
+:END:
 
 ** DONE Ensure that secrets are not leaked via command line or temp files
 CLOSED: [2021-08-15 Sun 15:34]
@@ -53,7 +56,24 @@ In fact, writing a wrapper script does not help at all: how horribly hacky and m
 
 This might allow us to avoid or delay putting the response body in a string, which could improve performance.
 
-** Queue
+** Parallel fetching
+:PROPERTIES:
+:ID:       96e3f880-4df4-4f9b-8d9d-fbd04e1eec6e
+:END:
+
+See, e.g. Daniel Mendler's [[https://github.com/minad/osm/commit/1264c3e1dc514567a5093b46fa5b4a7abdf74dec][implementation in osm.el]].
+
+** Name
+
++  =plz=
+     -  The current name.
++  =curly=
+     -  Since the library is based on curl, it wouldn't be a bad idea to have =curl= in the name, and this isn't too long.
+
+** DONE Queue
+:LOGBOOK:
+- State "DONE"       from              [2022-07-18 Mon 09:32]
+:END:
 
 + [[https://github.com/alphapapa/plz.el/tree/wip/queue][Branch: wip/queue]]
 
@@ -154,13 +174,6 @@ This might allow us to avoid or delay putting the response body in a string, whi
   object. (Except for plz-run?)
 #+end_example
 
-** Name
-
-+  =plz=
-     -  The current name.
-+  =curly=
-     -  Since the library is based on curl, it wouldn't be a bad idea to have =curl= in the name, and this isn't too long.
-
 * API Design
 
 ** Async
@@ -252,12 +265,111 @@ Assuming that =plz= has already called =decode-coding-region=, this is straightf
 -  State "TODO"       from              [2021-08-20 Fri 05:37]
 :END:
 
-+  [[https://github.com/alphapapa/plz.el/commit/7c27e4bdcd747f0bfc5a6298040739562a941e08#r55075010][Change: Sync with accept-process-output · alphapapa/plz.el@7c27e4b · GitHub]]
-+  [[https://github.com/alphapapa/plz.el/commit/0a860d94dcbb103d05f3ee006772a568904fa4de#commitcomment-55151841][Tests: "There be dragons." · alphapapa/plz.el@0a860d9 · GitHub]]
++ [[https://github.com/alphapapa/plz.el/commit/7c27e4bdcd747f0bfc5a6298040739562a941e08#r55075010][Change: Sync with accept-process-output · alphapapa/plz.el@7c27e4b · GitHub]]
++ [[https://github.com/alphapapa/plz.el/commit/0a860d94dcbb103d05f3ee006772a568904fa4de#commitcomment-55151841][Tests: "There be dragons." · alphapapa/plz.el@0a860d9 · GitHub]]
+
+**** [[https://github.com/alphapapa/plz.el/commit/3469bcdbb2e2c1a772ecadcf4f50da317065a96d][WIP: Queueing · alphapapa/plz.el@3469bcd · GitHub]]
+
+#+begin_src markdown
+  Going from 0 dependencies to 1 dependency is a big jump. With zero you get
+  some nice benefits, like never worrying about a package system (esp. when
+  testing, etc.). If you're going to make that transition it better be worth
+  the cost. A linked list queue is not worth it.
+
+  While that ELPA queue package is decent enough, this is trivial
+  functionality. You can implement an equivalent queue in just a few lines
+  of code. For example, here's a minimalistic one built out of a cons:
+
+  https://github.com/skeeto/emacs-aio/blob/master/aio.el#L322
+
+  (Feel free to copy this one if you like. It's in the public domain, and I
+  don't even care if you give me credit since it's so trivial. "A little
+  copying is better than a little dependency.")
+
+  plz-clear and plz-reset: Don't immediately nil the active list. A request
+  is not properly retired until all the callbacks have completed, and
+  requests should remain in the active list until then. That probably also
+  means blocking clear/reset until the active list clears. Otherwise 1) the
+  caller might observe an empty queue with invisible still-active requests,
+  which isn't really a valid state, and 2) it's up to the caller to somehow
+  wait (complicated and error-prone) if needed for the queue to return to a
+  valid state. You probably need to track this "cancellation" state so that
+  your wrapper callbacks don't actually run the queue, and so you can
+  potentially catch/handle callbacks enqueueing while you're busy trying to
+  clear the active list.
+
+  For plz-clear: queued, inactive requests should also have their :else
+  callbacks invoked to indicate they're not going to happen. Perhaps some
+  kind of "cancelled" error?
+
+  For plz-reset: I'm not sure this is really even a sound idea. The request
+  is concurrent, and it may still complete on the server side, including any
+  side effects, despite killing the process. These requests should not be
+  retried unless the caller explicitly requeues them (they know the context
+  but plz does not), and they'd know to do so because you reported to :else
+  that it was canceled.
+
+  I've probably said it before, but rigid guarantees around callbacks are
+  super important. In order to build anything reliable on this, callbacks
+  must be called exactly the right number of times (i.e. exactly once, not
+  zero or twice) at the right time, and the invariants must hold around
+  these callbacks (i.e. the queue state makes sense during the callback).
+  Fundamentally this is a concurrency situation even if there are no
+  explicit threads/coroutines involved. The biggest flaw with Emacs' own
+  url-retrieve, and the primary reason it's so unreliable, is its poor,
+  unpredictable callback discipline.
+
+  So a rule: When something goes in the queue, it stays there until plz has
+  informed its callbacks of the results. The callbacks on an enqueued
+  request are never called twice (for that request): it either fails or
+  succeeds and that's it.
+
+  There's a warning about signals in callbacks aborting queue processing,
+  but I'd just make the queue robust regardless. Let the signal unwind to
+  the top-level and make noise, but keep the queue moving. A mistake will
+  eventually happen, and then some consumer of this library will end up in
+  an invalid state (e.g. waiting on a queue that's not running because of an
+  unexpected signal). Example: There are still very rare edge cases in
+  Elfeed I haven't caught (I suspect there's one related to DNS failures),
+  and once every few months or so I have to use the emergency elfeed-unjam
+  lever to reset the queue to a good state.
+
+  plist-put is destructive, but you must still capture the return value,
+  particularly when the property doesn't exist yet. (Imagine setting a
+  property on a nil list.)
+
+  Is "delete" the right function for removing items? This uses "equal" but
+  you probably want eq like delq. cl-delete more sensibly uses "eql" by
+  default, which is just as good.
+
+  Some nit-picky stuff that probably doesn't matter, but I can't help
+  commenting since I'm (overly) sensitive to pessimization:
+
+  ,* Using "delete" on the active list is (almost) quadratic time, or more
+  accurately, O(n*m) for n requests and a limit of m. Using a set (read:
+  hashtable) or some other kind of O(1) removal would bring this down to
+  linear, O(n), time. I'm putting this under nit-picking since the limit is
+  likely a small number.
+
+  ,* The use of "length" in plz-run is O(n*m) time just like delete. You can
+  avoid this by tracking the length as separate counter rather than walking
+  the list in order to count. Alternatively, this is automatically fixed
+  when you swap in a set, since presumably it has an O(1) length function.
+
+  ,* Similarly, I don't like the recursion in plz-run even though it's also
+  bounded by the limit. Unless Emacs got TCO when I wasn't looking, I'd a
+  loop just to be more careful. (Go recently ran into trouble parsing PEM
+  using recursion despite having massive call stacks.)
+
+  Ending on a positive note: I like that you consistently return the queue
+  object. (Except for plz-run?)
+#+end_src
 
 ** Bug reports
 
 *** Emacs Process-related bugs
+
+**** [[https://debbugs.gnu.org/cgi/bugreport.cgi?bug=50166][#50166 - 28.0.50; ECM for possible process-status/sentinel bug - GNU bug report logs]]
 
 **** [[https://debbugs.gnu.org/cgi/bugreport.cgi?bug=49897][#49897 - 28.0.50; {PATCH} Make sense of url-retrieve-synchronously - GNU bug report logs]]
 
