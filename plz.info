@@ -114,7 +114,7 @@ string (here, raw JSON):
 
      (plz 'get "https://httpbin.org/user-agent")
 
-     nil
+     "{\n \"user-agent\": \"curl/7.35.0\"\n}\n"
 
    Synchronously ‘GET’ a URL that returns a JSON object, and parse and
 return it as an alist:
@@ -141,7 +141,7 @@ JSON object from the response body, and call a function with the result:
        :then (lambda (alist)
                (message "Result: %s" (alist-get 'data alist))))
 
-     #<process plz-request-curl>
+     Result: {"key":"value"}
 
    Synchronously download a JPEG file, then create an Emacs image object
 from the data:
@@ -149,7 +149,7 @@ from the data:
      (let ((jpeg-data (plz 'get "https://httpbin.org/image/jpeg" :as 'binary)))
        (create-image jpeg-data nil 'data))
 
-image   :type   jpeg   :data   \377\330\377\340
+image   :type   jpeg   :data   ""ÿØÿà^@^PJFIF..."
 
 
 File: README.info,  Node: Functions,  Next: Queueing,  Prev: Examples,  Up: Usage
