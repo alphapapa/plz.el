@@ -17,6 +17,16 @@
 :ID:       bc93ae30-b483-4113-977f-16bb55e6c73c
 :END:
 
+** TODO Handle other process statuses in ~plz--sentinel~
+:PROPERTIES:
+:milestone: 0.3
+:END:
+:LOGBOOK:
+- State "TODO"       from              [2022-09-18 Sun 11:55]
+:END:
+
+In the ~pcase-exhaustive~ form, need to handle ~interrupt\n~, and should have a failsafe as well.
+
 ** DONE Ensure that secrets are not leaked via command line or temp files
 CLOSED: [2021-08-15 Sun 15:34]
 :LOGBOOK:
