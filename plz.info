@@ -46,7 +46,7 @@ Usage
 
 Changelog
 
-* 0.2.1-pre: 021-pre. 
+* 0.2.1: 021. 
 * 0.2: 02. 
 * 0.1: 01. 
 
@@ -267,20 +267,21 @@ File: README.info,  Node: Changelog,  Next: Credits,  Prev: Usage,  Up: Top
 
 * Menu:
 
-* 0.2.1-pre: 021-pre. 
+* 0.2.1: 021. 
 * 0.2: 02. 
 * 0.1: 01. 
 
 
-File: README.info,  Node: 021-pre,  Next: 02,  Up: Changelog
+File: README.info,  Node: 021,  Next: 02,  Up: Changelog
 
-3.1 0.2.1-pre
-=============
+3.1 0.2.1
+=========
 
-Nothing new yet.
+*Fixes*
+   • Handle when Curl process is interrupted.
 
 
-File: README.info,  Node: 02,  Next: 01,  Prev: 021-pre,  Up: Changelog
+File: README.info,  Node: 02,  Next: 01,  Prev: 021,  Up: Changelog
 
 3.2 0.2
 =======
@@ -351,22 +352,22 @@ GPLv3
 
 Tag Table:
 Node: Top199
-Node: Installation1080
-Node: GNU ELPA1223
-Node: Manual1469
-Node: Usage1775
-Node: Examples2276
-Node: Functions3643
-Node: Queueing6538
-Node: Tips7796
-Node: Changelog8097
-Node: 021-pre8258
-Node: 028369
-Node: 018502
-Node: Credits8596
-Node: Development8962
-Node: Copyright assignment9476
-Node: License10064
+Node: Installation1072
+Node: GNU ELPA1215
+Node: Manual1461
+Node: Usage1767
+Node: Examples2268
+Node: Functions3635
+Node: Queueing6530
+Node: Tips7788
+Node: Changelog8089
+Node: 0218242
+Node: 028380
+Node: 018509
+Node: Credits8603
+Node: Development8969
+Node: Copyright assignment9483
+Node: License10071
 
 End Tag Table
 

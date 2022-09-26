@@ -173,7 +173,7 @@ You may also clear a queue with ~plz-clear~, which cancels any active or queued 
 :TOC:      :depth 0
 :END:
 
-** 0.2.1-pre
+** 0.2.1
 
 *Fixes*
 + Handle when Curl process is interrupted.
