@@ -175,7 +175,8 @@ You may also clear a queue with ~plz-clear~, which cancels any active or queued 
 
 ** 0.2.1-pre
 
-Nothing new yet.
+*Fixes*
++ Handle when Curl process is interrupted.
 
 ** 0.2
 
