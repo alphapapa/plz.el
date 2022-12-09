@@ -175,7 +175,8 @@ You may also clear a queue with ~plz-clear~, which cancels any active or queued 
 
 ** 0.3-pre
 
-Nothing new yet.
+*Additions*
++ Handle HTTP proxy headers from Curl.
 
 ** 0.2.1
 

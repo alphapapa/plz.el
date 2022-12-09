@@ -110,8 +110,12 @@
 ;;;; Constants
 
 (defconst plz-http-response-status-line-regexp
-  (rx bol "HTTP/" (group (1+ (or digit "."))) (1+ blank)
-      (group (1+ digit)))
+  (rx bol "HTTP/" (group (1+ (or digit ".")))
+      ;; Status code
+      (1+ blank) (group (1+ digit))
+      ;; Reason phrase
+      (optional (1+ blank) (group (1+ (not (any "\r\n")))))
+      "\r\n")
   "Regular expression matching HTTP response status line.")
 
 (defconst plz-curl-errors
@@ -634,6 +638,8 @@ node `(elisp) Sentinels').  Kills the buffer before returning."
           (pcase-exhaustive status
             ((or 0 "finished\n")
              ;; Curl exited normally: check HTTP status code.
+             (goto-char (point-min))
+             (plz--skip-proxy-headers)
              (pcase (plz--http-status)
                (200 (funcall plz-then))
                (_ (let ((err (make-plz-error :response (plz--response))))
@@ -672,15 +678,30 @@ node `(elisp) Sentinels').  Kills the buffer before returning."
 
 ;; Functions for parsing HTTP responses.
 
+(defun plz--skip-proxy-headers ()
+  "Skip proxy headers in current buffer."
+  (when (looking-at plz-http-response-status-line-regexp)
+    (let* ((status-code (string-to-number (match-string 2)))
+           (reason-phrase (match-string 3)))
+      (when (and (equal 200 status-code)
+                 (equal "Connection established" reason-phrase))
+        ;; Skip proxy headers (curl apparently offers no way to omit
+        ;; them).
+        (unless (re-search-forward "\r\n\r\n" nil t)
+          (signal 'plz-http-error '("plz--response: End of proxy headers not found")))))))
+
 (cl-defun plz--response (&key (decode-p t))
   "Return response struct for HTTP response in current buffer.
 When DECODE-P is non-nil, decode the response body automatically
-according to the apparent coding system."
+according to the apparent coding system.
+
+Assumes that point is at beginning of HTTP response."
   (save-excursion
-    (goto-char (point-min))
     ;; Parse HTTP version and status code.
     (unless (looking-at plz-http-response-status-line-regexp)
-      (error "Unable to parse HTTP response"))
+      (signal 'plz-http-error
+              (list "plz--response: Unable to parse HTTP response"
+                    (buffer-substring (point-min) (point-at-eol)))))
     (let* ((http-version (string-to-number (match-string 1)))
            (status-code (string-to-number (match-string 2)))
            (headers (plz--headers))
@@ -704,16 +725,15 @@ refer to rather than the current buffer's unparsed headers."
       (coding-system-from-name content-type))))
 
 (defun plz--http-status ()
-  "Return HTTP status code for HTTP response in current buffer."
-  (save-excursion
-    (goto-char (point-min))
-    (when (looking-at plz-http-response-status-line-regexp)
-      (string-to-number (match-string 2)))))
+  "Return HTTP status code for HTTP response in current buffer.
+Assumes point is at start of HTTP response."
+  (when (looking-at plz-http-response-status-line-regexp)
+    (string-to-number (match-string 2))))
 
 (defun plz--headers ()
-  "Return headers alist for HTTP response in current buffer."
+  "Return headers alist for HTTP response in current buffer.
+Assumes point is at start of HTTP response."
   (save-excursion
-    (goto-char (point-min))
     (forward-line 1)
     (let ((limit (save-excursion
                    (re-search-forward "^\r\n" nil)
@@ -729,9 +749,10 @@ refer to rather than the current buffer's unparsed headers."
                collect (cons (intern (downcase (match-string 1))) (match-string 2))))))
 
 (defun plz--narrow-to-body ()
-  "Narrow to body of HTTP response in current buffer."
-  (goto-char (point-min))
-  (re-search-forward "^\r\n" nil)
+  "Narrow to body of HTTP response in current buffer.
+Assumes point is at start of HTTP response."
+  (unless (re-search-forward "^\r\n" nil t)
+    (signal 'plz-http-error '("plz--narrow-to-body: Unable to find end of headers")))
   (narrow-to-region (point) (point-max)))
 
 ;;;; Footer
