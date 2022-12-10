@@ -700,8 +700,8 @@ Assumes that point is at beginning of HTTP response."
     ;; Parse HTTP version and status code.
     (unless (looking-at plz-http-response-status-line-regexp)
       (signal 'plz-http-error
-              (list "plz--response: Unable to parse HTTP response"
-                    (buffer-substring (point-min) (point-at-eol)))))
+              (list "plz--response: Unable to parse HTTP response status line"
+                    (buffer-substring (point) (point-at-eol)))))
     (let* ((http-version (string-to-number (match-string 1)))
            (status-code (string-to-number (match-string 2)))
            (headers (plz--headers))
