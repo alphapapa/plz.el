@@ -1,7 +1,7 @@
 # * test.yml --- Test Emacs packages using makem.sh on GitHub Actions
 
 # URL: https://github.com/alphapapa/makem.sh
-# Version: 0.5
+# Version: 0.6-pre
 
 # * Commentary:
 
@@ -50,6 +50,10 @@ jobs:
         version: ${{ matrix.emacs_version }}
 
     - uses: actions/checkout@v2
+
+    - name: Install Ispell
+      run: |
+        sudo apt-get install ispell
 
     - name: Initialize sandbox
       run: |
