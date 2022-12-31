@@ -120,6 +120,21 @@
              while (equal 'run (process-status process))
              do (sleep-for seconds))))
 
+(cl-defmacro plz-deftest (name () &body docstring-keys-and-body)
+  "Like `ert-deftest', but defines tests for both HTTP/1.1 and HTTP/2."
+  (declare (debug (&define [&name "test@" symbolp]
+			   sexp [&optional stringp]
+			   [&rest keywordp sexp] def-body))
+           (doc-string 3)
+           (indent 2))
+  `(progn
+     ,@(cl-loop for http-version in '("1.1" "2")
+                collect (let ((name (intern (format "%s-http%s" name http-version))))
+                          `(ert-deftest ,name ()
+                             (let ((plz-curl-default-args
+                                    ',(append plz-curl-default-args (list (format "--http%s" http-version)))))
+                               ,@docstring-keys-and-body))))))
+
 ;;;; Functions
 
 (defmacro plz-test-get-response (response)
@@ -137,7 +152,7 @@
 
 ;;;;; Async
 
-(ert-deftest plz-get-string nil
+(plz-deftest plz-get-string nil
   (let* ((test-string)
          (process (plz 'get "https://httpbin.org/get"
                     :as 'string
@@ -146,7 +161,7 @@
     (plz-test-wait process)
     (should (string-match "curl" test-string))))
 
-(ert-deftest plz-get-buffer nil
+(plz-deftest plz-get-buffer nil
   ;; The sentinel kills the buffer, so we get the buffer as a string.
   (let* ((test-buffer-string)
          (process (plz 'get "https://httpbin.org/get"
@@ -157,7 +172,7 @@
     (plz-test-wait process)
     (should (string-match "curl" test-buffer-string))))
 
-(ert-deftest plz-get-response nil
+(plz-deftest plz-get-response nil
   (let* ((test-response)
          (process (plz 'get "https://httpbin.org/get"
                     :as 'response
@@ -166,7 +181,7 @@
     (plz-test-wait process)
     (plz-test-get-response test-response)))
 
-(ert-deftest plz-get-json nil
+(plz-deftest plz-get-json nil
   (let* ((test-json)
          (process (plz 'get "https://httpbin.org/get"
                     :as #'json-read
@@ -176,7 +191,7 @@
     (let-alist test-json
       (should (string-match "curl" .headers.User-Agent)))))
 
-(ert-deftest plz-post-json-string nil
+(plz-deftest plz-post-json-string nil
   (let* ((json-string (json-encode (list (cons "key" "value"))))
          (response-json)
          (process (plz 'post "https://httpbin.org/post"
@@ -190,7 +205,7 @@
       (should (string-match "curl" .headers.User-Agent))
       (should (string= "value" (alist-get 'key (json-read-from-string .data)))))))
 
-(ert-deftest plz-post-jpeg-string nil
+(plz-deftest plz-post-jpeg-string nil
   (let* ((jpeg-to-upload (plz 'get "https://httpbin.org/image/jpeg"
                            :as 'binary :then 'sync))
          (_ (unless jpeg-to-upload
@@ -216,7 +231,7 @@
 
 ;; TODO: POST JSON buffer.
 
-(ert-deftest plz-put-json-string nil
+(plz-deftest plz-put-json-string nil
   (let* ((json-string (json-encode (list (cons "key" "value"))))
          (response-json)
          (process (plz 'put "https://httpbin.org/put"
@@ -234,21 +249,21 @@
 
 ;;;;; Sync
 
-(ert-deftest plz-get-string-sync nil
+(plz-deftest plz-get-string-sync nil
   (let-alist (json-read-from-string (plz 'get "https://httpbin.org/get"
                                       :as 'string :then 'sync))
     (should (equal "https://httpbin.org/get" .url))))
 
-(ert-deftest plz-get-response-sync nil
+(plz-deftest plz-get-response-sync nil
   (plz-test-get-response (plz 'get "https://httpbin.org/get"
                            :as 'response :then 'sync)))
 
-(ert-deftest plz-get-json-sync nil
+(plz-deftest plz-get-json-sync nil
   (let-alist (plz 'get "https://httpbin.org/get"
                :as #'json-read :then 'sync)
     (should (string-match "curl" .headers.User-Agent))))
 
-(ert-deftest plz-get-buffer-sync nil
+(plz-deftest plz-get-buffer-sync nil
   (let ((buffer (plz 'get "https://httpbin.org/get"
                   :as 'buffer :then 'sync)))
     (unwind-protect
@@ -260,7 +275,7 @@
 ;; These tests were added when plz--curl was changed to send headers
 ;; with "--config" rather than on the command line.
 
-(ert-deftest plz-get-with-headers ()
+(plz-deftest plz-get-with-headers ()
   (let* ((response-json)
          (process (plz 'get "https://httpbin.org/get"
                     :headers '(("X-Plz-Test-Header" . "plz-test-header-value"))
@@ -271,7 +286,7 @@
     (let-alist response-json
       (should (equal "plz-test-header-value" .headers.X-Plz-Test-Header)))))
 
-(ert-deftest plz-post-with-headers ()
+(plz-deftest plz-post-with-headers ()
   (let* ((alist (list (cons "key" "value")))
          (response-json)
          (process (plz 'post "https://httpbin.org/post"
@@ -286,7 +301,7 @@
       (should (equal "plz-test-header-value" .headers.X-Plz-Test-Header))
       (should (equal "value" (alist-get 'key (json-read-from-string .data)))))))
 
-(ert-deftest plz-get-json-with-headers-sync ()
+(plz-deftest plz-get-json-with-headers-sync ()
   (let-alist (plz 'get "https://httpbin.org/get"
                :headers '(("X-Plz-Test-Header" . "plz-test-header-value"))
                :as #'json-read :then 'sync)
@@ -295,7 +310,7 @@
 
 ;;;;; Errors
 
-(ert-deftest plz-get-curl-error nil
+(plz-deftest plz-get-curl-error nil
   ;; Async.
   (let* ((err)
          (process (plz 'get "https://httpbinnnnnn.org/get/status/404"
@@ -311,7 +326,7 @@
 ;; stalls the Emacs process indefinitely, using either sleep-for or
 ;; sit-for.
 
-;; (ert-deftest plz-get-killed-error nil
+;; (plz-deftest plz-get-killed-error nil
 ;;   ;; Async.
 ;;   (let* ((err)
 ;;          (process (plz 'get "https://httpbinnnnnn.org/get/status/404"
@@ -325,7 +340,7 @@
 ;;     (should (equal "curl process killed"
 ;;                    (plz-error-message err)))))
 
-(ert-deftest plz-get-curl-error-sync nil
+(plz-deftest plz-get-curl-error-sync nil
   ;; Sync.
   (let ((err (should-error (plz 'get "https://httpbinnnnnn.org/get/status/404"
                              :as 'string :then 'sync)
@@ -335,7 +350,7 @@
     (should (equal '(6 . "Couldn't resolve host. The given remote host was not resolved.")
                    (plz-error-curl-error (cdr err))))))
 
-(ert-deftest plz-get-404-error nil
+(plz-deftest plz-get-404-error nil
   ;; FIXME: Wrap each test expression in `should' rather than using `should-and'.
 
   ;; Async.
@@ -358,7 +373,7 @@
                  (plz-response-p (plz-error-response (cdr err)))
                  (eq 404 (plz-response-status (plz-error-response (cdr err))))))))
 
-(ert-deftest plz-get-timeout-error nil
+(plz-deftest plz-get-timeout-error nil
   ;; Async.
   (let* ((start-time (current-time))
          (end-time)
@@ -386,7 +401,7 @@
 
 ;;;;; Finally
 
-(ert-deftest plz-get-finally nil
+(plz-deftest plz-get-finally nil
   (let* ((finally-null t)
          (process (plz 'get "https://httpbin.org/get"
                     :as 'string
@@ -398,7 +413,7 @@
 
 ;;;;; Binary
 
-(ert-deftest plz-get-jpeg ()
+(plz-deftest plz-get-jpeg ()
   (let* ((test-jpeg)
          (process (plz 'get "https://httpbin.org/image/jpeg"
                     :as 'binary
@@ -407,14 +422,14 @@
     (plz-test-wait process)
     (should (equal 'jpeg (image-type-from-data test-jpeg)))))
 
-(ert-deftest plz-get-jpeg-sync ()
+(plz-deftest plz-get-jpeg-sync ()
   (let ((jpeg (plz 'get "https://httpbin.org/image/jpeg"
                 :as 'binary :then 'sync)))
     (should (equal 'jpeg (image-type-from-data jpeg)))))
 
 ;;;;; Downloading to files
 
-(ert-deftest plz-get-temp-file ()
+(plz-deftest plz-get-temp-file ()
   (let ((filename (plz 'get "https://httpbin.org/image/jpeg"
                     :as 'file :then 'sync)))
     (unwind-protect
@@ -425,7 +440,7 @@
       ;; It's a temp file, so it should always be deleted.
       (delete-file filename))))
 
-(ert-deftest plz-get-named-file ()
+(plz-deftest plz-get-named-file ()
   (let ((filename (make-temp-file "plz-")))
     ;; HACK: Delete the temp file and reuse its name, because
     ;; `make-temp-name' is less convenient to use.
@@ -446,7 +461,7 @@
 
 ;; TODO: Test that limit is enforced (though it seems to work fine).
 
-(ert-deftest plz-queue ()
+(plz-deftest plz-queue ()
   (let ((queue (make-plz-queue :limit 2))
         (urls '("https://httpbin.org/get?foo=0"
                 "https://httpbin.org/get?foo=1"))
