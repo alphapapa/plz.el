@@ -46,6 +46,7 @@ Usage
 
 Changelog
 
+* 0.4-pre: 04-pre. 
 * 0.3: 03. 
 * 0.2.1: 021. 
 * 0.2: 02. 
@@ -268,19 +269,31 @@ File: README.info,  Node: Changelog,  Next: Credits,  Prev: Usage,  Up: Top
 
 * Menu:
 
+* 0.4-pre: 04-pre. 
 * 0.3: 03. 
 * 0.2.1: 021. 
 * 0.2: 02. 
 * 0.1: 01. 
 
 
-File: README.info,  Node: 03,  Next: 021,  Up: Changelog
+File: README.info,  Node: 04-pre,  Next: 03,  Up: Changelog
 
-3.1 0.3
+3.1 0.4-pre
+===========
+
+Nothing new yet.
+
+
+File: README.info,  Node: 03,  Next: 021,  Prev: 04-pre,  Up: Changelog
+
+3.2 0.3
 =======
 
 *Additions*
-   • Handle HTTP proxy headers from Curl.
+   • Handle HTTP proxy headers from Curl.  (#2
+     (https://github.com/alphapapa/plz.el/issues/2).  Thanks to Alan
+     Third (https://github.com/alanthird) and Sawyer Zheng
+     (https://github.com/sawyerzheng) for reporting.)
 
    *Fixes*
    • Replaced words not in Ispell’s default dictionaries (so ‘checkdoc’
@@ -289,7 +302,7 @@ File: README.info,  Node: 03,  Next: 021,  Up: Changelog
 
 File: README.info,  Node: 021,  Next: 02,  Prev: 03,  Up: Changelog
 
-3.2 0.2.1
+3.3 0.2.1
 =========
 
 *Fixes*
@@ -298,7 +311,7 @@ File: README.info,  Node: 021,  Next: 02,  Prev: 03,  Up: Changelog
 
 File: README.info,  Node: 02,  Next: 01,  Prev: 021,  Up: Changelog
 
-3.3 0.2
+3.4 0.2
 =======
 
 *Added*
@@ -307,7 +320,7 @@ File: README.info,  Node: 02,  Next: 01,  Prev: 021,  Up: Changelog
 
 File: README.info,  Node: 01,  Prev: 02,  Up: Changelog
 
-3.4 0.1
+3.5 0.1
 =======
 
 Initial release.
@@ -367,23 +380,24 @@ GPLv3
 
 Tag Table:
 Node: Top199
-Node: Installation1084
-Node: GNU ELPA1227
-Node: Manual1473
-Node: Usage1779
-Node: Examples2280
-Node: Functions3647
-Node: Queueing6542
-Node: Tips7800
-Node: Changelog8101
-Node: 038266
-Node: 0218516
-Node: 028665
-Node: 018794
-Node: Credits8888
-Node: Development9254
-Node: Copyright assignment9768
-Node: License10356
+Node: Installation1104
+Node: GNU ELPA1247
+Node: Manual1493
+Node: Usage1799
+Node: Examples2300
+Node: Functions3667
+Node: Queueing6562
+Node: Tips7820
+Node: Changelog8121
+Node: 04-pre8306
+Node: 038412
+Node: 0218864
+Node: 029013
+Node: 019142
+Node: Credits9236
+Node: Development9602
+Node: Copyright assignment10116
+Node: License10704
 
 End Tag Table
 
