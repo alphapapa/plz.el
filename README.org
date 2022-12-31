@@ -178,6 +178,9 @@ You may also clear a queue with ~plz-clear~, which cancels any active or queued 
 *Additions*
 + Handle HTTP proxy headers from Curl.
 
+*Fixes*
++ Replaced words not in Ispell's default dictionaries (so ~checkdoc~ linting succeeds).
+
 ** 0.2.1
 
 *Fixes*

@@ -46,6 +46,7 @@ Usage
 
 Changelog
 
+* 0.3-pre: 03-pre. 
 * 0.2.1: 021. 
 * 0.2: 02. 
 * 0.1: 01. 
@@ -267,14 +268,28 @@ File: README.info,  Node: Changelog,  Next: Credits,  Prev: Usage,  Up: Top
 
 * Menu:
 
+* 0.3-pre: 03-pre. 
 * 0.2.1: 021. 
 * 0.2: 02. 
 * 0.1: 01. 
 
 
-File: README.info,  Node: 021,  Next: 02,  Up: Changelog
+File: README.info,  Node: 03-pre,  Next: 021,  Up: Changelog
 
-3.1 0.2.1
+3.1 0.3-pre
+===========
+
+*Additions*
+   • Handle HTTP proxy headers from Curl.
+
+   *Fixes*
+   • Replaced words not in Ispell’s default dictionaries (so ‘checkdoc’
+     linting succeeds).
+
+
+File: README.info,  Node: 021,  Next: 02,  Prev: 03-pre,  Up: Changelog
+
+3.2 0.2.1
 =========
 
 *Fixes*
@@ -283,7 +298,7 @@ File: README.info,  Node: 021,  Next: 02,  Up: Changelog
 
 File: README.info,  Node: 02,  Next: 01,  Prev: 021,  Up: Changelog
 
-3.2 0.2
+3.3 0.2
 =======
 
 *Added*
@@ -292,7 +307,7 @@ File: README.info,  Node: 02,  Next: 01,  Prev: 021,  Up: Changelog
 
 File: README.info,  Node: 01,  Prev: 02,  Up: Changelog
 
-3.3 0.1
+3.4 0.1
 =======
 
 Initial release.
@@ -352,22 +367,23 @@ GPLv3
 
 Tag Table:
 Node: Top199
-Node: Installation1072
-Node: GNU ELPA1215
-Node: Manual1461
-Node: Usage1767
-Node: Examples2268
-Node: Functions3635
-Node: Queueing6530
-Node: Tips7788
-Node: Changelog8089
-Node: 0218242
-Node: 028380
-Node: 018509
-Node: Credits8603
-Node: Development8969
-Node: Copyright assignment9483
-Node: License10071
+Node: Installation1092
+Node: GNU ELPA1235
+Node: Manual1481
+Node: Usage1787
+Node: Examples2288
+Node: Functions3655
+Node: Queueing6550
+Node: Tips7808
+Node: Changelog8109
+Node: 03-pre8282
+Node: 0218544
+Node: 028697
+Node: 018826
+Node: Credits8920
+Node: Development9286
+Node: Copyright assignment9800
+Node: License10388
 
 End Tag Table
 

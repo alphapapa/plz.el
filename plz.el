@@ -202,7 +202,7 @@
 ;;;; Variables
 
 (defvar-local plz-else nil
-  "Callback function for errored completion of request.
+  "Callback function for unsuccessful completion of request.
 Called in current curl process buffer.")
 
 (defvar-local plz-then nil
@@ -278,11 +278,11 @@ It may be:
 
 - `buffer' to pass the response buffer.
 
-- `binary' to pass the response body as an undecoded string.
+- `binary' to pass the response body as an un-decoded string.
 
 - `string' to pass the response body as a decoded string.
 
-- `response' to pass a `plz-response' struct.
+- `response' to pass a `plz-response' structure.
 
 - `file' to pass a temporary filename to which the response body
   has been saved without decoding.
@@ -304,11 +304,11 @@ above with AS.  Or THEN may be `sync' to make a synchronous
 request, in which case the result is returned directly.
 
 ELSE is an optional callback function called when the request
-fails with one argument, a `plz-error' struct.  If ELSE is nil,
-an error is signaled when the request fails, either
+fails with one argument, a `plz-error' structure.  If ELSE is
+nil, an error is signaled when the request fails, either
 `plz-curl-error' or `plz-http-error' as appropriate, with a
-`plz-error' struct as the error data.  For synchronous requests,
-this argument is ignored.
+`plz-error' structure as the error data.  For synchronous
+requests, this argument is ignored.
 
 FINALLY is an optional function called without argument after
 THEN or ELSE, as appropriate.  For synchronous requests, this
@@ -451,7 +451,7 @@ NOQUERY is passed to `make-process', which see."
 ;; A simple queue system.
 
 (cl-defstruct plz-queued-request
-  "Struct representing a queued `plz' HTTP request.
+  "Structure representing a queued `plz' HTTP request.
 For more details on these slots, see arguments to the function
 `plz'."
   method url headers body else finally noquery
@@ -460,7 +460,7 @@ For more details on these slots, see arguments to the function
   next previous process)
 
 (cl-defstruct plz-queue
-  "Struct forming a queue for `plz' requests.
+  "Structure forming a queue for `plz' requests.
 The queue may be appended to (the default) and prepended to, and
 items may be removed from the front of the queue (i.e. by
 default, it's FIFO).  Use functions `plz-queue', `plz-run', and
@@ -496,9 +496,9 @@ making QUEUE's requests."
 (defun plz--queue-append (request queue)
   "Append REQUEST to QUEUE and return QUEUE."
   (cl-check-type request plz-queued-request
-                 "REQUEST must be a `plz-queued-request' struct.")
+                 "REQUEST must be a `plz-queued-request' structure.")
   (cl-check-type queue plz-queue
-                 "QUEUE must be a `plz-queue' struct.")
+                 "QUEUE must be a `plz-queue' structure.")
   (when (plz-queue-last-request queue)
     (setf (plz-queued-request-next (plz-queue-last-request queue)) request))
   (setf (plz-queued-request-previous request) (plz-queue-last-request queue)
@@ -513,9 +513,9 @@ making QUEUE's requests."
 (defun plz--queue-prepend (request queue)
   "Prepend REQUEST to QUEUE and return QUEUE."
   (cl-check-type request plz-queued-request
-                 "REQUEST must be a `plz-queued-request' struct.")
+                 "REQUEST must be a `plz-queued-request' structure.")
   (cl-check-type queue plz-queue
-                 "QUEUE must be a `plz-queue' struct.")
+                 "QUEUE must be a `plz-queue' structure.")
   (when (plz-queue-requests queue)
     (setf (plz-queued-request-next request) (car (plz-queue-requests queue))
           (plz-queued-request-previous (plz-queued-request-next request)) request))
@@ -543,7 +543,7 @@ making QUEUE's requests."
   "Process requests in QUEUE and return QUEUE.
 Return when QUEUE is at limit or has no more queued requests.
 
-QUEUE should be a `plz-queue' struct."
+QUEUE should be a `plz-queue' structure."
   (cl-labels ((readyp
                (queue) (and (not (plz-queue-canceled-p queue))
                             (plz-queue-requests queue)
@@ -594,7 +594,7 @@ QUEUE should be a `plz-queue' struct."
 (defun plz-clear (queue)
   "Clear QUEUE and return it.
 Cancels any active or pending requests.  For pending requests,
-their ELSE functions will be called with a `plz-error' struct
+their ELSE functions will be called with a `plz-error' structure
 with the message, \"`plz' queue cleared; request canceled.\";
 active requests will have their curl processes killed and their
 ELSE functions called with the corresponding data."
@@ -656,7 +656,7 @@ node `(elisp) Sentinels').  Kills the buffer before returning."
                     (curl-error-message (alist-get curl-exit-code plz-curl-errors))
                     (err (make-plz-error :curl-error (cons curl-exit-code curl-error-message))))
                (pcase-exhaustive plz-else
-                 ;; FIXME: Returning a plz-error struct which has a curl-error slot, wrapped in a plz-curl-error, is confusing.
+                 ;; FIXME: Returning a plz-error structure which has a curl-error slot, wrapped in a plz-curl-error, is confusing.
                  (`nil (signal 'plz-curl-error err))
                  ((pred functionp) (funcall plz-else err)))))
 
@@ -691,7 +691,7 @@ node `(elisp) Sentinels').  Kills the buffer before returning."
           (signal 'plz-http-error '("plz--response: End of proxy headers not found")))))))
 
 (cl-defun plz--response (&key (decode-p t))
-  "Return response struct for HTTP response in current buffer.
+  "Return response structure for HTTP response in current buffer.
 When DECODE-P is non-nil, decode the response body automatically
 according to the apparent coding system.
 
