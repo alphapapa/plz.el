@@ -110,12 +110,16 @@
 ;;;; Constants
 
 (defconst plz-http-response-status-line-regexp
-  (rx bol "HTTP/" (group (1+ (or digit ".")))
+  (rx "HTTP/" (group (or "1.0" "1.1" "2")) " "
       ;; Status code
-      (1+ blank) (group (1+ digit))
+      (group (1+ digit)) " "
       ;; Reason phrase
-      (optional (1+ blank) (group (1+ (not (any "\r\n")))))
-      "\r\n")
+      (optional (group (1+ (not (any "\r\n")))))
+      (or
+       ;; HTTP 1
+       "\r\n"
+       ;; HTTP 2
+       "\n"))
   "Regular expression matching HTTP response status line.")
 
 (defconst plz-http-end-of-headers-regexp
