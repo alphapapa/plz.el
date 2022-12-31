@@ -46,7 +46,7 @@ Usage
 
 Changelog
 
-* 0.3-pre: 03-pre. 
+* 0.3: 03. 
 * 0.2.1: 021. 
 * 0.2: 02. 
 * 0.1: 01. 
@@ -268,16 +268,16 @@ File: README.info,  Node: Changelog,  Next: Credits,  Prev: Usage,  Up: Top
 
 * Menu:
 
-* 0.3-pre: 03-pre. 
+* 0.3: 03. 
 * 0.2.1: 021. 
 * 0.2: 02. 
 * 0.1: 01. 
 
 
-File: README.info,  Node: 03-pre,  Next: 021,  Up: Changelog
+File: README.info,  Node: 03,  Next: 021,  Up: Changelog
 
-3.1 0.3-pre
-===========
+3.1 0.3
+=======
 
 *Additions*
    • Handle HTTP proxy headers from Curl.
@@ -287,7 +287,7 @@ File: README.info,  Node: 03-pre,  Next: 021,  Up: Changelog
      linting succeeds).
 
 
-File: README.info,  Node: 021,  Next: 02,  Prev: 03-pre,  Up: Changelog
+File: README.info,  Node: 021,  Next: 02,  Prev: 03,  Up: Changelog
 
 3.2 0.2.1
 =========
@@ -367,23 +367,23 @@ GPLv3
 
 Tag Table:
 Node: Top199
-Node: Installation1092
-Node: GNU ELPA1235
-Node: Manual1481
-Node: Usage1787
-Node: Examples2288
-Node: Functions3655
-Node: Queueing6550
-Node: Tips7808
-Node: Changelog8109
-Node: 03-pre8282
-Node: 0218544
-Node: 028697
-Node: 018826
-Node: Credits8920
-Node: Development9286
-Node: Copyright assignment9800
-Node: License10388
+Node: Installation1084
+Node: GNU ELPA1227
+Node: Manual1473
+Node: Usage1779
+Node: Examples2280
+Node: Functions3647
+Node: Queueing6542
+Node: Tips7800
+Node: Changelog8101
+Node: 038266
+Node: 0218516
+Node: 028665
+Node: 018794
+Node: Credits8888
+Node: Development9254
+Node: Copyright assignment9768
+Node: License10356
 
 End Tag Table
 
