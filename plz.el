@@ -118,6 +118,12 @@
       "\r\n")
   "Regular expression matching HTTP response status line.")
 
+(defconst plz-http-end-of-headers-regexp
+  (rx (or "\r\n\r\n" "\n\n"))
+  "Regular expression matching the end of HTTP headers.
+This must work with both HTTP/1 (using CRLF) and HTTP/2 (using
+only LF).")
+
 (defconst plz-curl-errors
   ;; Copied from elfeed-curl.el.
   '((1 . "Unsupported protocol.")
@@ -736,7 +742,7 @@ Assumes point is at start of HTTP response."
   (save-excursion
     (forward-line 1)
     (let ((limit (save-excursion
-                   (re-search-forward "^\r\n" nil)
+                   (re-search-forward plz-http-end-of-headers-regexp nil)
                    (point))))
       (cl-loop while (re-search-forward (rx bol (group (1+ (not (in ":")))) ":" (1+ blank)
                                             (group (1+ (not (in "\r\n")))))
@@ -751,7 +757,7 @@ Assumes point is at start of HTTP response."
 (defun plz--narrow-to-body ()
   "Narrow to body of HTTP response in current buffer.
 Assumes point is at start of HTTP response."
-  (unless (re-search-forward "^\r\n" nil t)
+  (unless (re-search-forward plz-http-end-of-headers-regexp nil t)
     (signal 'plz-http-error '("plz--narrow-to-body: Unable to find end of headers")))
   (narrow-to-region (point) (point-max)))
 
