@@ -354,7 +354,7 @@ NOQUERY is passed to `make-process', which see."
                                    (when timeout
                                      (list (cons "--max-time" (number-to-string timeout))))
                                    (pcase method
-                                     ((or 'put 'post)
+                                     ((or 'put 'post 'patch)
                                       (cl-assert body)
                                       (list (cons "--request" (upcase (symbol-name method)))
                                             ;; It appears that this must be the last argument
