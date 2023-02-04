@@ -308,6 +308,26 @@
     (should (string-match "curl" .headers.User-Agent))
     (should (equal "plz-test-header-value" .headers.X-Plz-Test-Header))))
 
+;;;;; HEAD requests
+
+;; NOTE: httpbin.org doesn't appear to support a "/head" endpoint,
+;; so we'll use "/get".
+
+(plz-deftest plz-head-without-headers ()
+  ;; I'm not sure how useful it may be to make a HEAD request without
+  ;; caring about the headers, but perhaps it could be useful as a
+  ;; lightweight way to test a server's presence, so we should
+  ;; probably support it.  This merely tests that no error is
+  ;; signaled, which should mean that the HEAD request succeeded.
+  (should (equal "" (plz 'head "https://httpbin.org/get"))))
+
+(plz-deftest plz-head-as-response ()
+  (let ((response (plz 'head "https://httpbin.org/get"
+                    :as 'response)))
+    (should (equal "application/json"
+                   (alist-get 'content-type
+                              (plz-response-headers response))))))
+
 ;;;;; Errors
 
 (plz-deftest plz-get-curl-error nil

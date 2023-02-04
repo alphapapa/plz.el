@@ -175,6 +175,9 @@ You may also clear a queue with ~plz-clear~, which cancels any active or queued 
 
 ** 0.4-pre
 
+*Additions*
++ Support for HTTP ~HEAD~ requests.  (Thanks to [[https://ushin.org/][USHIN, Inc.]] for sponsoring this feature.)
+
 *Internal*
 + Test suite explicitly tests with both HTTP/1.1 and HTTP/2.
 
