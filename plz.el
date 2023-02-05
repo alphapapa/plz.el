@@ -666,6 +666,7 @@ node `(elisp) Sentinels').  Kills the buffer before returning."
              (pcase (plz--http-status)
                ((and status (guard (<= 200 status 299)))
                 ;; Any 2xx response is considered successful.
+                (ignore status)  ; Byte-compiling in Emacs <28 complains without this.
                 (funcall plz-then))
                ;; Any other status code is considered unsuccessful
                ;; (for now, anyway).
