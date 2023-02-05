@@ -664,7 +664,11 @@ node `(elisp) Sentinels').  Kills the buffer before returning."
              (goto-char (point-min))
              (plz--skip-proxy-headers)
              (pcase (plz--http-status)
-               (200 (funcall plz-then))
+               ((and status (guard (<= 200 status 299)))
+                ;; Any 2xx response is considered successful.
+                (funcall plz-then))
+               ;; Any other status code is considered unsuccessful
+               ;; (for now, anyway).
                (_ (let ((err (make-plz-error :response (plz--response))))
                     (pcase-exhaustive plz-else
                       (`nil (signal 'plz-http-error err))

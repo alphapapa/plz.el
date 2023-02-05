@@ -328,6 +328,18 @@
                    (alist-get 'content-type
                               (plz-response-headers response))))))
 
+;;;;; Status codes
+
+(plz-deftest plz-201-succeeds ()
+  ;; This merely tests that a 201 response does not signal an error.
+  (should (plz 'get "https://httpbin.org/status/201")))
+
+(plz-deftest plz-400-errors ()
+  (should-error (plz 'get "https://httpbin.org/status/400")))
+
+(plz-deftest plz-500-errors ()
+  (should-error (plz 'get "https://httpbin.org/status/500")))
+
 ;;;;; Errors
 
 (plz-deftest plz-get-curl-error nil
