@@ -54,10 +54,10 @@ Synchronously =GET= a URL and return the response body as a decoded string (here
   (plz 'get "https://httpbin.org/user-agent")
 #+END_SRC
 
-#+RESULTS:
-#+BEGIN_SRC elisp
+#+RESULTS[47fef7e4780e9fac6c99d7661c29de580bf0fa14]:
+#+begin_src elisp
   "{\n \"user-agent\": \"curl/7.35.0\"\n}\n"
-#+END_SRC
+#+end_src
 
 Synchronously =GET= a URL that returns a JSON object, and parse and return it as an alist:
 
@@ -65,8 +65,8 @@ Synchronously =GET= a URL that returns a JSON object, and parse and return it as
   (plz 'get "https://httpbin.org/get" :as #'json-read)
 #+END_SRC
 
-#+RESULTS:
-#+BEGIN_SRC elisp
+#+RESULTS[a117174ba62b2be3ea3f23e5c43662047b81bccf]:
+#+begin_src elisp
   ((args)
    (headers
     (Accept . "*/*")
@@ -74,7 +74,7 @@ Synchronously =GET= a URL that returns a JSON object, and parse and return it as
     (Host . "httpbin.org")
     (User-Agent . "curl/7.35.0"))
    (url . "https://httpbin.org/get"))
-#+END_SRC
+#+end_src
 
 Asynchronously =POST= a JSON object in the request body, then parse a JSON object from the response body, and call a function with the result:
 
@@ -87,7 +87,7 @@ Asynchronously =POST= a JSON object in the request body, then parse a JSON objec
             (message "Result: %s" (alist-get 'data alist))))
 #+END_SRC
 
-#+RESULTS:
+#+RESULTS[3f4fdd16c4980bf36c3930e91f69cc379cca4a35]:
 : Result: {"key":"value"}
 
 Synchronously download a JPEG file, then create an Emacs image object from the data:
@@ -97,7 +97,7 @@ Synchronously download a JPEG file, then create an Emacs image object from the d
     (create-image jpeg-data nil 'data))
 #+END_SRC
 
-#+RESULTS:
+#+RESULTS[fbe8a6c8cb097ac08e992ea90bdbd50e7337a385]:
 : (image :type jpeg :data ""ÿØÿà^@^PJFIF...")
 
 ** Functions
@@ -138,7 +138,7 @@ Synchronously download a JPEG file, then create an Emacs image object from the d
 
 All of the queue-related functions return the queue as their value, making them easy to use.  For example:
 
-#+begin_src elisp
+#+begin_src elisp :exports code
   (defvar my-queue (make-plz-queue :limit 2))
 
   (plz-run
@@ -149,7 +149,7 @@ All of the queue-related functions return the queue as their value, making them 
 
 Or:
 
-#+begin_src elisp
+#+begin_src elisp :exports code
   (let ((queue (make-plz-queue :limit 2))
         (urls '("https://httpbin.org/get?foo=0"
                 "https://httpbin.org/get?foo=1")))
