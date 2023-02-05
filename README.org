@@ -176,7 +176,7 @@ You may also clear a queue with ~plz-clear~, which cancels any active or queued 
 ** 0.4-pre
 
 *Additions*
-+ Support for HTTP ~HEAD~ requests.  (Thanks to [[https://ushin.org/][USHIN, Inc.]] for sponsoring this feature.)
++ Support for HTTP ~HEAD~ requests.  (Thanks to [[https://ushin.org/][USHIN, Inc.]] for sponsoring.)
 
 *Fixes*
 + All 2xx HTTP status codes are considered successful.  ([[https://github.com/alphapapa/plz.el/issues/17][#17]].  Thanks to [[https://github.com/josephmturner][Joseph Turner]] for reporting.  Thanks to [[https://ushin.org/][USHIN, Inc.]] for sponsoring.)

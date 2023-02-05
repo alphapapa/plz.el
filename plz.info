@@ -282,8 +282,14 @@ File: README.info,  Node: 04-pre,  Next: 03,  Up: Changelog
 ===========
 
 *Additions*
-   • Support for HTTP ‘HEAD’ requests.  (Thanks to Inc.  for sponsoring
-     this feature.)
+   • Support for HTTP ‘HEAD’ requests.  (Thanks to Inc.  for
+     sponsoring.)
+
+   *Fixes*
+   • All 2xx HTTP status codes are considered successful.  (#17
+     (https://github.com/alphapapa/plz.el/issues/17).  Thanks to Joseph
+     Turner (https://github.com/josephmturner) for reporting.  Thanks to
+     Inc.  for sponsoring.)
 
    *Internal*
    • Test suite explicitly tests with both HTTP/1.1 and HTTP/2.
@@ -395,14 +401,14 @@ Node: Queueing6562
 Node: Tips7820
 Node: Changelog8121
 Node: 04-pre8306
-Node: 038586
-Node: 0219038
-Node: 029187
-Node: 019316
-Node: Credits9410
-Node: Development9776
-Node: Copyright assignment10290
-Node: License10878
+Node: 038824
+Node: 0219276
+Node: 029425
+Node: 019554
+Node: Credits9648
+Node: Development10014
+Node: Copyright assignment10528
+Node: License11116
 
 End Tag Table
 
