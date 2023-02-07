@@ -186,6 +186,7 @@ You may also clear a queue with ~plz-clear~, which cancels any active or queued 
 
 *Internal*
 + Test suite explicitly tests with both HTTP/1.1 and HTTP/2.
++ Test suite also tests with Emacs versions 27.2, 28.1, and 28.2.
 
 ** 0.3
 
