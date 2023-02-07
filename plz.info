@@ -285,6 +285,12 @@ File: README.info,  Node: 04-pre,  Next: 03,  Up: Changelog
    • Support for HTTP ‘HEAD’ requests.  (Thanks to Inc.  for
      sponsoring.)
 
+   *Changes*
+   • Allow sending ‘POST’ and ‘PUT’ requests without bodies.  (#16
+     (https://github.com/alphapapa/plz.el/issues/16).  Thanks to Joseph
+     Turner (https://github.com/josephmturner) for reporting.  Thanks to
+     Inc.  for sponsoring.)
+
    *Fixes*
    • All 2xx HTTP status codes are considered successful.  (#17
      (https://github.com/alphapapa/plz.el/issues/17).  Thanks to Joseph
@@ -401,14 +407,14 @@ Node: Queueing6562
 Node: Tips7820
 Node: Changelog8121
 Node: 04-pre8306
-Node: 038824
-Node: 0219276
-Node: 029425
-Node: 019554
-Node: Credits9648
-Node: Development10014
-Node: Copyright assignment10528
-Node: License11116
+Node: 039088
+Node: 0219540
+Node: 029689
+Node: 019818
+Node: Credits9912
+Node: Development10278
+Node: Copyright assignment10792
+Node: License11380
 
 End Tag Table
 

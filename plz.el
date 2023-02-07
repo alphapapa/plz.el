@@ -364,7 +364,6 @@ NOQUERY is passed to `make-process', which see."
                                      ('get
                                       (list (cons "--dump-header" "-")))
                                      ((or 'put 'post)
-                                      (cl-assert body)
                                       (list (cons "--dump-header" "-")
                                             (cons "--request" (upcase (symbol-name method)))
                                             ;; It appears that this must be the last argument

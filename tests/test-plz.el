@@ -328,6 +328,18 @@
                    (alist-get 'content-type
                               (plz-response-headers response))))))
 
+;;;;; POST requests
+
+(plz-deftest plz-post-empty-body ()
+  (should (equal ""
+                 (alist-get 'data
+                            (json-read-from-string
+                             (plz 'post "https://httpbin.org/post")))))
+  (should (equal "application/json"
+                 (alist-get 'content-type
+                            (plz-response-headers
+                             (plz 'post "https://httpbin.org/post" :as 'response))))))
+
 ;;;;; Status codes
 
 (plz-deftest plz-201-succeeds ()
