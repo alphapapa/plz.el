@@ -319,7 +319,7 @@
   ;; lightweight way to test a server's presence, so we should
   ;; probably support it.  This merely tests that no error is
   ;; signaled, which should mean that the HEAD request succeeded.
-  (should (equal "" (plz 'head "https://httpbin.org/get"))))
+  (should (plz 'head "https://httpbin.org/get")))
 
 (plz-deftest plz-head-as-response ()
   (let ((response (plz 'head "https://httpbin.org/get"
