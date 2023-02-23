@@ -395,3 +395,15 @@ Assuming that =plz= has already called =decode-coding-region=, this is straightf
 
 A nice-looking wrapper for =url.el=.
 
+
+* Users
+
+Known users of =plz=.
+
++ [[https://github.com/Fuco1/org-node-graph/blob/master/org-graph-embeddings.el][org-node-graph]]
++ [[https://github.com/jinnovation/kele.el][GitHub - jinnovation/kele.el: 🥤 Spritzy Kubernetes cluster management for Emacs]]
++ [[https://github.com/purplg/orrient.el][GitHub - purplg/orrient.el]]
++ [[https://sr.ht/~akagi/srht.el/][srht.el: Emacs sr.ht API client]]
++ [[https://github.com/merrickluo/qbittorrent.el][GitHub - merrickluo/qbittorrent.el: A qBittorrent client for Emacs.]]
++ [[https://github.com/akirak/emacs-dumb-japanese][GitHub - akirak/emacs-dumb-japanese: (Experimental) An opinionated Japanese input method that never learns your language]]
++ ...and others that I don't recall at the moment...
