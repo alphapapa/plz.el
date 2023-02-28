@@ -373,7 +373,8 @@ NOQUERY is passed to `make-process', which see."
                                       (list (cons "--dump-header" "-")
                                             (cons "--request" (upcase (symbol-name method)))))
                                      ('head
-                                      (list (cons "--head" ""))))))
+                                      (list (cons "--head" "")
+                                            (cons "--request" "HEAD"))))))
          (curl-config (cl-loop for (key . value) in curl-config-args
                                concat (format "%s \"%s\"\n" key value)))
          (decode (pcase as
