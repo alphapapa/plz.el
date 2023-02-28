@@ -183,6 +183,7 @@ You may also clear a queue with ~plz-clear~, which cancels any active or queued 
 
 *Fixes*
 + All 2xx HTTP status codes are considered successful.  ([[https://github.com/alphapapa/plz.el/issues/17][#17]].  Thanks to [[https://github.com/josephmturner][Joseph Turner]] for reporting.  Thanks to [[https://ushin.org/][USHIN, Inc.]] for sponsoring.)
++ Errors are signaled with error data correctly.
 
 *Internal*
 + Test suite explicitly tests with both HTTP/1.1 and HTTP/2.

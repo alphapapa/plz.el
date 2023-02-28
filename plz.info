@@ -296,6 +296,7 @@ File: README.info,  Node: 04-pre,  Next: 03,  Up: Changelog
      (https://github.com/alphapapa/plz.el/issues/17).  Thanks to Joseph
      Turner (https://github.com/josephmturner) for reporting.  Thanks to
      Inc.  for sponsoring.)
+   • Errors are signaled with error data correctly.
 
    *Internal*
    • Test suite explicitly tests with both HTTP/1.1 and HTTP/2.
@@ -408,14 +409,14 @@ Node: Queueing6562
 Node: Tips7820
 Node: Changelog8121
 Node: 04-pre8306
-Node: 039159
-Node: 0219611
-Node: 029760
-Node: 019889
-Node: Credits9983
-Node: Development10349
-Node: Copyright assignment10863
-Node: License11451
+Node: 039213
+Node: 0219665
+Node: 029814
+Node: 019943
+Node: Credits10037
+Node: Development10403
+Node: Copyright assignment10917
+Node: License11505
 
 End Tag Table
 

@@ -96,8 +96,8 @@
 ;;;; Errors
 
 ;; FIXME: `condition-case' can't catch these...?
-(define-error 'plz-curl-error "Curl error")
-(define-error 'plz-http-error "HTTP error")
+(define-error 'plz-curl-error "plz: Curl error")
+(define-error 'plz-http-error "plz: HTTP error")
 
 ;;;; Structs
 
@@ -672,7 +672,7 @@ node `(elisp) Sentinels').  Kills the buffer before returning."
                ;; (for now, anyway).
                (_ (let ((err (make-plz-error :response (plz--response))))
                     (pcase-exhaustive plz-else
-                      (`nil (signal 'plz-http-error err))
+                      (`nil (signal 'plz-http-error (list "plz--sentinel: HTTP error" err)))
                       ((pred functionp) (funcall plz-else err)))))))
 
             ((or (and (pred numberp) code)
@@ -685,7 +685,7 @@ node `(elisp) Sentinels').  Kills the buffer before returning."
                     (err (make-plz-error :curl-error (cons curl-exit-code curl-error-message))))
                (pcase-exhaustive plz-else
                  ;; FIXME: Returning a plz-error structure which has a curl-error slot, wrapped in a plz-curl-error, is confusing.
-                 (`nil (signal 'plz-curl-error err))
+                 (`nil (signal 'plz-curl-error (list "plz--sentinel: Curl error" err)))
                  ((pred functionp) (funcall plz-else err)))))
 
             ((and (or "killed\n" "interrupt\n") status)
@@ -695,7 +695,7 @@ node `(elisp) Sentinels').  Kills the buffer before returning."
                                ("interrupt\n" "curl process interrupted")))
                     (err (make-plz-error :message message)))
                (pcase-exhaustive plz-else
-                 (`nil (signal 'plz-curl-error err))
+                 (`nil (signal 'plz-curl-error (list "plz--sentinel: Curl error" err)))
                  ((pred functionp) (funcall plz-else err)))))))
       (when finally
         (funcall finally))
