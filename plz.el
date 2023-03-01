@@ -397,6 +397,9 @@ NOQUERY is passed to `make-process', which see."
                                    :command (append (list plz-curl-program) curl-command-line-args)
                                    :connection-type 'pipe
                                    :sentinel #'plz--sentinel
+                                   ;; FIXME: Set the stderr process sentinel to ignore to prevent
+                                   ;; "process finished" garbage in the buffer (response body).  See:
+                                   ;; <https://stackoverflow.com/questions/42810755/how-to-remove-process-finished-message-from-make-process-or-start-process-in-e>.
                                    :stderr (current-buffer)
                                    :noquery noquery))
             ;; The THEN function is called in the response buffer.
