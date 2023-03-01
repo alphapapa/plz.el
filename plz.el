@@ -383,6 +383,7 @@ NOQUERY is passed to `make-process', which see."
          sync-p)
     (when (eq 'sync then)
       (setf sync-p t
+            ;; FIXME: For sync requests, `else' should be forced nil.
             then (lambda (result)
                    (setf plz-result result))))
     (with-current-buffer (generate-new-buffer " *plz-request-curl*")
