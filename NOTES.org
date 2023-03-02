@@ -17,6 +17,13 @@
 :ID:       bc93ae30-b483-4113-977f-16bb55e6c73c
 :END:
 
+** TODO [#B] Use ~with-local-quit~ as appropriate
+:LOGBOOK:
+- State "TODO"       from              [2023-03-02 Thu 16:18]
+:END:
+
+We've been noticing this happening in hyperdrive.el sometimes.  It may be necessary to use ~with-local-quit~ somewhere in =plz='s code.  See: [[id:57a9bbd4-9b6e-4db0-a293-a099d4a05c89][Blocking call to accept-process-output with quit inhibited!! [11 times]​]].
+
 ** TODO Handle other process statuses in ~plz--sentinel~
 :PROPERTIES:
 :milestone: 0.3
@@ -260,6 +267,20 @@ Assuming that =plz= has already called =decode-coding-region=, this is straightf
 :TOC:      :depth 1
 :END:
 
+** Users
+
+Known users of =plz=.
+
++ [[https://github.com/alphapapa/ement.el][GitHub - alphapapa/ement.el: Matrix client for Emacs]]
++ [[https://git.sr.ht/~ushin/hyperdrive.el][~ushin/hyperdrive.el - Emacs gateway to the Hypercore network - sourcehut git]]
++ [[https://github.com/Fuco1/org-node-graph/blob/master/org-graph-embeddings.el][org-node-graph]]
++ [[https://github.com/jinnovation/kele.el][GitHub - jinnovation/kele.el: 🥤 Spritzy Kubernetes cluster management for Emacs]]
++ [[https://github.com/purplg/orrient.el][GitHub - purplg/orrient.el]]
++ [[https://sr.ht/~akagi/srht.el/][srht.el: Emacs sr.ht API client]]
++ [[https://github.com/merrickluo/qbittorrent.el][GitHub - merrickluo/qbittorrent.el: A qBittorrent client for Emacs.]]
++ [[https://github.com/akirak/emacs-dumb-japanese][GitHub - akirak/emacs-dumb-japanese: (Experimental) An opinionated Japanese input method that never learns your language]]
++ ...and others that I don't recall at the moment...
+  
 ** Discussions
 
 *** [[https://lists.gnu.org/archive/html/emacs-devel/2016-12/msg01070.html][with-url]]
@@ -375,6 +396,25 @@ Assuming that =plz= has already called =decode-coding-region=, this is straightf
   object. (Except for plz-run?)
 #+end_src
 
+*** [[https://lists.gnu.org/archive/html/emacs-devel/2010-09/msg00199.html][Blocking call to accept-process-output with quit inhibited!! [11 times]​]]
+:PROPERTIES:
+:ID:       57a9bbd4-9b6e-4db0-a293-a099d4a05c89
+:END:
+
+This thread discusses how process sentinels, et al inhibit quit, which causes that message to be displayed.
+
+Some quotes from Stefan:
+
+#+begin_quote
+No, usually it's there because the Elisp coder is not aware of the risk (e.g. he doesn't realize his code will be run with inhibit-quit set, probably because he doesn't realize that this is set whenever we run process filters, process sentinels, post-command-hook, jit-lock, timers, and a handful other cases).
+#+end_quote
+
+#+begin_quote
+> But why then is quit inhibited at all?
+
+Because these are run asynchronously, so in most cases the user has no idea that code is being executed at that point.  So if she hits C-g it's likely to be for other reasons than to interrupt the async code, so by default Emacs runs the async code to completion first and then processes the C-g (you wouldn't want a C-g meant to abort a command to result in a half-font-locked display, would you?).  I.e. if you want to execute code that may last for a significant amount of time from one of those places, you need with-local-quit (and you may want to make sure the user knows that such code is being run).
+#+end_quote
+
 ** Bug reports
 
 *** Emacs Process-related bugs
@@ -396,14 +436,3 @@ Assuming that =plz= has already called =decode-coding-region=, this is straightf
 A nice-looking wrapper for =url.el=.
 
 
-* Users
-
-Known users of =plz=.
-
-+ [[https://github.com/Fuco1/org-node-graph/blob/master/org-graph-embeddings.el][org-node-graph]]
-+ [[https://github.com/jinnovation/kele.el][GitHub - jinnovation/kele.el: 🥤 Spritzy Kubernetes cluster management for Emacs]]
-+ [[https://github.com/purplg/orrient.el][GitHub - purplg/orrient.el]]
-+ [[https://sr.ht/~akagi/srht.el/][srht.el: Emacs sr.ht API client]]
-+ [[https://github.com/merrickluo/qbittorrent.el][GitHub - merrickluo/qbittorrent.el: A qBittorrent client for Emacs.]]
-+ [[https://github.com/akirak/emacs-dumb-japanese][GitHub - akirak/emacs-dumb-japanese: (Experimental) An opinionated Japanese input method that never learns your language]]
-+ ...and others that I don't recall at the moment...
