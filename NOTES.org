@@ -73,6 +73,24 @@ In fact, writing a wrapper script does not help at all: how horribly hacky and m
 
 This might allow us to avoid or delay putting the response body in a string, which could improve performance.
 
+** HTTP status code and error handling improvements
+
+*** Return values to THEN and ELSE functions
+As it stands, handling specific errors, like different HTTP status codes or Curl error codes, is awkward.  It requires passing an ELSE function which receives a ~plz-error~ struct which contains any Curl error code in one slot, and any HTTP response in another slot; and accessing the HTTP status code requires destructuring both the ~plz-error~ struct and the contained ~plz-response~ struct.
+
+It becomes even more awkward if various 2xx HTTP codes need to be handled differently, requiring the user to destructure the response and case the status code in both the THEN and ELSE functions.
+
+A potential improvement would be, when the user specifies ~:as 'response~, to return the ~plz-response~ struct to the THEN function even for non-2xx HTTP status codes, which would allow the user to handle all HTTP status codes in a single place.
+
+For the case that Curl returns an error (e.g. connection failure), there would be basically two choices: a) return the ~plz-response~ struct anyway, but using the <100 Curl error code as the status code (which seems like an elegant hack, but a hack nonetheless); or b) return a ~plz-error~ struct instead (which would require the user to typecase the argument in the THEN function, which it would be preferable to avoid).
+
+*** Wrap ~(funcall then ...)~ in ~condition-case~ and pass Lisp error to ELSE
+Another potential improvement might be to wrap more of ~plz--sentinel~'s body in a ~condition-case~, to catch any error from the THEN function, and to call the ELSE function with the Lisp error as the value.  Then the ELSE function could dispatch on the type of error and even re-signal it if it's unexpected.
+
+In this case, probably the ELSE function would always receive a Lisp error list as its argument rather than a ~plz-error~ struct.
+
+Of course, this would be a breaking change, so it would have to be considered carefully and, if possible, handled with a graceful transition.
+
 ** Parallel fetching
 :PROPERTIES:
 :ID:       96e3f880-4df4-4f9b-8d9d-fbd04e1eec6e
