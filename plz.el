@@ -459,6 +459,7 @@ NOQUERY is passed to `make-process', which see."
         (when body
           (cl-typecase body
             (string (process-send-string process body))
+            ;; TODO: Document that BODY can be a buffer.
             (buffer (with-current-buffer body
                       (process-send-region process (point-min) (point-max))))))
         (process-send-eof process)
