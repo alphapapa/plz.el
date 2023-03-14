@@ -73,6 +73,13 @@ In fact, writing a wrapper script does not help at all: how horribly hacky and m
 
 This might allow us to avoid or delay putting the response body in a string, which could improve performance.
 
+** TODO Allow sending files from disk as request body
+:LOGBOOK:
+- State "TODO"       from              [2023-03-14 Tue 05:37]
+:END:
+
++ See: [[id:c0012a30-0d08-4b48-8d3a-89d1f3deec20][Sending should not rely on UNIX pipes -- it's slow. · Issue #207 · tkf/emacs-request · GitHub]].
+
 ** HTTP status code and error handling improvements
 
 *** Return values to THEN and ELSE functions
@@ -446,6 +453,13 @@ And I don't know where to begin to debug it.  Digging through the log buffer to 
 
 I guess our best option now is to keep using `url-with-retrieve-async` for everything that works for, and use `request` only for HTTP requests that don't work with `url`.  Sigh.  What a mess.
 #+end_quote
+
+*** [[https://github.com/tkf/emacs-request/issues/207][Sending should not rely on UNIX pipes -- it's slow. · Issue #207 · tkf/emacs-request · GitHub]]
+:PROPERTIES:
+:ID:       c0012a30-0d08-4b48-8d3a-89d1f3deec20
+:END:
+
+This issue notes that sending large files (e.g. 25 MB) to curl via UNIX pipes is slow.
 
 ** Bug reports
 
