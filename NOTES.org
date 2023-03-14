@@ -433,6 +433,20 @@ No, usually it's there because the Elisp coder is not aware of the risk (e.g. he
 Because these are run asynchronously, so in most cases the user has no idea that code is being executed at that point.  So if she hits C-g it's likely to be for other reasons than to interrupt the async code, so by default Emacs runs the async code to completion first and then processes the C-g (you wouldn't want a C-g meant to abort a command to result in a half-font-locked display, would you?).  I.e. if you want to execute code that may last for a significant amount of time from one of those places, you need with-local-quit (and you may want to make sure the user knows that such code is being run).
 #+end_quote
 
+*** About request.el
+
+**** [[https://github.com/alphapapa/matrix-client.el/pull/27#issuecomment-428689369][Early WIP: "next-gen" client by alphapapa · Pull Request #27 · alphapapa/matrix-client.el · GitHub]]
+
+A comment I made on [2018-10-10 Wed]:
+
+#+begin_quote markdown
+@jgkamat Okay, well, now I remember what the problem with `request` is: sync requests start getting duplicated.  The last message I received in a room arrived 21 times!  When I first run `matrix-client-ng-connect`, it's fine.  But over time, sync requests start getting duplicated.  I don't know how it would be possible for that to happen, but it is happening.
+
+And I don't know where to begin to debug it.  Digging through the log buffer to find where a sync request is first duplicated is tedious and error-prone.  Even if I found where, it wouldn't tell me why it happened.  And `request` is labyrinthine and very difficult to follow by stepping through with edebug.  And this never happens with `url`.
+
+I guess our best option now is to keep using `url-with-retrieve-async` for everything that works for, and use `request` only for HTTP requests that don't work with `url`.  Sigh.  What a mess.
+#+end_quote
+
 ** Bug reports
 
 *** Emacs Process-related bugs
