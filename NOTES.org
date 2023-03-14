@@ -73,6 +73,13 @@ In fact, writing a wrapper script does not help at all: how horribly hacky and m
 
 This might allow us to avoid or delay putting the response body in a string, which could improve performance.
 
+** TODO Experiment with running callbacks with timers
+:LOGBOOK:
+- State "TODO"       from              [2023-03-14 Tue 11:58]
+:END:
+
++ See: [[id:bbf01f92-1a55-4b86-a92b-f7ef0ed6ad4a][continuation passing in Emacs vs. JUST-THIS-ONE]].
+
 ** TODO Allow sending files from disk as request body
 :LOGBOOK:
 - State "TODO"       from              [2023-03-14 Tue 05:37]
@@ -307,6 +314,13 @@ Known users of =plz=.
 + ...and others that I don't recall at the moment...
   
 ** Discussions
+
+*** [[https://lists.gnu.org/archive/html/emacs-devel/2023-03/msg00430.html][continuation passing in Emacs vs. JUST-THIS-ONE]]
+:PROPERTIES:
+:ID:       bbf01f92-1a55-4b86-a92b-f7ef0ed6ad4a
+:END:
+
+Later discussion in the thread mentions using timers to improve responsiveness, and I wonder if something like that would be useful in ~plz~ (e.g. having the process sentinel just call ~(run-at-time nil ...)~ and do all the work in a function called by the timer--maybe it would make error handling easier or cleaner or less troublesome by not doing so in the sentinel).
 
 *** [[https://lists.gnu.org/archive/html/emacs-devel/2016-12/msg01070.html][with-url]]
 
