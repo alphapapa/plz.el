@@ -199,11 +199,12 @@ File: README.info,  Node: Functions,  Next: Queueing,  Prev: Examples,  Up: Usag
      request, in which case the result is returned directly.
 
      ‘ELSE’ is an optional callback function called when the request
-     fails with one argument, a ‘plz-error’ struct.  If ‘ELSE’ is nil,
-     an error is signaled when the request fails, either
-     ‘plz-curl-error’ or ‘plz-http-error’ as appropriate, with a
-     ‘plz-error’ struct as the error data.  For synchronous requests,
-     this argument is ignored.
+     fails (i.e.  if curl fails, or if the HTTP response has a non-2xx
+     status code).  It is called with one argument, a ‘plz-error’
+     structure.  If ‘ELSE’ is nil, an error is signaled when the request
+     fails, either ‘plz-curl-error’ or ‘plz-http-error’ as appropriate,
+     with a ‘plz-error’ structure as the error data.  For synchronous
+     requests, this argument is ignored.
 
      ‘FINALLY’ is an optional function called without argument after
      ‘THEN’ or ‘ELSE’, as appropriate.  For synchronous requests, this
@@ -405,18 +406,18 @@ Node: Manual1493
 Node: Usage1799
 Node: Examples2300
 Node: Functions3667
-Node: Queueing6562
-Node: Tips7820
-Node: Changelog8121
-Node: 04-pre8306
-Node: 039213
-Node: 0219665
-Node: 029814
-Node: 019943
-Node: Credits10037
-Node: Development10403
-Node: Copyright assignment10917
-Node: License11505
+Node: Queueing6661
+Node: Tips7919
+Node: Changelog8220
+Node: 04-pre8405
+Node: 039312
+Node: 0219764
+Node: 029913
+Node: 0110042
+Node: Credits10136
+Node: Development10502
+Node: Copyright assignment11016
+Node: License11604
 
 End Tag Table
 
