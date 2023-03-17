@@ -386,13 +386,14 @@
 
 (plz-deftest plz-get-curl-error-sync nil
   ;; Sync.
-  (let ((err (should-error (plz 'get "https://httpbinnnnnn.org/get/status/404"
-                             :as 'string :then 'sync)
-                           :type 'plz-curl-error)))
-    (should (eq 'plz-curl-error (car err)))
-    (should (plz-error-p (cdr err)))
+  (pcase-let ((`(,signal ,_message ,data)
+	       (should-error (plz 'get "https://httpbinnnnnn.org/get/status/404"
+                               :as 'string :then 'sync)
+                             :type 'plz-curl-error)))
+    (should (eq 'plz-curl-error signal))
+    (should (plz-error-p data))
     (should (equal '(6 . "Couldn't resolve host. The given remote host was not resolved.")
-                   (plz-error-curl-error (cdr err))))))
+                   (plz-error-curl-error data)))))
 
 (plz-deftest plz-get-404-error nil
   ;; FIXME: Wrap each test expression in `should' rather than using `should-and'.
@@ -404,18 +405,19 @@
                     :else (lambda (e)
                             (setf err e)))))
     (plz-test-wait process)
-    (should (and (plz-error-p err)
-                 (plz-response-p (plz-error-response err))
-                 (eq 404 (plz-response-status (plz-error-response err))))))
+    (should (plz-error-p err))
+    (should (plz-response-p (plz-error-response err)))
+    (should (eq 404 (plz-response-status (plz-error-response err)))))
 
   ;; Sync.
-  (let ((err (should-error (plz 'get "https://httpbin.org/get/status/404"
-                             :as 'string :then 'sync)
-                           :type 'plz-http-error)))
-    (should (and (eq 'plz-http-error (car err))
-                 (plz-error-p (cdr err))
-                 (plz-response-p (plz-error-response (cdr err)))
-                 (eq 404 (plz-response-status (plz-error-response (cdr err))))))))
+  (pcase-let ((`(,signal ,_message ,data)
+	       (should-error (plz 'get "https://httpbin.org/get/status/404"
+			       :as 'string :then 'sync)
+                             :type 'plz-http-error)))
+    (should (eq 'plz-http-error signal))
+    (should (plz-error-p data))
+    (should (plz-response-p (plz-error-response data)))
+    (should (eq 404 (plz-response-status (plz-error-response data))))))
 
 (plz-deftest plz-get-timeout-error nil
   ;; Async.
@@ -433,14 +435,14 @@
     (should (< (time-to-seconds (time-subtract end-time start-time)) 1.1)))
 
   ;; Sync.
-  (let ((start-time (current-time))
-        (err (cdr
-              (should-error (plz 'get "https://httpbin.org/delay/5"
-                              :as 'string :then 'sync :timeout 1)
-                            :type 'plz-curl-error)))
-        (end-time (current-time)))
-    (should (eq 28 (car (plz-error-curl-error err))))
-    (should (equal "Operation timeout." (cdr (plz-error-curl-error err))))
+  (pcase-let* ((start-time (current-time))
+               (`(,_signal ,_message ,data)
+		(should-error (plz 'get "https://httpbin.org/delay/5"
+				:as 'string :then 'sync :timeout 1)
+			      :type 'plz-curl-error))
+               (end-time (current-time)))
+    (should (eq 28 (car (plz-error-curl-error data))))
+    (should (equal "Operation timeout." (cdr (plz-error-curl-error data))))
     (should (< (time-to-seconds (time-subtract end-time start-time)) 1.1))))
 
 ;;;;; Finally
