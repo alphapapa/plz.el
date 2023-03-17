@@ -46,7 +46,7 @@ Usage
 
 Changelog
 
-* 0.4-pre: 04-pre. 
+* 0.4: 04. 
 * 0.3: 03. 
 * 0.2.1: 021. 
 * 0.2: 02. 
@@ -270,17 +270,17 @@ File: README.info,  Node: Changelog,  Next: Credits,  Prev: Usage,  Up: Top
 
 * Menu:
 
-* 0.4-pre: 04-pre. 
+* 0.4: 04. 
 * 0.3: 03. 
 * 0.2.1: 021. 
 * 0.2: 02. 
 * 0.1: 01. 
 
 
-File: README.info,  Node: 04-pre,  Next: 03,  Up: Changelog
+File: README.info,  Node: 04,  Next: 03,  Up: Changelog
 
-3.1 0.4-pre
-===========
+3.1 0.4
+=======
 
 *Additions*
    • Support for HTTP ‘HEAD’ requests.  (Thanks to Inc.  for
@@ -304,7 +304,7 @@ File: README.info,  Node: 04-pre,  Next: 03,  Up: Changelog
    • Test suite also tests with Emacs versions 27.2, 28.1, and 28.2.
 
 
-File: README.info,  Node: 03,  Next: 021,  Prev: 04-pre,  Up: Changelog
+File: README.info,  Node: 03,  Next: 021,  Prev: 04,  Up: Changelog
 
 3.2 0.3
 =======
@@ -400,24 +400,24 @@ GPLv3
 
 Tag Table:
 Node: Top199
-Node: Installation1104
-Node: GNU ELPA1247
-Node: Manual1493
-Node: Usage1799
-Node: Examples2300
-Node: Functions3667
-Node: Queueing6661
-Node: Tips7919
-Node: Changelog8220
-Node: 04-pre8405
-Node: 039312
-Node: 0219764
-Node: 029913
-Node: 0110042
-Node: Credits10136
-Node: Development10502
-Node: Copyright assignment11016
-Node: License11604
+Node: Installation1096
+Node: GNU ELPA1239
+Node: Manual1485
+Node: Usage1791
+Node: Examples2292
+Node: Functions3659
+Node: Queueing6653
+Node: Tips7911
+Node: Changelog8212
+Node: 048389
+Node: 039284
+Node: 0219732
+Node: 029881
+Node: 0110010
+Node: Credits10104
+Node: Development10470
+Node: Copyright assignment10984
+Node: License11572
 
 End Tag Table
 
