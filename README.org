@@ -173,7 +173,7 @@ You may also clear a queue with ~plz-clear~, which cancels any active or queued 
 :TOC:      :depth 0
 :END:
 
-** 0.5-pre
+** 0.5
 
 *Additions*
 + Struct ~plz-queue~'s ~finally~ slot, a function called when the queue is finished.
