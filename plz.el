@@ -502,6 +502,8 @@ default, it's FIFO).  Use functions `plz-queue', `plz-run', and
             :documentation "Queued requests.")
   (canceled-p nil
               :documentation "Non-nil when queue has been canceled.")
+  (finally nil
+           :documentation "Function called after queue has been emptied or canceled.")
   first-active last-active
   first-request last-request)
 
@@ -618,15 +620,17 @@ QUEUE should be a `plz-queue' structure."
           (setf args (plist-put args :timeout timeout)))
         (setf (plz-queued-request-process request) (apply #'plz args))
         (push request (plz-queue-active queue))))
+    (funcall (plz-queue-finally queue))
     queue))
 
 (defun plz-clear (queue)
   "Clear QUEUE and return it.
-Cancels any active or pending requests.  For pending requests,
-their ELSE functions will be called with a `plz-error' structure
-with the message, \"`plz' queue cleared; request canceled.\";
-active requests will have their curl processes killed and their
-ELSE functions called with the corresponding data."
+Cancels any active or pending requests and calls the queue's
+FINALLY function.  For pending requests, their ELSE functions
+will be called with a `plz-error' structure with the message,
+\"`plz' queue cleared; request canceled.\"; active requests will
+have their curl processes killed and their ELSE functions called
+with the corresponding data."
   (setf (plz-queue-canceled-p queue) t)
   (dolist (request (plz-queue-active queue))
     (kill-process (plz-queued-request-process request))
@@ -635,6 +639,7 @@ ELSE functions called with the corresponding data."
     (funcall (plz-queued-request-else request)
              (make-plz-error :message "`plz' queue cleared; request canceled."))
     (setf (plz-queue-requests queue) (delq request (plz-queue-requests queue))))
+  (funcall (plz-queue-finally queue))
   (setf (plz-queue-first-active queue) nil
         (plz-queue-last-active queue) nil
         (plz-queue-first-request queue) nil

@@ -508,10 +508,13 @@
 ;; TODO: Test that limit is enforced (though it seems to work fine).
 
 (plz-deftest plz-queue ()
-  (let ((queue (make-plz-queue :limit 2))
-        (urls '("https://httpbin.org/get?foo=0"
-                "https://httpbin.org/get?foo=1"))
-        completed-urls)
+  (let* ((finally-called nil)
+         (queue (make-plz-queue :limit 2
+                                :finally (lambda ()
+                                           (setf finally-called t))))
+         (urls '("https://httpbin.org/get?foo=0"
+                 "https://httpbin.org/get?foo=1"))
+         completed-urls)
     (dolist (url urls)
       (plz-queue queue
         'get url :then (lambda (_)
@@ -523,7 +526,10 @@
                   (sleep-for 0.1)
                   (cl-incf waits)))
     (and (seq-set-equal-p urls completed-urls)
-         (zerop (plz-length queue)))))
+         (zerop (plz-length queue))
+         finally-called)))
+
+;; TODO: Add test for canceling queue.
 
 ;;;; Footer
 
