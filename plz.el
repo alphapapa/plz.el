@@ -211,6 +211,9 @@ only LF).")
 
 ;;;; Variables
 
+(defvar-local plz-stderr-buffer nil
+  "Buffer into which curl STDERR is directed.")
+
 (defvar-local plz-else nil
   "Callback function for unsuccessful completion of request.
 Called in current curl process buffer.")
@@ -399,67 +402,69 @@ NOQUERY is passed to `make-process', which see."
       ;; Avoid making process in a nonexistent directory (in case the current
       ;; default-directory has since been removed).  It's unclear what the best
       ;; directory is, but this seems to make sense, and it should still exist.
-      (let ((default-directory temporary-file-directory)
-            (process (make-process :name "plz-request-curl"
-                                   :buffer (current-buffer)
-                                   :coding 'binary
-                                   :command (append (list plz-curl-program) curl-command-line-args)
-                                   :connection-type 'pipe
-                                   :sentinel #'plz--sentinel
-                                   ;; FIXME: Set the stderr process sentinel to ignore to prevent
-                                   ;; "process finished" garbage in the buffer (response body).  See:
-                                   ;; <https://stackoverflow.com/questions/42810755/how-to-remove-process-finished-message-from-make-process-or-start-process-in-e>.
-                                   :stderr (current-buffer)
-                                   :noquery noquery))
-            ;; The THEN function is called in the response buffer.
-            (then (pcase-exhaustive as
-                    ((or 'binary 'string)
-                     (lambda ()
-                       (let ((coding-system (or (plz--coding-system) 'utf-8)))
-                         (pcase as
-                           ('binary (set-buffer-multibyte nil)))
-                         (plz--narrow-to-body)
-                         (when decode
-                           (decode-coding-region (point) (point-max) coding-system))
-                         (funcall then (buffer-string)))))
-                    ('buffer (lambda ()
-                               (funcall then (current-buffer))))
-                    ('response (lambda ()
-                                 (funcall then (plz--response :decode-p decode))))
-                    ('file (lambda ()
-                             (set-buffer-multibyte nil)
-                             (plz--narrow-to-body)
-                             (let ((filename (make-temp-file "plz-")))
-                               (condition-case err
-                                   (write-region (point-min) (point-max) filename)
-                                 ;; In case of an error writing to the file, delete the temp file
-                                 ;; and signal the error.  Ignore any errors encountered while
-                                 ;; deleting the file, which would obscure the original error.
-                                 (error (ignore-errors
-                                          (delete-file filename))
-                                        (signal (car err) (cdr err))))
-                               (funcall then filename))))
-                    (`(file ,(and (pred stringp) filename))
-                     (lambda ()
-                       (set-buffer-multibyte nil)
-                       (plz--narrow-to-body)
-                       (condition-case err
-                           (write-region (point-min) (point-max) filename nil nil nil 'excl)
-                         ;; Since we are creating the file, it seems sensible to delete it in case of an
-                         ;; error while writing to it (e.g. a disk-full error).  And we ignore any errors
-                         ;; encountered while deleting the file, which would obscure the original error.
-                         (error (ignore-errors
-                                  (when (file-exists-p filename)
-                                    (delete-file filename)))
-                                (signal (car err) (cdr err))))
-                       (funcall then filename)))
-                    ((pred functionp) (lambda ()
-                                        (let ((coding-system (or (plz--coding-system) 'utf-8)))
-                                          (plz--narrow-to-body)
-                                          (when decode
-                                            (decode-coding-region (point) (point-max) coding-system))
-                                          (funcall then (funcall as))))))))
-        (setf plz-then then
+      (let* ((default-directory temporary-file-directory)
+             (stderr-buffer (generate-new-buffer " *plz-request-curl-stderr*"))
+             (process (make-process :name "plz-request-curl"
+                                    :buffer (current-buffer)
+                                    :coding 'binary
+                                    :command (append (list plz-curl-program) curl-command-line-args)
+                                    :connection-type 'pipe
+                                    :sentinel #'plz--sentinel
+                                    ;; FIXME: Set the stderr process sentinel to ignore to prevent
+                                    ;; "process finished" garbage in the buffer (response body).  See:
+                                    ;; <https://stackoverflow.com/questions/42810755/how-to-remove-process-finished-message-from-make-process-or-start-process-in-e>.
+                                    :stderr stderr-buffer
+                                    :noquery noquery))
+             ;; The THEN function is called in the response buffer.
+             (then (pcase-exhaustive as
+                     ((or 'binary 'string)
+                      (lambda ()
+                        (let ((coding-system (or (plz--coding-system) 'utf-8)))
+                          (pcase as
+                            ('binary (set-buffer-multibyte nil)))
+                          (plz--narrow-to-body)
+                          (when decode
+                            (decode-coding-region (point) (point-max) coding-system))
+                          (funcall then (buffer-string)))))
+                     ('buffer (lambda ()
+                                (funcall then (current-buffer))))
+                     ('response (lambda ()
+                                  (funcall then (plz--response :decode-p decode))))
+                     ('file (lambda ()
+                              (set-buffer-multibyte nil)
+                              (plz--narrow-to-body)
+                              (let ((filename (make-temp-file "plz-")))
+                                (condition-case err
+                                    (write-region (point-min) (point-max) filename)
+                                  ;; In case of an error writing to the file, delete the temp file
+                                  ;; and signal the error.  Ignore any errors encountered while
+                                  ;; deleting the file, which would obscure the original error.
+                                  (error (ignore-errors
+                                           (delete-file filename))
+                                         (signal (car err) (cdr err))))
+                                (funcall then filename))))
+                     (`(file ,(and (pred stringp) filename))
+                      (lambda ()
+                        (set-buffer-multibyte nil)
+                        (plz--narrow-to-body)
+                        (condition-case err
+                            (write-region (point-min) (point-max) filename nil nil nil 'excl)
+                          ;; Since we are creating the file, it seems sensible to delete it in case of an
+                          ;; error while writing to it (e.g. a disk-full error).  And we ignore any errors
+                          ;; encountered while deleting the file, which would obscure the original error.
+                          (error (ignore-errors
+                                   (when (file-exists-p filename)
+                                     (delete-file filename)))
+                                 (signal (car err) (cdr err))))
+                        (funcall then filename)))
+                     ((pred functionp) (lambda ()
+                                         (let ((coding-system (or (plz--coding-system) 'utf-8)))
+                                           (plz--narrow-to-body)
+                                           (when decode
+                                             (decode-coding-region (point) (point-max) coding-system))
+                                           (funcall then (funcall as))))))))
+        (setf plz-stderr-buffer stderr-buffer
+              plz-then then
               plz-else else
               plz-finally finally
               plz-sync sync-p)
@@ -720,7 +725,13 @@ node `(elisp) Sentinels').  Kills the buffer before returning."
                     (err (make-plz-error :message message)))
                (pcase-exhaustive plz-else
                  (`nil (signal 'plz-curl-error (list "plz--sentinel: Curl error" err)))
-                 ((pred functionp) (funcall plz-else err)))))))
+                 ((pred functionp) (funcall plz-else err))))))
+          (when (and (buffer-live-p plz-stderr-buffer)
+                     (not (process-live-p (get-buffer-process plz-stderr-buffer))))
+            ;; In case the sentinel is called multiple times for a the
+            ;; same process and status (possible Emacs bug?), ensure
+            ;; the buffer is alive before trying to kill it.
+            (kill-buffer plz-stderr-buffer)))
       (when finally
         (funcall finally))
       (unless sync
