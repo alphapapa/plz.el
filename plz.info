@@ -46,6 +46,7 @@ Usage
 
 Changelog
 
+* 0.5.3-pre: 053-pre.
 * 0.5.2: 052.
 * 0.5.1: 051.
 * 0.5: 05.
@@ -273,6 +274,7 @@ File: README.info,  Node: Changelog,  Next: Credits,  Prev: Usage,  Up: Top
 
 * Menu:
 
+* 0.5.3-pre: 053-pre.
 * 0.5.2: 052.
 * 0.5.1: 051.
 * 0.5: 05.
@@ -283,9 +285,17 @@ File: README.info,  Node: Changelog,  Next: Credits,  Prev: Usage,  Up: Top
 * 0.1: 01.
 
 
-File: README.info,  Node: 052,  Next: 051,  Up: Changelog
+File: README.info,  Node: 053-pre,  Next: 052,  Up: Changelog
 
-3.1 0.5.2
+3.1 0.5.3-pre
+=============
+
+Nothing new yet.
+
+
+File: README.info,  Node: 052,  Next: 051,  Prev: 053-pre,  Up: Changelog
+
+3.2 0.5.2
 =========
 
 *Fixes*
@@ -295,7 +305,7 @@ File: README.info,  Node: 052,  Next: 051,  Up: Changelog
 
 File: README.info,  Node: 051,  Next: 05,  Prev: 052,  Up: Changelog
 
-3.2 0.5.1
+3.3 0.5.1
 =========
 
 *Fixes*
@@ -305,7 +315,7 @@ File: README.info,  Node: 051,  Next: 05,  Prev: 052,  Up: Changelog
 
 File: README.info,  Node: 05,  Next: 04,  Prev: 051,  Up: Changelog
 
-3.3 0.5
+3.4 0.5
 =======
 
 *Additions*
@@ -315,7 +325,7 @@ File: README.info,  Node: 05,  Next: 04,  Prev: 051,  Up: Changelog
 
 File: README.info,  Node: 04,  Next: 03,  Prev: 05,  Up: Changelog
 
-3.4 0.4
+3.5 0.4
 =======
 
 *Additions*
@@ -342,7 +352,7 @@ File: README.info,  Node: 04,  Next: 03,  Prev: 05,  Up: Changelog
 
 File: README.info,  Node: 03,  Next: 021,  Prev: 04,  Up: Changelog
 
-3.5 0.3
+3.6 0.3
 =======
 
 *Additions*
@@ -358,7 +368,7 @@ File: README.info,  Node: 03,  Next: 021,  Prev: 04,  Up: Changelog
 
 File: README.info,  Node: 021,  Next: 02,  Prev: 03,  Up: Changelog
 
-3.6 0.2.1
+3.7 0.2.1
 =========
 
 *Fixes*
@@ -367,7 +377,7 @@ File: README.info,  Node: 021,  Next: 02,  Prev: 03,  Up: Changelog
 
 File: README.info,  Node: 02,  Next: 01,  Prev: 021,  Up: Changelog
 
-3.7 0.2
+3.8 0.2
 =======
 
 *Added*
@@ -376,7 +386,7 @@ File: README.info,  Node: 02,  Next: 01,  Prev: 021,  Up: Changelog
 
 File: README.info,  Node: 01,  Prev: 02,  Up: Changelog
 
-3.8 0.1
+3.9 0.1
 =======
 
 Initial release.
@@ -436,27 +446,28 @@ GPLv3
 
 Tag Table:
 Node: Top199
-Node: Installation1130
-Node: GNU ELPA1273
-Node: Manual1519
-Node: Usage1825
-Node: Examples2326
-Node: Functions3693
-Node: Queueing6687
-Node: Tips7945
-Node: Changelog8246
-Node: 0528457
-Node: 0518652
-Node: 058904
-Node: 049110
-Node: 0310016
-Node: 02110464
-Node: 0210613
-Node: 0110742
-Node: Credits10836
-Node: Development11202
-Node: Copyright assignment11716
-Node: License12304
+Node: Installation1152
+Node: GNU ELPA1295
+Node: Manual1541
+Node: Usage1847
+Node: Examples2348
+Node: Functions3715
+Node: Queueing6709
+Node: Tips7967
+Node: Changelog8268
+Node: 053-pre8501
+Node: 0528613
+Node: 0518824
+Node: 059076
+Node: 049282
+Node: 0310188
+Node: 02110636
+Node: 0210785
+Node: 0110914
+Node: Credits11008
+Node: Development11374
+Node: Copyright assignment11888
+Node: License12476
 
 End Tag Table
 
