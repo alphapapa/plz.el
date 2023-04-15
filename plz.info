@@ -286,7 +286,8 @@ File: README.info,  Node: 051-pre,  Next: 05,  Up: Changelog
 3.1 0.5.1-pre
 =============
 
-Nothing new yet.
+*Fixes*
+   • Only call ‘plz-queue’’s ‘finally’ function when specified.
 
 
 File: README.info,  Node: 05,  Next: 04,  Prev: 051-pre,  Up: Changelog
@@ -432,16 +433,16 @@ Node: Queueing6681
 Node: Tips7939
 Node: Changelog8240
 Node: 051-pre8445
-Node: 058556
-Node: 048766
-Node: 039672
-Node: 02110120
-Node: 0210269
-Node: 0110398
-Node: Credits10492
-Node: Development10858
-Node: Copyright assignment11372
-Node: License11960
+Node: 058623
+Node: 048833
+Node: 039739
+Node: 02110187
+Node: 0210336
+Node: 0110465
+Node: Credits10559
+Node: Development10925
+Node: Copyright assignment11439
+Node: License12027
 
 End Tag Table
 

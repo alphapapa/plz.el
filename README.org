@@ -175,7 +175,8 @@ You may also clear a queue with ~plz-clear~, which cancels any active or queued 
 
 ** 0.5.1-pre
 
-Nothing new yet.
+*Fixes*
++ Only call ~plz-queue~'s ~finally~ function when specified.  (Thanks to [[https://github.com/redchops][Dan Oriani]] for reporting.)
 
 ** 0.5
 
