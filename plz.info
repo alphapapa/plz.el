@@ -46,6 +46,7 @@ Usage
 
 Changelog
 
+* 0.5.1-pre: 051-pre.
 * 0.5: 05.
 * 0.4: 04.
 * 0.3: 03.
@@ -271,6 +272,7 @@ File: README.info,  Node: Changelog,  Next: Credits,  Prev: Usage,  Up: Top
 
 * Menu:
 
+* 0.5.1-pre: 051-pre.
 * 0.5: 05.
 * 0.4: 04.
 * 0.3: 03.
@@ -279,9 +281,17 @@ File: README.info,  Node: Changelog,  Next: Credits,  Prev: Usage,  Up: Top
 * 0.1: 01.
 
 
-File: README.info,  Node: 05,  Next: 04,  Up: Changelog
+File: README.info,  Node: 051-pre,  Next: 05,  Up: Changelog
 
-3.1 0.5
+3.1 0.5.1-pre
+=============
+
+Nothing new yet.
+
+
+File: README.info,  Node: 05,  Next: 04,  Prev: 051-pre,  Up: Changelog
+
+3.2 0.5
 =======
 
 *Additions*
@@ -291,7 +301,7 @@ File: README.info,  Node: 05,  Next: 04,  Up: Changelog
 
 File: README.info,  Node: 04,  Next: 03,  Prev: 05,  Up: Changelog
 
-3.2 0.4
+3.3 0.4
 =======
 
 *Additions*
@@ -318,7 +328,7 @@ File: README.info,  Node: 04,  Next: 03,  Prev: 05,  Up: Changelog
 
 File: README.info,  Node: 03,  Next: 021,  Prev: 04,  Up: Changelog
 
-3.3 0.3
+3.4 0.3
 =======
 
 *Additions*
@@ -334,7 +344,7 @@ File: README.info,  Node: 03,  Next: 021,  Prev: 04,  Up: Changelog
 
 File: README.info,  Node: 021,  Next: 02,  Prev: 03,  Up: Changelog
 
-3.4 0.2.1
+3.5 0.2.1
 =========
 
 *Fixes*
@@ -343,7 +353,7 @@ File: README.info,  Node: 021,  Next: 02,  Prev: 03,  Up: Changelog
 
 File: README.info,  Node: 02,  Next: 01,  Prev: 021,  Up: Changelog
 
-3.5 0.2
+3.6 0.2
 =======
 
 *Added*
@@ -352,7 +362,7 @@ File: README.info,  Node: 02,  Next: 01,  Prev: 021,  Up: Changelog
 
 File: README.info,  Node: 01,  Prev: 02,  Up: Changelog
 
-3.6 0.1
+3.7 0.1
 =======
 
 Initial release.
@@ -412,25 +422,26 @@ GPLv3
 
 Tag Table:
 Node: Top199
-Node: Installation1102
-Node: GNU ELPA1245
-Node: Manual1491
-Node: Usage1797
-Node: Examples2298
-Node: Functions3665
-Node: Queueing6659
-Node: Tips7917
-Node: Changelog8218
-Node: 058401
-Node: 048595
-Node: 039501
-Node: 0219949
-Node: 0210098
-Node: 0110227
-Node: Credits10321
-Node: Development10687
-Node: Copyright assignment11201
-Node: License11789
+Node: Installation1124
+Node: GNU ELPA1267
+Node: Manual1513
+Node: Usage1819
+Node: Examples2320
+Node: Functions3687
+Node: Queueing6681
+Node: Tips7939
+Node: Changelog8240
+Node: 051-pre8445
+Node: 058556
+Node: 048766
+Node: 039672
+Node: 02110120
+Node: 0210269
+Node: 0110398
+Node: Credits10492
+Node: Development10858
+Node: Copyright assignment11372
+Node: License11960
 
 End Tag Table
 
