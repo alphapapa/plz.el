@@ -46,7 +46,7 @@ Usage
 
 Changelog
 
-* 0.5.1-pre: 051-pre.
+* 0.5.1: 051.
 * 0.5: 05.
 * 0.4: 04.
 * 0.3: 03.
@@ -272,7 +272,7 @@ File: README.info,  Node: Changelog,  Next: Credits,  Prev: Usage,  Up: Top
 
 * Menu:
 
-* 0.5.1-pre: 051-pre.
+* 0.5.1: 051.
 * 0.5: 05.
 * 0.4: 04.
 * 0.3: 03.
@@ -281,16 +281,17 @@ File: README.info,  Node: Changelog,  Next: Credits,  Prev: Usage,  Up: Top
 * 0.1: 01.
 
 
-File: README.info,  Node: 051-pre,  Next: 05,  Up: Changelog
+File: README.info,  Node: 051,  Next: 05,  Up: Changelog
 
-3.1 0.5.1-pre
-=============
+3.1 0.5.1
+=========
 
 *Fixes*
-   • Only call ‘plz-queue’’s ‘finally’ function when specified.
+   • Only call ‘plz-queue’’s ‘finally’ function when specified.  (Thanks
+     to Dan Oriani (https://github.com/redchops) for reporting.)
 
 
-File: README.info,  Node: 05,  Next: 04,  Prev: 051-pre,  Up: Changelog
+File: README.info,  Node: 05,  Next: 04,  Prev: 051,  Up: Changelog
 
 3.2 0.5
 =======
@@ -423,26 +424,26 @@ GPLv3
 
 Tag Table:
 Node: Top199
-Node: Installation1124
-Node: GNU ELPA1267
-Node: Manual1513
-Node: Usage1819
-Node: Examples2320
-Node: Functions3687
-Node: Queueing6681
-Node: Tips7939
-Node: Changelog8240
-Node: 051-pre8445
-Node: 058623
-Node: 048833
-Node: 039739
-Node: 02110187
-Node: 0210336
-Node: 0110465
-Node: Credits10559
-Node: Development10925
-Node: Copyright assignment11439
-Node: License12027
+Node: Installation1116
+Node: GNU ELPA1259
+Node: Manual1505
+Node: Usage1811
+Node: Examples2312
+Node: Functions3679
+Node: Queueing6673
+Node: Tips7931
+Node: Changelog8232
+Node: 0518429
+Node: 058669
+Node: 048875
+Node: 039781
+Node: 02110229
+Node: 0210378
+Node: 0110507
+Node: Credits10601
+Node: Development10967
+Node: Copyright assignment11481
+Node: License12069
 
 End Tag Table
 
