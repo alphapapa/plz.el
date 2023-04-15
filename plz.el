@@ -502,10 +502,10 @@ default, it's FIFO).  Use functions `plz-queue', `plz-run', and
             :documentation "Queued requests.")
   (canceled-p nil
               :documentation "Non-nil when queue has been canceled.")
-  (finally nil
-           :documentation "Function called after queue has been emptied or canceled.")
   first-active last-active
-  first-request last-request)
+  first-request last-request
+  (finally nil
+           :documentation "Function called after queue has been emptied or canceled."))
 
 (defun plz-queue (queue &rest args)
   "Enqueue request for ARGS on QUEUE and return QUEUE.

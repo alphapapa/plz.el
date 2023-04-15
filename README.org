@@ -175,7 +175,8 @@ You may also clear a queue with ~plz-clear~, which cancels any active or queued 
 
 ** 0.5.3-pre
 
-Nothing new yet.
+*Fixes*
++ Move new slot in ~plz-queue~ struct to end to prevent invalid byte-compiler expansions for already-compiled applications (which would require them to be recompiled after upgrading ~plz~).
 
 ** 0.5.2
 
