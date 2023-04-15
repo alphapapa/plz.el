@@ -46,7 +46,7 @@ Usage
 
 Changelog
 
-* 0.5.2-pre: 052-pre.
+* 0.5.2: 052.
 * 0.5.1: 051.
 * 0.5: 05.
 * 0.4: 04.
@@ -273,7 +273,7 @@ File: README.info,  Node: Changelog,  Next: Credits,  Prev: Usage,  Up: Top
 
 * Menu:
 
-* 0.5.2-pre: 052-pre.
+* 0.5.2: 052.
 * 0.5.1: 051.
 * 0.5: 05.
 * 0.4: 04.
@@ -283,17 +283,17 @@ File: README.info,  Node: Changelog,  Next: Credits,  Prev: Usage,  Up: Top
 * 0.1: 01.
 
 
-File: README.info,  Node: 052-pre,  Next: 051,  Up: Changelog
+File: README.info,  Node: 052,  Next: 051,  Up: Changelog
 
-3.1 0.5.2-pre
-=============
+3.1 0.5.2
+=========
 
 *Fixes*
    • When clearing a queue, only call ‘plz-queue’’s ‘finally’ function
      when specified.
 
 
-File: README.info,  Node: 051,  Next: 05,  Prev: 052-pre,  Up: Changelog
+File: README.info,  Node: 051,  Next: 05,  Prev: 052,  Up: Changelog
 
 3.2 0.5.1
 =========
@@ -436,27 +436,27 @@ GPLv3
 
 Tag Table:
 Node: Top199
-Node: Installation1138
-Node: GNU ELPA1281
-Node: Manual1527
-Node: Usage1833
-Node: Examples2334
-Node: Functions3701
-Node: Queueing6695
-Node: Tips7953
-Node: Changelog8254
-Node: 052-pre8473
-Node: 0518680
-Node: 058936
-Node: 049142
-Node: 0310048
-Node: 02110496
-Node: 0210645
-Node: 0110774
-Node: Credits10868
-Node: Development11234
-Node: Copyright assignment11748
-Node: License12336
+Node: Installation1130
+Node: GNU ELPA1273
+Node: Manual1519
+Node: Usage1825
+Node: Examples2326
+Node: Functions3693
+Node: Queueing6687
+Node: Tips7945
+Node: Changelog8246
+Node: 0528457
+Node: 0518652
+Node: 058904
+Node: 049110
+Node: 0310016
+Node: 02110464
+Node: 0210613
+Node: 0110742
+Node: Credits10836
+Node: Development11202
+Node: Copyright assignment11716
+Node: License12304
 
 End Tag Table
 
