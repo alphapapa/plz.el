@@ -640,7 +640,8 @@ with the corresponding data."
     (funcall (plz-queued-request-else request)
              (make-plz-error :message "`plz' queue cleared; request canceled."))
     (setf (plz-queue-requests queue) (delq request (plz-queue-requests queue))))
-  (funcall (plz-queue-finally queue))
+  (when (plz-queue-finally queue)
+    (funcall (plz-queue-finally queue)))
   (setf (plz-queue-first-active queue) nil
         (plz-queue-last-active queue) nil
         (plz-queue-first-request queue) nil

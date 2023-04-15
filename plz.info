@@ -288,7 +288,9 @@ File: README.info,  Node: 052-pre,  Next: 051,  Up: Changelog
 3.1 0.5.2-pre
 =============
 
-Nothing new yet.
+*Fixes*
+   • When clearing a queue, only call ‘plz-queue’’s ‘finally’ function
+     when specified.
 
 
 File: README.info,  Node: 051,  Next: 05,  Prev: 052-pre,  Up: Changelog
@@ -444,17 +446,17 @@ Node: Queueing6695
 Node: Tips7953
 Node: Changelog8254
 Node: 052-pre8473
-Node: 0518585
-Node: 058841
-Node: 049047
-Node: 039953
-Node: 02110401
-Node: 0210550
-Node: 0110679
-Node: Credits10773
-Node: Development11139
-Node: Copyright assignment11653
-Node: License12241
+Node: 0518680
+Node: 058936
+Node: 049142
+Node: 0310048
+Node: 02110496
+Node: 0210645
+Node: 0110774
+Node: Credits10868
+Node: Development11234
+Node: Copyright assignment11748
+Node: License12336
 
 End Tag Table
 
