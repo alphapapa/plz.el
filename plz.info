@@ -46,7 +46,7 @@ Usage
 
 Changelog
 
-* 0.5.3-pre: 053-pre.
+* 0.5.3: 053.
 * 0.5.2: 052.
 * 0.5.1: 051.
 * 0.5: 05.
@@ -274,7 +274,7 @@ File: README.info,  Node: Changelog,  Next: Credits,  Prev: Usage,  Up: Top
 
 * Menu:
 
-* 0.5.3-pre: 053-pre.
+* 0.5.3: 053.
 * 0.5.2: 052.
 * 0.5.1: 051.
 * 0.5: 05.
@@ -285,10 +285,10 @@ File: README.info,  Node: Changelog,  Next: Credits,  Prev: Usage,  Up: Top
 * 0.1: 01.
 
 
-File: README.info,  Node: 053-pre,  Next: 052,  Up: Changelog
+File: README.info,  Node: 053,  Next: 052,  Up: Changelog
 
-3.1 0.5.3-pre
-=============
+3.1 0.5.3
+=========
 
 *Fixes*
    • Move new slot in ‘plz-queue’ struct to end to prevent invalid
@@ -296,7 +296,7 @@ File: README.info,  Node: 053-pre,  Next: 052,  Up: Changelog
      would require them to be recompiled after upgrading ‘plz’).
 
 
-File: README.info,  Node: 052,  Next: 051,  Prev: 053-pre,  Up: Changelog
+File: README.info,  Node: 052,  Next: 051,  Prev: 053,  Up: Changelog
 
 3.2 0.5.2
 =========
@@ -449,28 +449,28 @@ GPLv3
 
 Tag Table:
 Node: Top199
-Node: Installation1152
-Node: GNU ELPA1295
-Node: Manual1541
-Node: Usage1847
-Node: Examples2348
-Node: Functions3715
-Node: Queueing6709
-Node: Tips7967
-Node: Changelog8268
-Node: 053-pre8501
-Node: 0528817
-Node: 0519028
-Node: 059280
-Node: 049486
-Node: 0310392
-Node: 02110840
-Node: 0210989
-Node: 0111118
-Node: Credits11212
-Node: Development11578
-Node: Copyright assignment12092
-Node: License12680
+Node: Installation1144
+Node: GNU ELPA1287
+Node: Manual1533
+Node: Usage1839
+Node: Examples2340
+Node: Functions3707
+Node: Queueing6701
+Node: Tips7959
+Node: Changelog8260
+Node: 0538485
+Node: 0528789
+Node: 0518996
+Node: 059248
+Node: 049454
+Node: 0310360
+Node: 02110808
+Node: 0210957
+Node: 0111086
+Node: Credits11180
+Node: Development11546
+Node: Copyright assignment12060
+Node: License12648
 
 End Tag Table
 
