@@ -508,27 +508,33 @@
 ;; TODO: Test that limit is enforced (though it seems to work fine).
 
 (plz-deftest plz-queue-with-finally ()
-  "Ensure that a queue with a FINALLY function calls it when done."
-  (let* ((finally-called nil)
+  "Ensure that a queue with a FINALLY function calls it correctly.
+That is, that the function is called after the queue is emptied,
+and only called once."
+  (let* ((finally-called-at nil)
+         (finally-called-times 0)
          (queue (make-plz-queue :limit 2
                                 :finally (lambda ()
-                                           (setf finally-called t))))
-         (urls '("https://httpbin.org/get?foo=0"
-                 "https://httpbin.org/get?foo=1"))
-         completed-urls)
+                                           (setf finally-called-at (current-time))
+                                           (cl-incf finally-called-times))))
+         (urls '("https://httpbin.org/delay/2"))
+         completed-urls queue-started-at)
     (dolist (url urls)
       (plz-queue queue
         'get url :then (lambda (_)
                          (push url completed-urls))))
+    (setf queue-started-at (current-time))
     (plz-run queue)
     (cl-loop with waits = 0
-             while (and (plz-queue-active queue) (< waits 20))
+             while (and (plz-queue-active queue) (< waits 60))
              do (progn
                   (sleep-for 0.1)
                   (cl-incf waits)))
-    (and (seq-set-equal-p urls completed-urls)
-         (zerop (plz-length queue))
-         finally-called)))
+    (should (seq-set-equal-p urls completed-urls))
+    (should (zerop (plz-length queue)))
+    (should (= 1 finally-called-times))
+    (should (>= (float-time (time-subtract finally-called-at queue-started-at))
+                2))))
 
 (plz-deftest plz-queue-without-finally ()
   "Ensure that a queue without a FINALLY function doesn't signal an error."
@@ -546,8 +552,8 @@
              do (progn
                   (sleep-for 0.1)
                   (cl-incf waits)))
-    (and (seq-set-equal-p urls completed-urls)
-         (zerop (plz-length queue)))))
+    (should (seq-set-equal-p urls completed-urls))
+    (should (zerop (plz-length queue)))))
 
 ;; TODO: Add test for canceling queue.
 

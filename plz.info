@@ -292,7 +292,9 @@ File: README.info,  Node: 054-pre,  Next: 053,  Up: Changelog
 3.1 0.5.4-pre
 =============
 
-Nothing new yet.
+*Fixes*
+   • Only run queue’s ‘finally’ function after queue is empty.  (New
+     features should not be designed and released on a Friday.)
 
 
 File: README.info,  Node: 053,  Next: 052,  Prev: 054-pre,  Up: Changelog
@@ -469,19 +471,19 @@ Node: Queueing6723
 Node: Tips7981
 Node: Changelog8282
 Node: 054-pre8529
-Node: 0538641
-Node: 0528961
-Node: 0519168
-Node: 059420
-Node: 049626
-Node: 0310532
-Node: 02110980
-Node: 0211129
-Node: 0111258
-Node: Credits11354
-Node: Development11720
-Node: Copyright assignment12234
-Node: License12822
+Node: 0538773
+Node: 0529093
+Node: 0519300
+Node: 059552
+Node: 049758
+Node: 0310664
+Node: 02111112
+Node: 0211261
+Node: 0111390
+Node: Credits11486
+Node: Development11852
+Node: Copyright assignment12366
+Node: License12954
 
 End Tag Table
 

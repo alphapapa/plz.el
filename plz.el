@@ -620,7 +620,9 @@ QUEUE should be a `plz-queue' structure."
           (setf args (plist-put args :timeout timeout)))
         (setf (plz-queued-request-process request) (apply #'plz args))
         (push request (plz-queue-active queue))))
-    (when (plz-queue-finally queue)
+    (when (and (plz-queue-finally queue)
+               (zerop (length (plz-queue-active queue)))
+               (zerop (length (plz-queue-requests queue))))
       (funcall (plz-queue-finally queue)))
     queue))
 
