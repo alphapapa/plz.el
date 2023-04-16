@@ -46,7 +46,7 @@ Usage
 
 Changelog
 
-* 0.5.4-pre: 054-pre.
+* 0.5.4: 054.
 * 0.5.3: 053.
 * 0.5.2: 052.
 * 0.5.1: 051.
@@ -275,7 +275,7 @@ File: README.info,  Node: Changelog,  Next: Credits,  Prev: Usage,  Up: Top
 
 * Menu:
 
-* 0.5.4-pre: 054-pre.
+* 0.5.4: 054.
 * 0.5.3: 053.
 * 0.5.2: 052.
 * 0.5.1: 051.
@@ -287,17 +287,17 @@ File: README.info,  Node: Changelog,  Next: Credits,  Prev: Usage,  Up: Top
 * 0.1: 01.
 
 
-File: README.info,  Node: 054-pre,  Next: 053,  Up: Changelog
+File: README.info,  Node: 054,  Next: 053,  Up: Changelog
 
-3.1 0.5.4-pre
-=============
+3.1 0.5.4
+=========
 
 *Fixes*
    • Only run queue’s ‘finally’ function after queue is empty.  (New
      features should not be designed and released on a Friday.)
 
 
-File: README.info,  Node: 053,  Next: 052,  Prev: 054-pre,  Up: Changelog
+File: README.info,  Node: 053,  Next: 052,  Prev: 054,  Up: Changelog
 
 3.2 0.5.3
 =========
@@ -461,29 +461,29 @@ GPLv3
 
 Tag Table:
 Node: Top199
-Node: Installation1166
-Node: GNU ELPA1309
-Node: Manual1555
-Node: Usage1861
-Node: Examples2362
-Node: Functions3729
-Node: Queueing6723
-Node: Tips7981
-Node: Changelog8282
-Node: 054-pre8529
-Node: 0538773
-Node: 0529093
-Node: 0519300
-Node: 059552
-Node: 049758
-Node: 0310664
-Node: 02111112
-Node: 0211261
-Node: 0111390
-Node: Credits11486
-Node: Development11852
-Node: Copyright assignment12366
-Node: License12954
+Node: Installation1158
+Node: GNU ELPA1301
+Node: Manual1547
+Node: Usage1853
+Node: Examples2354
+Node: Functions3721
+Node: Queueing6715
+Node: Tips7973
+Node: Changelog8274
+Node: 0548513
+Node: 0538745
+Node: 0529061
+Node: 0519268
+Node: 059520
+Node: 049726
+Node: 0310632
+Node: 02111080
+Node: 0211229
+Node: 0111358
+Node: Credits11454
+Node: Development11820
+Node: Copyright assignment12334
+Node: License12922
 
 End Tag Table
 

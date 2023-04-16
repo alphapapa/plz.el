@@ -173,7 +173,7 @@ You may also clear a queue with ~plz-clear~, which cancels any active or queued 
 :TOC:      :depth 0
 :END:
 
-** 0.5.4-pre
+** 0.5.4
 
 *Fixes*
 + Only run queue's ~finally~ function after queue is empty.  (New features should not be designed and released on a Friday.)
