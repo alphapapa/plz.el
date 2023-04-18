@@ -403,7 +403,9 @@ NOQUERY is passed to `make-process', which see."
       ;; default-directory has since been removed).  It's unclear what the best
       ;; directory is, but this seems to make sense, and it should still exist.
       (let* ((default-directory temporary-file-directory)
-             (stderr-buffer (generate-new-buffer " *plz-request-curl-stderr*"))
+             (stderr-process (make-pipe-process :name "plz-stderr"
+                                                :noquery noquery
+                                                :sentinel #'plz--stderr-sentinel))
              (process (make-process :name "plz-request-curl"
                                     :buffer (current-buffer)
                                     :coding 'binary
@@ -413,7 +415,7 @@ NOQUERY is passed to `make-process', which see."
                                     ;; FIXME: Set the stderr process sentinel to ignore to prevent
                                     ;; "process finished" garbage in the buffer (response body).  See:
                                     ;; <https://stackoverflow.com/questions/42810755/how-to-remove-process-finished-message-from-make-process-or-start-process-in-e>.
-                                    :stderr stderr-buffer
+                                    :stderr stderr-process
                                     :noquery noquery))
              ;; The THEN function is called in the response buffer.
              (then (pcase-exhaustive as
@@ -463,8 +465,7 @@ NOQUERY is passed to `make-process', which see."
                                            (when decode
                                              (decode-coding-region (point) (point-max) coding-system))
                                            (funcall then (funcall as))))))))
-        (setf plz-stderr-buffer stderr-buffer
-              plz-then then
+        (setf plz-then then
               plz-else else
               plz-finally finally
               plz-sync sync-p)
@@ -671,6 +672,29 @@ Includes active and queued requests."
      (length (plz-queue-requests queue))))
 
 ;;;;; Private
+
+(defun plz--stderr-sentinel (process-or-buffer status)
+  (let ((buffer (cl-etypecase process-or-buffer
+                  (process (process-buffer process-or-buffer))
+                  (buffer process-or-buffer)))
+        kill-buffer-p)
+    (unwind-protect
+        (with-current-buffer buffer
+          (pcase-exhaustive status
+            ((or 0 "finished\n")
+             (setf kill-buffer-p t))
+
+            ((or (and (pred numberp) code)
+                 (rx "exited abnormally with code " (let code (group (1+ digit)))))
+             ;; Curl error.
+             (setf kill-buffer-p t))
+
+            ((and (or "killed\n" "interrupt\n") status)
+             ;; Curl process killed or interrupted.
+             (setf kill-buffer-p t)))
+          )
+      (when kill-buffer-p
+        (kill-buffer buffer)))))
 
 (defun plz--sentinel (process-or-buffer status)
   "Process buffer of curl output in PROCESS-OR-BUFFER.
