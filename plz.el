@@ -278,6 +278,9 @@ selected result.
 HEADERS may be an alist of extra headers to send with the
 request.
 
+BODY may be a string, a buffer, or a list like `(file FILENAME)'
+to upload a file from disk.
+
 BODY-TYPE may be `text' to send BODY as text, or `binary' to send
 it as binary.
 
@@ -369,7 +372,12 @@ NOQUERY is passed to `make-process', which see."
                                             (cons "--request" (upcase (symbol-name method)))
                                             ;; It appears that this must be the last argument
                                             ;; in order to pass data on the rest of STDIN.
-                                            (cons data-arg "@-")))
+                                            (pcase body
+                                              (`(file ,filename)
+                                               ;; Use `expand-file-name' because curl doesn't
+                                               ;; expand, e.g. "~" into "/home/...".
+                                               (cons "--upload-file" (expand-file-name filename)))
+                                              (_ (cons data-arg "@-")))))
                                      ('delete
                                       (list (cons "--dump-header" "-")
                                             (cons "--request" (upcase (symbol-name method)))))

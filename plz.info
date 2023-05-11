@@ -175,6 +175,9 @@ File: README.info,  Node: Functions,  Next: Queueing,  Prev: Examples,  Up: Usag
      ‘HEADERS’ may be an alist of extra headers to send with the
      request.
 
+     ‘BODY’ may be a string, a buffer, or a list like ‘(file FILENAME)’
+     to upload a file from disk.
+
      ‘BODY-TYPE’ may be ‘text’ to send ‘BODY’ as text, or ‘binary’ to
      send it as binary.
 
@@ -294,7 +297,16 @@ File: README.info,  Node: 06-pre,  Next: 054,  Up: Changelog
 3.1 0.6-pre
 ===========
 
-Nothing new yet.
+*Additions*
+   • Function ‘plz’’s ‘:body’ argument now accepts a list like ‘(file
+     FILENAME)’ to upload a file from disk (by passing the filename to
+     curl, rather than reading its content into Emacs and sending it to
+     curl through the pipe).
+
+   *Fixes*
+   • Function ‘plz’’s docstring now mentions that the ‘:body’ argument
+     may also be a buffer (an intentional feature that was accidentally
+     undocumented).
 
 
 File: README.info,  Node: 054,  Next: 053,  Prev: 06-pre,  Up: Changelog
@@ -477,24 +489,24 @@ Node: Manual1566
 Node: Usage1872
 Node: Examples2373
 Node: Functions3740
-Node: Queueing6734
-Node: Tips7992
-Node: Changelog8293
-Node: 06-pre8551
-Node: 0548658
-Node: 0538905
-Node: 0529221
-Node: 0519428
-Node: 059680
-Node: 049886
-Node: 0310792
-Node: 02111240
-Node: 0211389
-Node: 0111520
-Node: Credits11616
-Node: Development11982
-Node: Copyright assignment12496
-Node: License13084
+Node: Queueing6848
+Node: Tips8106
+Node: Changelog8407
+Node: 06-pre8665
+Node: 0549212
+Node: 0539459
+Node: 0529775
+Node: 0519982
+Node: 0510234
+Node: 0410440
+Node: 0311346
+Node: 02111794
+Node: 0211943
+Node: 0112074
+Node: Credits12170
+Node: Development12536
+Node: Copyright assignment13050
+Node: License13638
 
 End Tag Table
 

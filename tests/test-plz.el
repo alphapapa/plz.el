@@ -503,6 +503,24 @@
       (when (file-exists-p filename)
         (delete-file filename)))))
 
+(plz-deftest plz-upload-file-by-name ()
+  (let ((filename (make-temp-file "plz-"))
+        response-json process)
+    (unwind-protect
+        (progn
+          (with-temp-file filename
+            (insert "deadbeef"))
+          (setf process
+                (plz 'put "https://httpbin.org/put"
+                  :body `(file ,filename)
+                  :as #'json-read
+                  :then (lambda (json)
+                          (setf response-json json))))
+          (plz-test-wait process)
+          (should (equal "deadbeef" (alist-get 'data response-json)))
+          (should-not (alist-get 'files response-json)))
+      (delete-file filename))))
+
 ;;;;; Queue
 
 ;; TODO: Test that limit is enforced (though it seems to work fine).

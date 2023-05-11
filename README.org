@@ -46,6 +46,8 @@
 
 The main public function is ~plz~, which sends an HTTP request and returns either the result of the specified type (for a synchronous request), or the ~curl~ process object (for asynchronous requests).  For asynchronous requests, callback, error-handling, and finalizer functions may be specified, as well as various other options.
 
+# TODO: Add ":body (file FILENAME)" to docs.
+
 ** Examples
 
 Synchronously =GET= a URL and return the response body as a decoded string (here, raw JSON):
@@ -107,6 +109,8 @@ Synchronously download a JPEG file, then create an Emacs image object from the d
    Request ~METHOD~ from ~URL~ with curl.  Return the curl process object or, for a synchronous request, the selected result.
 
    ~HEADERS~ may be an alist of extra headers to send with the request.
+
+   ~BODY~ may be a string, a buffer, or a list like ~(file FILENAME)~ to upload a file from disk.
 
    ~BODY-TYPE~ may be ~text~ to send ~BODY~ as text, or ~binary~ to send it as binary.
 
@@ -175,7 +179,11 @@ You may also clear a queue with ~plz-clear~, which cancels any active or queued 
 
 ** 0.6-pre
 
-Nothing new yet.
+*Additions*
++ Function ~plz~'s ~:body~ argument now accepts a list like ~(file FILENAME)~ to upload a file from disk (by passing the filename to curl, rather than reading its content into Emacs and sending it to curl through the pipe).
+
+*Fixes*
++ Function ~plz~'s docstring now mentions that the ~:body~ argument may also be a buffer (an intentional feature that was accidentally undocumented).
 
 ** 0.5.4
 
