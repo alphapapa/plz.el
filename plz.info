@@ -307,6 +307,7 @@ File: README.info,  Node: 06-pre,  Next: 054,  Up: Changelog
    • Function ‘plz’’s docstring now mentions that the ‘:body’ argument
      may also be a buffer (an intentional feature that was accidentally
      undocumented).
+   • Handle HTTP 301 redirects when using ‘:as 'response’.
 
 
 File: README.info,  Node: 054,  Next: 053,  Prev: 06-pre,  Up: Changelog
@@ -493,20 +494,20 @@ Node: Queueing6848
 Node: Tips8106
 Node: Changelog8407
 Node: 06-pre8665
-Node: 0549212
-Node: 0539459
-Node: 0529775
-Node: 0519982
-Node: 0510234
-Node: 0410440
-Node: 0311346
-Node: 02111794
-Node: 0211943
-Node: 0112074
-Node: Credits12170
-Node: Development12536
-Node: Copyright assignment13050
-Node: License13638
+Node: 0549277
+Node: 0539524
+Node: 0529840
+Node: 05110047
+Node: 0510299
+Node: 0410505
+Node: 0311411
+Node: 02111859
+Node: 0212008
+Node: 0112139
+Node: Credits12235
+Node: Development12601
+Node: Copyright assignment13115
+Node: License13703
 
 End Tag Table
 

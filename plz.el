@@ -686,6 +686,7 @@ node `(elisp) Sentinels').  Kills the buffer before returning."
              ;; Curl exited normally: check HTTP status code.
              (goto-char (point-min))
              (plz--skip-proxy-headers)
+             (while (plz--skip-redirect-headers))
              (pcase (plz--http-status)
                ((and status (guard (<= 200 status 299)))
                 ;; Any 2xx response is considered successful.
@@ -740,6 +741,15 @@ node `(elisp) Sentinels').  Kills the buffer before returning."
         ;; them).
         (unless (re-search-forward "\r\n\r\n" nil t)
           (signal 'plz-http-error '("plz--response: End of proxy headers not found")))))))
+
+(defun plz--skip-redirect-headers ()
+  "Skip HTTP redirect headers in current buffer."
+  (when (and (looking-at plz-http-response-status-line-regexp)
+             (member (string-to-number (match-string 2)) '(301 302 307 308)))
+    ;; Skip redirect headers ("--dump-header" forces redirect headers to be included
+    ;; even when used with "--location").
+    (unless (re-search-forward "\r\n\r\n" nil t)
+      (signal 'plz-http-error '("plz--response: End of redirect headers not found")))))
 
 (cl-defun plz--response (&key (decode-p t))
   "Return response structure for HTTP response in current buffer.

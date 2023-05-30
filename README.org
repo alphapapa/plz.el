@@ -184,6 +184,7 @@ You may also clear a queue with ~plz-clear~, which cancels any active or queued 
 
 *Fixes*
 + Function ~plz~'s docstring now mentions that the ~:body~ argument may also be a buffer (an intentional feature that was accidentally undocumented).
++ Handle HTTP 301 redirects when using ~:as 'response~.
 
 ** 0.5.4
 

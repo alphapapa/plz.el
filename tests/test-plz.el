@@ -352,6 +352,28 @@
 (plz-deftest plz-500-errors ()
   (should-error (plz 'get "https://httpbin.org/status/500")))
 
+;;;;; Redirects
+
+(plz-deftest plz-301-redirects ()
+  (plz-test-get-response
+   (plz 'get "https://httpbin.org/redirect-to?url=https%3A%2F%2Fhttpbin.org/get&status_code=301"
+     :as 'response :then 'sync)))
+
+(plz-deftest plz-302-redirects ()
+  (plz-test-get-response
+   (plz 'get "https://httpbin.org/redirect-to?url=https%3A%2F%2Fhttpbin.org/get&status_code=302"
+     :as 'response :then 'sync)))
+
+(plz-deftest plz-307-redirects ()
+  (plz-test-get-response
+   (plz 'get "https://httpbin.org/redirect-to?url=https%3A%2F%2Fhttpbin.org/get&status_code=307"
+     :as 'response :then 'sync)))
+
+(plz-deftest plz-308-redirects ()
+  (plz-test-get-response
+   (plz 'get "https://httpbin.org/redirect-to?url=https%3A%2F%2Fhttpbin.org/get&status_code=308"
+     :as 'response :then 'sync)))
+
 ;;;;; Errors
 
 (plz-deftest plz-get-curl-error nil
