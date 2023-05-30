@@ -748,8 +748,8 @@ node `(elisp) Sentinels').  Kills the buffer before returning."
              (member (string-to-number (match-string 2)) '(301 302 307 308)))
     ;; Skip redirect headers ("--dump-header" forces redirect headers to be included
     ;; even when used with "--location").
-    (unless (re-search-forward "\r\n\r\n" nil t)
-      (signal 'plz-http-error '("plz--response: End of redirect headers not found")))))
+    (or (re-search-forward "\r\n\r\n" nil t)
+        (signal 'plz-http-error '("plz--response: End of redirect headers not found")))))
 
 (cl-defun plz--response (&key (decode-p t))
   "Return response structure for HTTP response in current buffer.
