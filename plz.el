@@ -407,6 +407,7 @@ NOQUERY is passed to `make-process', which see."
                    (_ decode)))
          (default-directory temporary-file-directory)
          (process-buffer (generate-new-buffer " *plz-request-curl*"))
+         (stderr-buffer (generate-new-buffer " *plz-request-curl-stderr*"))
          (process (make-process :name "plz-request-curl"
                                 :buffer process-buffer
                                 :coding 'binary
@@ -416,7 +417,7 @@ NOQUERY is passed to `make-process', which see."
                                 ;; FIXME: Set the stderr process sentinel to ignore to prevent
                                 ;; "process finished" garbage in the buffer (response body).  See:
                                 ;; <https://stackoverflow.com/questions/42810755/how-to-remove-process-finished-message-from-make-process-or-start-process-in-e>.
-                                :stderr process-buffer
+                                :stderr stderr-buffer
                                 :noquery noquery))
          sync-p)
     (when (eq 'sync then)
@@ -499,26 +500,29 @@ NOQUERY is passed to `make-process', which see."
                       (process-send-region process (point-min) (point-max))))))
         (process-send-eof process)
         (if sync-p
-            (progn
-              (while
-                  ;; According to the Elisp manual, blocking on a process's
-                  ;; output is really this simple.  And it seems to work.
-                  (accept-process-output process))
-              (unless (process-get process :plz-result)
-                (plz--sentinel process "finished\n")
-                (unless (process-get process :plz-result)
-                  (error "NO RESULT FROM PROCESS:%S  BUFFER-STRING:%S" process
-                         (buffer-string))))
-              (pcase (process-get process :plz-result)
-                ((pred plz-error-p)
-                 ;; FIXME: ...signal correct error  type
-                 (if plz-else
-                     (funcall plz-else (process-get process :plz-result))
-                   (signal 'plz-http-error (process-get process :plz-result))))
-                (_                 
-                 (prog1 (process-get process :plz-result) ;; plz-result
-                   (unless (eq as 'buffer)
-                     (kill-buffer))))))
+            (unwind-protect
+                (progn
+                  ;; See Info node `(elisp)Accepting Output'.
+                  (unless (and process (get-buffer-process stderr-buffer))
+                    (error "Process unexpectedly nil"))
+                  (while (accept-process-output process))
+                  (while (accept-process-output (get-buffer-process stderr-buffer)))
+                  (unless (process-get process :plz-result)
+                    (plz--sentinel process "finished\n")
+                    (unless (process-get process :plz-result)
+                      (error "NO RESULT FROM PROCESS:%S  BUFFER-STRING:%S" process
+                             (buffer-string))))
+                  (pcase (process-get process :plz-result)
+                    ((pred plz-error-p)
+                     ;; FIXME: ...signal correct error  type
+                     (if plz-else
+                         (funcall plz-else (process-get process :plz-result))
+                       (signal 'plz-http-error (process-get process :plz-result))))
+                    (_
+                     (process-get process :plz-result))))
+              (unless (eq as 'buffer)
+                (kill-buffer process-buffer))
+              (kill-buffer stderr-buffer))
           process)))))
 
 ;;;;; Queue
