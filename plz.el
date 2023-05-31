@@ -405,28 +405,32 @@ NOQUERY is passed to `make-process', which see."
          (decode (pcase as
                    ('binary nil)
                    (_ decode)))
+         (default-directory temporary-file-directory)
+         (process-buffer (generate-new-buffer " *plz-request-curl*"))
+         (process (make-process :name "plz-request-curl"
+                                :buffer process-buffer
+                                :coding 'binary
+                                :command (append (list plz-curl-program) curl-command-line-args)
+                                :connection-type 'pipe
+                                :sentinel #'plz--sentinel
+                                ;; FIXME: Set the stderr process sentinel to ignore to prevent
+                                ;; "process finished" garbage in the buffer (response body).  See:
+                                ;; <https://stackoverflow.com/questions/42810755/how-to-remove-process-finished-message-from-make-process-or-start-process-in-e>.
+                                :stderr process-buffer
+                                :noquery noquery))
          sync-p)
     (when (eq 'sync then)
       (setf sync-p t
             ;; FIXME: For sync requests, `else' should be forced nil.
             then (lambda (result)
+                   (process-put process :plz-result result)
                    (setf plz-result result))))
-    (with-current-buffer (generate-new-buffer " *plz-request-curl*")
+    (with-current-buffer process-buffer
       ;; Avoid making process in a nonexistent directory (in case the current
       ;; default-directory has since been removed).  It's unclear what the best
       ;; directory is, but this seems to make sense, and it should still exist.
-      (let ((default-directory temporary-file-directory)
-            (process (make-process :name "plz-request-curl"
-                                   :buffer (current-buffer)
-                                   :coding 'binary
-                                   :command (append (list plz-curl-program) curl-command-line-args)
-                                   :connection-type 'pipe
-                                   :sentinel #'plz--sentinel
-                                   ;; FIXME: Set the stderr process sentinel to ignore to prevent
-                                   ;; "process finished" garbage in the buffer (response body).  See:
-                                   ;; <https://stackoverflow.com/questions/42810755/how-to-remove-process-finished-message-from-make-process-or-start-process-in-e>.
-                                   :stderr (current-buffer)
-                                   :noquery noquery))
+      (let (
+            
             ;; The THEN function is called in the response buffer.
             (then (pcase-exhaustive as
                     ((or 'binary 'string)
@@ -437,11 +441,17 @@ NOQUERY is passed to `make-process', which see."
                          (plz--narrow-to-body)
                          (when decode
                            (decode-coding-region (point) (point-max) coding-system))
-                         (funcall then (buffer-string)))))
+                         (let ((string (buffer-string)))
+                           (unless string
+                             (error "STRING IS NIL?!  STRING:%S" string))
+                           (funcall then string)))))
                     ('buffer (lambda ()
                                (funcall then (current-buffer))))
                     ('response (lambda ()
-                                 (funcall then (plz--response :decode-p decode))))
+                                 (let ((response (plz--response :decode-p decode)))
+                                   (unless response
+                                     (error "RESPONSE IS NIL?!  BUFFER-CONTENTS:%S" (buffer-string)))
+                                   (funcall then response))))
                     ('file (lambda ()
                              (set-buffer-multibyte nil)
                              (plz--narrow-to-body)
@@ -494,9 +504,21 @@ NOQUERY is passed to `make-process', which see."
                   ;; According to the Elisp manual, blocking on a process's
                   ;; output is really this simple.  And it seems to work.
                   (accept-process-output process))
-              (prog1 plz-result
-                (unless (eq as 'buffer)
-                  (kill-buffer))))
+              (unless (process-get process :plz-result)
+                (plz--sentinel process "finished\n")
+                (unless (process-get process :plz-result)
+                  (error "NO RESULT FROM PROCESS:%S  BUFFER-STRING:%S" process
+                         (buffer-string))))
+              (pcase (process-get process :plz-result)
+                ((pred plz-error-p)
+                 ;; FIXME: ...signal correct error  type
+                 (if plz-else
+                     (funcall plz-else (process-get process :plz-result))
+                   (signal 'plz-http-error (process-get process :plz-result))))
+                (_                 
+                 (prog1 (process-get process :plz-result) ;; plz-result
+                   (unless (eq as 'buffer)
+                     (kill-buffer))))))
           process)))))
 
 ;;;;; Queue
@@ -697,45 +719,59 @@ node `(elisp) Sentinels').  Kills the buffer before returning."
     (unwind-protect
         (with-current-buffer buffer
           (setf sync plz-sync)
-          (pcase-exhaustive status
-            ((or 0 "finished\n")
-             ;; Curl exited normally: check HTTP status code.
-             (goto-char (point-min))
-             (plz--skip-proxy-headers)
-             (while (plz--skip-redirect-headers))
-             (pcase (plz--http-status)
-               ((and status (guard (<= 200 status 299)))
-                ;; Any 2xx response is considered successful.
-                (ignore status)  ; Byte-compiling in Emacs <28 complains without this.
-                (funcall plz-then))
-               ;; Any other status code is considered unsuccessful
-               ;; (for now, anyway).
-               (_ (let ((err (make-plz-error :response (plz--response))))
-                    (pcase-exhaustive plz-else
-                      (`nil (signal 'plz-http-error (list "plz--sentinel: HTTP error" err)))
-                      ((pred functionp) (funcall plz-else err)))))))
+          (condition-case err
+              (pcase-exhaustive status
+                ((or 0 "finished\n")
+                 ;; Curl exited normally: check HTTP status code.
+                 (goto-char (point-min))
+                 (plz--skip-proxy-headers)
+                 (while (plz--skip-redirect-headers))
+                 (pcase (plz--http-status)
+                   ((and status (guard (<= 200 status 299)))
+                    ;; Any 2xx response is considered successful.
+                    (ignore status) ; Byte-compiling in Emacs <28 complains without this.
+                    (funcall plz-then))
+                   (_
+                    ;; Any other status code is considered unsuccessful
+                    ;; (for now, anyway).
+                    (let ((err (make-plz-error :response (plz--response))))
+                      (process-put process-or-buffer :plz-result err)
+                      (pcase-exhaustive plz-else
+                        (`nil (setf plz-result err))
+                        ((pred functionp) (funcall plz-else err)))))))
 
-            ((or (and (pred numberp) code)
-                 (rx "exited abnormally with code " (let code (group (1+ digit)))))
-             ;; Curl error.
-             (let* ((curl-exit-code (cl-typecase code
-                                      (string (string-to-number code))
-                                      (number code)))
-                    (curl-error-message (alist-get curl-exit-code plz-curl-errors))
-                    (err (make-plz-error :curl-error (cons curl-exit-code curl-error-message))))
-               (pcase-exhaustive plz-else
-                 ;; FIXME: Returning a plz-error structure which has a curl-error slot, wrapped in a plz-curl-error, is confusing.
-                 (`nil (signal 'plz-curl-error (list "plz--sentinel: Curl error" err)))
-                 ((pred functionp) (funcall plz-else err)))))
+                ((or (and (pred numberp) code)
+                     (rx "exited abnormally with code " (let code (group (1+ digit)))))
+                 ;; Curl error.
+                 (let* ((curl-exit-code (cl-typecase code
+                                          (string (string-to-number code))
+                                          (number code)))
+                        (curl-error-message (alist-get curl-exit-code plz-curl-errors))
+                        (err (make-plz-error :curl-error (cons curl-exit-code curl-error-message))))
+                   (process-put process-or-buffer :plz-result err)
+                   (pcase-exhaustive plz-else
+                     ;; FIXME: Returning a plz-error structure which has a curl-error slot, wrapped in a plz-curl-error, is confusing.
+                     (`nil (setf plz-result err))
+                     ((pred functionp) (funcall plz-else err)))))
 
-            ((and (or "killed\n" "interrupt\n") status)
-             ;; Curl process killed or interrupted.
-             (let* ((message (pcase status
-                               ("killed\n" "curl process killed")
-                               ("interrupt\n" "curl process interrupted")))
-                    (err (make-plz-error :message message)))
+                ((and (or "killed\n" "interrupt\n") status)
+                 ;; Curl process killed or interrupted.
+                 (let* ((message (pcase status
+                                   ("killed\n" "curl process killed")
+                                   ("interrupt\n" "curl process interrupted")))
+                        (err (make-plz-error :message message)))
+                   (process-put process-or-buffer :plz-result err)
+                   (pcase-exhaustive plz-else
+                     (`nil (setf plz-result err))
+                     ((pred functionp) (funcall plz-else err))))))
+            (error
+             ;; Error signaled by a function called to process HTTP response:
+             ;; rather than signaling an error from within the sentinel,
+             ;; return or call the ELSE function with a plz-error struct.
+             (let ((err (make-plz-error :message (format "plz--sentinel: Error signaled: %S" err))))
+               (process-put process-or-buffer :plz-result err)
                (pcase-exhaustive plz-else
-                 (`nil (signal 'plz-curl-error (list "plz--sentinel: Curl error" err)))
+                 (`nil (setf plz-result err))
                  ((pred functionp) (funcall plz-else err)))))))
       (when finally
         (funcall finally))
