@@ -321,8 +321,11 @@ For binary content, it should be nil.  When AS is `binary',
 DECODE is automatically set to nil.
 
 THEN is a callback function, whose sole argument is selected
-above with AS.  Or THEN may be `sync' to make a synchronous
-request, in which case the result is returned directly.
+above with AS; if the request fails and no ELSE function is
+given (see below), the argument will be a `plz-error' struct
+describing the error.  Or THEN may be `sync' to make a
+synchronous request, in which case the result is returned
+directly from this function.
 
 ELSE is an optional callback function called when the request
 fails (i.e. if curl fails, or if the HTTP response has a non-2xx
@@ -750,7 +753,6 @@ node `(elisp) Sentinels').  Kills the buffer before returning."
                         (err (make-plz-error :curl-error (cons curl-exit-code curl-error-message))))
                    (process-put process-or-buffer :plz-result err)
                    (pcase-exhaustive plz-else
-                     ;; FIXME: Returning a plz-error structure which has a curl-error slot, wrapped in a plz-curl-error, is confusing.
                      (`nil (setf plz-result err))
                      ((pred functionp) (funcall plz-else err)))))
 
