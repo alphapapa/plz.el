@@ -444,44 +444,43 @@ NOQUERY is passed to `make-process', which see."
                          (plz--narrow-to-body)
                          (when decode
                            (decode-coding-region (point) (point-max) coding-system))
-                         (let ((string (buffer-string)))
-                           (unless string
-                             (error "STRING IS NIL?!  STRING:%S" string))
-                           (funcall then string)))))
+                         (funcall then (or (buffer-string)
+                                           (make-plz-error :message (format "buffer-string is nil in buffer:%S" process-buffer)))))))
                     ('buffer (lambda ()
                                (funcall then (current-buffer))))
                     ('response (lambda ()
-                                 (let ((response (plz--response :decode-p decode)))
-                                   (unless response
-                                     (error "RESPONSE IS NIL?!  BUFFER-CONTENTS:%S" (buffer-string)))
-                                   (funcall then response))))
+                                 (funcall then (or (plz--response :decode-p decode)
+                                                   (make-plz-error :message (format "response is nil for buffer:%S  buffer-string:%S"
+                                                                                    process-buffer (buffer-string)))))))
                     ('file (lambda ()
                              (set-buffer-multibyte nil)
                              (plz--narrow-to-body)
                              (let ((filename (make-temp-file "plz-")))
                                (condition-case err
-                                   (write-region (point-min) (point-max) filename)
+                                   (progn
+                                     (write-region (point-min) (point-max) filename)
+                                     (funcall then filename))
                                  ;; In case of an error writing to the file, delete the temp file
                                  ;; and signal the error.  Ignore any errors encountered while
                                  ;; deleting the file, which would obscure the original error.
                                  (error (ignore-errors
                                           (delete-file filename))
-                                        (signal (car err) (cdr err))))
-                               (funcall then filename))))
+                                        (funcall then (make-plz-error :message (format "error while writing to file %S: %S" filename err))))))))
                     (`(file ,(and (pred stringp) filename))
                      (lambda ()
                        (set-buffer-multibyte nil)
                        (plz--narrow-to-body)
                        (condition-case err
-                           (write-region (point-min) (point-max) filename nil nil nil 'excl)
+                           (progn
+                             (write-region (point-min) (point-max) filename nil nil nil 'excl)
+                             (funcall then filename))
                          ;; Since we are creating the file, it seems sensible to delete it in case of an
                          ;; error while writing to it (e.g. a disk-full error).  And we ignore any errors
                          ;; encountered while deleting the file, which would obscure the original error.
                          (error (ignore-errors
                                   (when (file-exists-p filename)
                                     (delete-file filename)))
-                                (signal (car err) (cdr err))))
-                       (funcall then filename)))
+                                (funcall then (make-plz-error :message (format "error while writing to file %S: %S" filename err)))))))
                     ((pred functionp) (lambda ()
                                         (let ((coding-system (or (plz--coding-system) 'utf-8)))
                                           (plz--narrow-to-body)
