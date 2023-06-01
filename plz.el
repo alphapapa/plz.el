@@ -418,12 +418,14 @@ NOQUERY is passed to `make-process', which see."
                                 :command (append (list plz-curl-program) curl-command-line-args)
                                 :connection-type 'pipe
                                 :sentinel #'plz--sentinel
-                                ;; FIXME: Set the stderr process sentinel to ignore to prevent
-                                ;; "process finished" garbage in the buffer (response body).  See:
-                                ;; <https://stackoverflow.com/questions/42810755/how-to-remove-process-finished-message-from-make-process-or-start-process-in-e>.
                                 :stderr stderr-buffer
                                 :noquery noquery))
          sync-p)
+    (set-process-sentinel
+     ;; Set the stderr process sentinel to ignore to prevent "process finished"
+     ;; garbage in the STDERR buffer (though that buffer's contents are
+     ;; currently ignored, this is a good idea, in case we change that).
+     (get-buffer-process stderr-buffer) #'ignore)
     (when (eq 'sync then)
       (setf sync-p t
             ;; FIXME: For sync requests, `else' should be forced nil.
