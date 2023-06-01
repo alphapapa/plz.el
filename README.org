@@ -46,8 +46,6 @@
 
 The main public function is ~plz~, which sends an HTTP request and returns either the result of the specified type (for a synchronous request), or the ~curl~ process object (for asynchronous requests).  For asynchronous requests, callback, error-handling, and finalizer functions may be specified, as well as various other options.
 
-# TODO: Add ":body (file FILENAME)" to docs.
-
 ** Examples
 
 Synchronously =GET= a URL and return the response body as a decoded string (here, raw JSON):
