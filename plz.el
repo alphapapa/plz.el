@@ -233,9 +233,6 @@ Called in current curl process buffer.")
 Called after the then/else function, without arguments, outside
 the curl process buffer.")
 
-(defvar-local plz-result nil
-  "Used when `plz' is called synchronously.")
-
 (defvar-local plz-sync nil
   "Used when `plz' is called synchronously.")
 
@@ -431,8 +428,7 @@ NOQUERY is passed to `make-process', which see."
     (when (eq 'sync then)
       (setf sync-p t
             then (lambda (result)
-                   (process-put process :plz-result result)
-                   (setf plz-result result))
+                   (process-put process :plz-result result))
             else nil))
     (with-current-buffer process-buffer
       (let ((then (pcase-exhaustive as
@@ -736,9 +732,8 @@ node `(elisp) Sentinels').  Kills the buffer before returning."
                     ;; Any other status code is considered unsuccessful
                     ;; (for now, anyway).
                     (let ((err (make-plz-error :response (plz--response))))
-                      (process-put process-or-buffer :plz-result err)
                       (pcase-exhaustive plz-else
-                        (`nil (setf plz-result err))
+                        (`nil (process-put process-or-buffer :plz-result err))
                         ((pred functionp) (funcall plz-else err)))))))
 
                 ((or (and (pred numberp) code)
@@ -749,9 +744,8 @@ node `(elisp) Sentinels').  Kills the buffer before returning."
                                           (number code)))
                         (curl-error-message (alist-get curl-exit-code plz-curl-errors))
                         (err (make-plz-error :curl-error (cons curl-exit-code curl-error-message))))
-                   (process-put process-or-buffer :plz-result err)
                    (pcase-exhaustive plz-else
-                     (`nil (setf plz-result err))
+                     (`nil (process-put process-or-buffer :plz-result err))
                      ((pred functionp) (funcall plz-else err)))))
 
                 ((and (or "killed\n" "interrupt\n") status)
@@ -760,18 +754,16 @@ node `(elisp) Sentinels').  Kills the buffer before returning."
                                    ("killed\n" "curl process killed")
                                    ("interrupt\n" "curl process interrupted")))
                         (err (make-plz-error :message message)))
-                   (process-put process-or-buffer :plz-result err)
                    (pcase-exhaustive plz-else
-                     (`nil (setf plz-result err))
+                     (`nil (process-put process-or-buffer :plz-result err))
                      ((pred functionp) (funcall plz-else err))))))
             (error
              ;; Error signaled by a function called to process HTTP response:
              ;; rather than signaling an error from within the sentinel,
              ;; return or call the ELSE function with a plz-error struct.
              (let ((err (make-plz-error :message (format "plz--sentinel: Error signaled: %S" err))))
-               (process-put process-or-buffer :plz-result err)
                (pcase-exhaustive plz-else
-                 (`nil (setf plz-result err))
+                 (`nil (process-put process-or-buffer :plz-result err))
                  ((pred functionp) (funcall plz-else err)))))))
       (when finally
         (funcall finally))
