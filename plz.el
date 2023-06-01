@@ -405,7 +405,11 @@ NOQUERY is passed to `make-process', which see."
          (decode (pcase as
                    ('binary nil)
                    (_ decode)))
-         (default-directory temporary-file-directory)
+         (default-directory
+           ;; Avoid making process in a nonexistent directory (in case the current
+           ;; default-directory has since been removed).  It's unclear what the best
+           ;; directory is, but this seems to make sense, and it should still exist.
+           temporary-file-directory)
          (process-buffer (generate-new-buffer " *plz-request-curl*"))
          (stderr-buffer (generate-new-buffer " *plz-request-curl-stderr*"))
          (process (make-process :name "plz-request-curl"
@@ -427,13 +431,7 @@ NOQUERY is passed to `make-process', which see."
                    (process-put process :plz-result result)
                    (setf plz-result result))))
     (with-current-buffer process-buffer
-      ;; Avoid making process in a nonexistent directory (in case the current
-      ;; default-directory has since been removed).  It's unclear what the best
-      ;; directory is, but this seems to make sense, and it should still exist.
-      (let (
-            
-            ;; The THEN function is called in the response buffer.
-            (then (pcase-exhaustive as
+      (let ((then (pcase-exhaustive as
                     ((or 'binary 'string)
                      (lambda ()
                        (let ((coding-system (or (plz--coding-system) 'utf-8)))
