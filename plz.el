@@ -513,10 +513,7 @@ NOQUERY is passed to `make-process', which see."
                              (buffer-string))))
                   (pcase (process-get process :plz-result)
                     ((pred plz-error-p)
-                     ;; FIXME: ...signal correct error  type
-                     (if plz-else
-                         (funcall plz-else (process-get process :plz-result))
-                       (signal 'plz-error (process-get process :plz-result))))
+                     (signal 'plz-error (process-get process :plz-result)))
                     (_
                      (process-get process :plz-result))))
               (unless (eq as 'buffer)
