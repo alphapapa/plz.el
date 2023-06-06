@@ -509,10 +509,9 @@ NOQUERY is passed to `make-process', which see."
                       (error "NO RESULT FROM PROCESS:%S  BUFFER-STRING:%S" process
                              (buffer-string))))
                   (pcase (process-get process :plz-result)
-                    ((pred plz-error-p)
-                     (signal 'plz-error (process-get process :plz-result)))
-                    (_
-                     (process-get process :plz-result))))
+                    ((and (pred plz-error-p) data)
+                     (signal 'plz-error data))
+                    (else else)))
               (unless (eq as 'buffer)
                 (kill-buffer process-buffer))
               (kill-buffer stderr-buffer))
