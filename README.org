@@ -154,7 +154,9 @@ All of the queue-related functions return the queue as their value, making them 
 Or:
 
 #+begin_src elisp :exports code
-  (let ((queue (make-plz-queue :limit 2))
+  (let ((queue (make-plz-queue :limit 2
+                               :finally (lambda ()
+                                          (message "Queue empty."))))
         (urls '("https://httpbin.org/get?foo=0"
                 "https://httpbin.org/get?foo=1")))
     (plz-run

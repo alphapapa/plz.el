@@ -249,7 +249,9 @@ making them easy to use.  For example:
 
    Or:
 
-     (let ((queue (make-plz-queue :limit 2))
+     (let ((queue (make-plz-queue :limit 2
+                                  :finally (lambda ()
+                                             (message "Queue empty."))))
            (urls '("https://httpbin.org/get?foo=0"
                    "https://httpbin.org/get?foo=1")))
        (plz-run
@@ -491,23 +493,23 @@ Node: Usage1872
 Node: Examples2373
 Node: Functions3740
 Node: Queueing6848
-Node: Tips8106
-Node: Changelog8407
-Node: 06-pre8665
-Node: 0549277
-Node: 0539524
-Node: 0529840
-Node: 05110047
-Node: 0510299
-Node: 0410505
-Node: 0311411
-Node: 02111859
-Node: 0212008
-Node: 0112139
-Node: Credits12235
-Node: Development12601
-Node: Copyright assignment13115
-Node: License13703
+Node: Tips8231
+Node: Changelog8532
+Node: 06-pre8790
+Node: 0549402
+Node: 0539649
+Node: 0529965
+Node: 05110172
+Node: 0510424
+Node: 0410630
+Node: 0311536
+Node: 02111984
+Node: 0212133
+Node: 0112264
+Node: Credits12360
+Node: Development12726
+Node: Copyright assignment13240
+Node: License13828
 
 End Tag Table
 
