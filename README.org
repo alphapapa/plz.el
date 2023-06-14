@@ -179,7 +179,7 @@ You may also clear a queue with ~plz-clear~, which cancels any active or queued 
 :TOC:      :depth 0
 :END:
 
-** 0.6-pre
+** 0.6
 
 *Additions*
 + Function ~plz~'s ~:body~ argument now accepts a list like ~(file FILENAME)~ to upload a file from disk (by passing the filename to curl, rather than reading its content into Emacs and sending it to curl through the pipe).

@@ -46,7 +46,7 @@ Usage
 
 Changelog
 
-* 0.6-pre: 06-pre.
+* 0.6: 06.
 * 0.5.4: 054.
 * 0.5.3: 053.
 * 0.5.2: 052.
@@ -281,7 +281,7 @@ File: README.info,  Node: Changelog,  Next: Credits,  Prev: Usage,  Up: Top
 
 * Menu:
 
-* 0.6-pre: 06-pre.
+* 0.6: 06.
 * 0.5.4: 054.
 * 0.5.3: 053.
 * 0.5.2: 052.
@@ -294,10 +294,10 @@ File: README.info,  Node: Changelog,  Next: Credits,  Prev: Usage,  Up: Top
 * 0.1: 01.
 
 
-File: README.info,  Node: 06-pre,  Next: 054,  Up: Changelog
+File: README.info,  Node: 06,  Next: 054,  Up: Changelog
 
-3.1 0.6-pre
-===========
+3.1 0.6
+=======
 
 *Additions*
    • Function ‘plz’’s ‘:body’ argument now accepts a list like ‘(file
@@ -312,7 +312,7 @@ File: README.info,  Node: 06-pre,  Next: 054,  Up: Changelog
    • Handle HTTP 3xx redirects when using ‘:as 'response’.
 
 
-File: README.info,  Node: 054,  Next: 053,  Prev: 06-pre,  Up: Changelog
+File: README.info,  Node: 054,  Next: 053,  Prev: 06,  Up: Changelog
 
 3.2 0.5.4
 =========
@@ -486,30 +486,30 @@ GPLv3
 
 Tag Table:
 Node: Top199
-Node: Installation1177
-Node: GNU ELPA1320
-Node: Manual1566
-Node: Usage1872
-Node: Examples2373
-Node: Functions3740
-Node: Queueing6848
-Node: Tips8231
-Node: Changelog8532
-Node: 06-pre8790
-Node: 0549402
-Node: 0539649
-Node: 0529965
-Node: 05110172
-Node: 0510424
-Node: 0410630
-Node: 0311536
-Node: 02111984
-Node: 0212133
-Node: 0112264
-Node: Credits12360
-Node: Development12726
-Node: Copyright assignment13240
-Node: License13828
+Node: Installation1169
+Node: GNU ELPA1312
+Node: Manual1558
+Node: Usage1864
+Node: Examples2365
+Node: Functions3732
+Node: Queueing6840
+Node: Tips8223
+Node: Changelog8524
+Node: 068774
+Node: 0549374
+Node: 0539617
+Node: 0529933
+Node: 05110140
+Node: 0510392
+Node: 0410598
+Node: 0311504
+Node: 02111952
+Node: 0212101
+Node: 0112232
+Node: Credits12328
+Node: Development12694
+Node: Copyright assignment13208
+Node: License13796
 
 End Tag Table
 
