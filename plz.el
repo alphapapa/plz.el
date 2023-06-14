@@ -513,7 +513,7 @@ default, it's FIFO).  Use functions `plz-queue', `plz-run', and
   first-active last-active
   first-request last-request
   (finally nil
-           :documentation "Function called after queue has been emptied or canceled."))
+           :documentation "Function called with no arguments after queue has been emptied or canceled."))
 
 (defun plz-queue (queue &rest args)
   "Enqueue request for ARGS on QUEUE and return QUEUE.
