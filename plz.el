@@ -273,7 +273,7 @@ connection phase and waiting to receive the response (the
 
 ;;;;; Public
 
-(cl-defun plz (method url &key headers body else finally noquery
+(cl-defun plz (method url &rest rest &key headers body else finally noquery
                       (as 'string) (then 'sync)
                       (body-type 'text) (decode t decode-s)
                       (connect-timeout plz-connect-timeout) (timeout plz-timeout))
@@ -487,6 +487,7 @@ NOQUERY is passed to `make-process', which see."
               plz-else else
               plz-finally finally
               plz-sync sync-p)
+        (setf (process-get process :plz-args) (apply #'list method url rest))
         ;; Send --config arguments.
         (process-send-string process curl-config)
         (when body
@@ -760,7 +761,8 @@ node `(elisp) Sentinels').  Kills the buffer before returning."
              ;; Error signaled by a function called to process HTTP response:
              ;; rather than signaling an error from within the sentinel,
              ;; return or call the ELSE function with a plz-error struct.
-             (let ((err (make-plz-error :message (format "plz--sentinel: Error signaled: %S" err))))
+             (let ((err (make-plz-error :message (format "plz--sentinel: Error signaled: %S  REQUEST-ARGS:%S"
+                                                         err (process-get process-or-buffer :plz-args)))))
                (pcase-exhaustive plz-else
                  (`nil (process-put process-or-buffer :plz-result err))
                  ((pred functionp) (funcall plz-else err)))))))
