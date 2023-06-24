@@ -496,6 +496,10 @@ NOQUERY is passed to `make-process', which see."
             (buffer (with-current-buffer body
                       (process-send-region process (point-min) (point-max))))))
         (process-send-eof process)
+	;; HACK: We set the result to a sentinel value so that any other
+	;; value, even nil, means that the response was processed, and
+	;; the sentinel does not need to be called again (see below).
+	(process-put process :plz-result :plz-result)
         (if sync-p
             (unwind-protect
                 (progn
@@ -504,18 +508,30 @@ NOQUERY is passed to `make-process', which see."
                     (error "Process unexpectedly nil"))
                   (while (accept-process-output process))
                   (while (accept-process-output (get-buffer-process stderr-buffer)))
-                  (unless (process-get process :plz-result)
+                  (when (eq :plz-result (process-get process :plz-result))
+                    ;; HACK: Sentinel seems to not have been called:
+                    ;; call it again.  (Although this is a hack, it
+                    ;; seems to be a necessary one due to Emacs's
+                    ;; process handling.)
+                    ;; FIXME: Add link to relevant bug reports.
                     (plz--sentinel process "finished\n")
-                    (unless (process-get process :plz-result)
-                      (error "NO RESULT FROM PROCESS:%S  BUFFER-STRING:%S" process
-                             (buffer-string))))
+                    (when (eq :plz-result (process-get process :plz-result))
+                      (error "plz: NO RESULT FROM PROCESS:%S  BUFFER-STRING:%S"
+                             process (buffer-string))))
+                  ;; Sentinel seems to have been called: check the result.
                   (pcase (process-get process :plz-result)
                     ((and (pred plz-error-p) data)
+                     ;; The AS function signaled an error, which was collected
+                     ;; into a `plz-error' struct: re-signal the error here,
+                     ;; outside of the sentinel.
                      (signal 'plz-error data))
-                    (else else)))
+                    (else
+                     ;; The AS function returned a value: return it.
+                     else)))
               (unless (eq as 'buffer)
                 (kill-buffer process-buffer))
               (kill-buffer stderr-buffer))
+          ;; Async request: return the process object.
           process)))))
 
 ;;;;; Queue
