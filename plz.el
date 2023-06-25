@@ -770,6 +770,11 @@ To be called from a timer run in `plz--sentinel'."
                     (ignore status) ; Byte-compiling in Emacs <28 complains without this.
                     (funcall plz-then))
                    (_
+                    ;; FIXME: If using ":as 'response", the HTTP
+                    ;; response should be passed to the THEN function,
+                    ;; regardless of the status code.  Only for curl
+                    ;; errors should the ELSE function be called.
+
                     ;; Any other status code is considered unsuccessful
                     ;; (for now, anyway).
                     (let ((err (make-plz-error :response (plz--response))))
