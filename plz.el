@@ -731,26 +731,34 @@ node `(elisp) Sentinels').  Kills the buffer before returning."
         ((or 0 "finished\n")
          ;; Curl exited normally: check HTTP status code.
          (if plz-sync
-             (plz--timer process buffer status)
-           (run-at-time 0 nil #'plz--timer process buffer status)))
+             (plz--respond process buffer status)
+           (run-at-time 0 nil #'plz--respond process buffer status)))
 
         ((or (and (pred numberp) code)
              (rx "exited abnormally with code " (let code (group (1+ digit)))))
          ;; Curl error.
          (ignore code)
          (if plz-sync
-             (plz--timer process buffer status)
-           (run-at-time 0 nil #'plz--timer process buffer status)))
+             (plz--respond process buffer status)
+           (run-at-time 0 nil #'plz--respond process buffer status)))
 
         ((and (or "killed\n" "interrupt\n") status)
          ;; Curl process killed or interrupted.
          (if plz-sync
-             (plz--timer process buffer status)
-           (run-at-time 0 nil #'plz--timer process buffer status)))))))
+             (plz--respond process buffer status)
+           (run-at-time 0 nil #'plz--respond process buffer status)))))))
 
-(defun plz--timer (process buffer status)
-  "Process HTTP response in BUFFER.
-To be called from a timer run in `plz--sentinel'."
+(defun plz--respond (process buffer status)
+  "Respond to HTTP response from PROCESS in BUFFER.
+Parses the response and calls the THEN/ELSE callbacks
+accordingly.  To be called from `plz--sentinel'.  STATUS is the
+argument passed to `plz--sentinel', which see."
+  ;; Is it silly to call this function "please respond"?  Perhaps, but
+  ;; naming things is hard.  The term "process" has another meaning in
+  ;; this context, and the old standby, "handle," is much overused.
+  ;; "Respond" also means "to react to something," which is what this
+  ;; does--react to receiving the HTTP response--and it's an internal
+  ;; name, so why not.
   (let ((finally (buffer-local-value 'plz-finally buffer))
         sync)
     (cl-assert process nil "PROCESS IS NIL FOR BUFFER:%S" buffer)
