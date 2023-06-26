@@ -46,8 +46,6 @@
 
 The main public function is ~plz~, which sends an HTTP request and returns either the result of the specified type (for a synchronous request), or the ~curl~ process object (for asynchronous requests).  For asynchronous requests, callback, error-handling, and finalizer functions may be specified, as well as various other options.
 
-# TODO: Add ":body (file FILENAME)" to docs.
-
 ** Examples
 
 Synchronously =GET= a URL and return the response body as a decoded string (here, raw JSON):
@@ -188,6 +186,7 @@ You may also clear a queue with ~plz-clear~, which cancels any active or queued 
 
 *Internal*
 + Tests now run against a local instance of [[https://github.com/postmanlabs/httpbin][httpbin]] (since the ~httpbin.org~ server is often overloaded).
++ No buffer-local variables are defined anymore; process properties are used instead.
 
 ** 0.6
 

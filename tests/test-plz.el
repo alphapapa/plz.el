@@ -453,7 +453,7 @@ Also, any instance of \"URI-PREFIX\" in URL-PART is replaced with
 
 (plz-deftest plz-get-timeout-error-sync nil
   (pcase-let* ((start-time (current-time))
-               (`(,_signal . (,_string ,(cl-struct plz-error (curl-error `(,code . ,message)))))
+               (`(,_signal . (,_message ,(cl-struct plz-error (curl-error `(,code . ,message)))))
 		(should-error (plz 'get (plz-test-url "/delay/5")
 				:as 'string :then 'sync :timeout 1)
 			      :type 'plz-error))
