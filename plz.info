@@ -301,7 +301,15 @@ File: README.info,  Node: 07-pre,  Next: 06,  Up: Changelog
 3.1 0.7-pre
 ===========
 
-Nothing new yet.
+*Changes*
+   • A new error signal, ‘plz-error’, is defined.  The existing signals,
+     ‘plz-curl-error’ and ‘plz-http-error’, inherit from it, so handling
+     ‘plz-error’ catches both.
+
+     *NOTE:* The existing signals, ‘plz-curl-error’ and
+     ‘plz-http-error’, are hereby deprecated, and they will be removed
+     in v0.8.  Applications should be updated while using v0.7 to only
+     expect ‘plz-error’.
 
 
 File: README.info,  Node: 06,  Next: 054,  Prev: 07-pre,  Up: Changelog
@@ -506,21 +514,21 @@ Node: Queueing6859
 Node: Tips8242
 Node: Changelog8543
 Node: 07-pre8812
-Node: 068918
-Node: 0549533
-Node: 0539776
-Node: 05210092
-Node: 05110299
-Node: 0510551
-Node: 0410757
-Node: 0311663
-Node: 02112111
-Node: 0212262
-Node: 0112393
-Node: Credits12489
-Node: Development12855
-Node: Copyright assignment13369
-Node: License13957
+Node: 069342
+Node: 0549957
+Node: 05310200
+Node: 05210516
+Node: 05110723
+Node: 0510975
+Node: 0411181
+Node: 0312087
+Node: 02112535
+Node: 0212686
+Node: 0112817
+Node: Credits12913
+Node: Development13279
+Node: Copyright assignment13793
+Node: License14381
 
 End Tag Table
 

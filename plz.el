@@ -46,6 +46,14 @@
 
 ;;;; Usage:
 
+;; FIXME: Remove the following note in v0.8.
+
+;; NOTE: In v0.8 of plz, only one error will be signaled: `plz-error'.
+;; The existing errors, `plz-curl-error' and `plz-http-error', inherit
+;; from `plz-error' to allow applications to update their code while
+;; using v0.7 (i.e. any `condition-case' forms should now handle only
+;; `plz-error', not the other two).
+
 ;; Call function `plz' to make an HTTP request.  Its docstring
 ;; explains its arguments.  `plz' also supports other HTTP methods,
 ;; uploading and downloading binary files, sending URL parameters and
@@ -96,8 +104,9 @@
 ;;;; Errors
 
 ;; FIXME: `condition-case' can't catch these...?
-(define-error 'plz-curl-error "plz: Curl error")
-(define-error 'plz-http-error "plz: HTTP error")
+(define-error 'plz-error "plz error")
+(define-error 'plz-curl-error "plz: Curl error" 'plz-error)
+(define-error 'plz-http-error "plz: HTTP error" 'plz-error)
 
 ;;;; Structs
 
@@ -323,6 +332,12 @@ fails, either `plz-curl-error' or `plz-http-error' as
 appropriate, with a `plz-error' structure as the error data.  For
 synchronous requests, this argument is ignored.
 
+NOTE: In v0.8 of plz, only one error will be signaled:
+`plz-error'.  The existing errors, `plz-curl-error' and
+`plz-http-error', inherit from `plz-error' to allow applications
+to update their code while using v0.7 (i.e. any `condition-case'
+forms should now handle only `plz-error', not the other two).
+
 FINALLY is an optional function called without argument after
 THEN or ELSE, as appropriate.  For synchronous requests, this
 argument is ignored.
@@ -332,6 +347,7 @@ how long it takes to connect to a host and to receive a response
 from a host, respectively.
 
 NOQUERY is passed to `make-process', which see."
+  ;; FIXME: Remove the note about error changes from the docstring in v0.8.
   ;; Inspired by and copied from `elfeed-curl-retrieve'.
   (declare (indent defun))
   (setf decode (if (and decode-s (not decode))
