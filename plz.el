@@ -525,8 +525,8 @@ NOQUERY is passed to `make-process', which see.
                      ;; outside of the sentinel.
                      (if (plz-error-response data)
                          ;; FIXME: Signal only plz-error in v0.8.
-                         (signal 'plz-http-error (list data))
-                       (signal 'plz-curl-error (list data))))
+                         (signal 'plz-http-error (list "HTTP error" data))
+                       (signal 'plz-curl-error (list "Curl error" data))))
                     (else
                      ;; The AS function returned a value: return it.
                      else)))
