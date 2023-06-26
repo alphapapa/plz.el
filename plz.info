@@ -317,7 +317,8 @@ File: README.info,  Node: 07-pre,  Next: 06,  Up: Changelog
      (https://github.com/alphapapa/plz.el/issues/3).)
    • STDERR output from curl processes is not included in response
      bodies (which sometimes happened, depending on Emacs’s internal
-     race conditions).
+     race conditions).  (Fixes #23
+     (https://github.com/alphapapa/plz.el/issues/23).)
 
    *Internal*
    • Response processing now happens outside the process sentinel, so
@@ -533,21 +534,21 @@ Node: Queueing6859
 Node: Tips8242
 Node: Changelog8543
 Node: 07-pre8812
-Node: 0610213
-Node: 05410828
-Node: 05311071
-Node: 05211387
-Node: 05111594
-Node: 0511846
-Node: 0412052
-Node: 0312958
-Node: 02113406
-Node: 0213557
-Node: 0113688
-Node: Credits13784
-Node: Development14150
-Node: Copyright assignment14664
-Node: License15252
+Node: 0610280
+Node: 05410895
+Node: 05311138
+Node: 05211454
+Node: 05111661
+Node: 0511913
+Node: 0412119
+Node: 0313025
+Node: 02113473
+Node: 0213624
+Node: 0113755
+Node: Credits13851
+Node: Development14217
+Node: Copyright assignment14731
+Node: License15319
 
 End Tag Table
 

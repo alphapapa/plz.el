@@ -186,7 +186,7 @@ You may also clear a queue with ~plz-clear~, which cancels any active or queued 
 
 *Fixes*
 + Significant improvement in reliability by implementing failsafes and workarounds for Emacs's process-handling code.  (See [[https://github.com/alphapapa/plz.el/issues/3][#3]].)
-+ STDERR output from curl processes is not included in response bodies (which sometimes happened, depending on Emacs's internal race conditions).
++ STDERR output from curl processes is not included in response bodies (which sometimes happened, depending on Emacs's internal race conditions).  (Fixes [[https://github.com/alphapapa/plz.el/issues/23][#23]].)
 
 *Internal*
 + Response processing now happens outside the process sentinel, so any errors (e.g. in user callbacks) are not signaled from inside the sentinel.  (This avoids the 2-second pause Emacs imposes in such cases.)
