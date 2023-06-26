@@ -483,6 +483,7 @@ NOQUERY is passed to `make-process', which see.
                                           (when decode
                                             (decode-coding-region (point) (point-max) coding-system))
                                           (funcall then (funcall as))))))))
+        ;; TODO: Consider using process properties for these instead of buffer-local vars.
         (setf plz-then then
               plz-else else
               plz-finally finally
