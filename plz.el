@@ -723,34 +723,19 @@ Includes active and queued requests."
 ;;;;; Private
 
 (defun plz--sentinel (process status)
-  ;; FIXME: Update docstring for arguments.
-  "Process buffer of curl output in PROCESS-OR-BUFFER.
-If PROCESS-OR-BUFFER if a process, uses its buffer; if a buffer,
-uses it.  STATUS should be the process's event string (see info
-node `(elisp) Sentinels').  Kills the buffer before returning."
-  ;; Inspired by and some code copied from `elfeed-curl--sentinel'.
-  (let ((buffer (process-buffer process)))
-    (with-current-buffer buffer
-      (pcase status
-        ((or 0 "finished\n")
-         ;; Curl exited normally: check HTTP status code.
-         (if plz-sync
-             (plz--respond process buffer status)
-           (run-at-time 0 nil #'plz--respond process buffer status)))
-
-        ((or (and (pred numberp) code)
-             (rx "exited abnormally with code " (let code (group (1+ digit)))))
-         ;; Curl error.
-         (ignore code)
-         (if plz-sync
-             (plz--respond process buffer status)
-           (run-at-time 0 nil #'plz--respond process buffer status)))
-
-        ((and (or "killed\n" "interrupt\n") status)
-         ;; Curl process killed or interrupted.
-         (if plz-sync
-             (plz--respond process buffer status)
-           (run-at-time 0 nil #'plz--respond process buffer status)))))))
+  "Sentinel for curl PROCESS.
+STATUS should be the process's event string (see info
+node `(elisp) Sentinels').  Calls `plz--respond' to process the
+HTTP response (directly for synchronous requests, or from a timer
+for asynchronous ones)."
+  (pcase status
+    ((or "finished\n" "killed\n" "interrupt\n"
+         (pred numberp)
+         (rx "exited abnormally with code " (group (1+ digit))))
+     (let ((buffer (process-buffer process)))
+       (if (buffer-local-value 'plz-sync buffer)
+           (plz--respond process buffer status)
+         (run-at-time 0 nil #'plz--respond process buffer status))))))
 
 (defun plz--respond (process buffer status)
   "Respond to HTTP response from PROCESS in BUFFER.
