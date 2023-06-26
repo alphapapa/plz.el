@@ -487,8 +487,11 @@ NOQUERY is passed to `make-process', which see.
         (setf plz-then then
               plz-else else
               plz-finally finally
-              plz-sync sync-p)
-        (setf (process-get process :plz-args) (apply #'list method url rest))
+              plz-sync sync-p
+              ;; Record list of arguments for debugging purposes (e.g. when
+              ;; using Edebug in a process buffer, this allows determining
+              ;; which request the buffer is for).
+              (process-get process :plz-args) (apply #'list method url rest))
         ;; Send --config arguments.
         (process-send-string process curl-config)
         (when body
