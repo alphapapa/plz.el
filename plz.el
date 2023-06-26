@@ -514,8 +514,8 @@ NOQUERY is passed to `make-process', which see.
                     ;; <https://debbugs.gnu.org/cgi/bugreport.cgi?bug=50166>.
                     (plz--sentinel process "finished\n")
                     (when (eq :plz-result (process-get process :plz-result))
-                      (error "plz: NO RESULT FROM PROCESS:%S  BUFFER-STRING:%S"
-                             process (buffer-string))))
+                      (error "Plz: NO RESULT FROM PROCESS:%S  ARGS:%S"
+                             process rest)))
                   ;; Sentinel seems to have been called: check the result.
                   (pcase (process-get process :plz-result)
                     ((and (pred plz-error-p) data)
