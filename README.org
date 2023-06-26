@@ -186,6 +186,9 @@ You may also clear a queue with ~plz-clear~, which cancels any active or queued 
 
   *NOTE:* The existing signals, ~plz-curl-error~ and ~plz-http-error~, are hereby deprecated, and they will be removed in v0.8.  Applications should be updated while using v0.7 to only expect ~plz-error~.
 
+*Internal*
++ Tests now run against a local instance of [[https://github.com/postmanlabs/httpbin][httpbin]] (since the ~httpbin.org~ server is often overloaded).
+
 ** 0.6
 
 *Additions*

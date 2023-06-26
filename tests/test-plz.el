@@ -98,6 +98,11 @@
 
 ;;;; Variables
 
+(defvar plz-test-uri-prefix
+  ;; "https://httpbin.org"
+  "http://localhost"
+  "URI prefix for HTTP requests, without trailing slash.
+If running httpbin locally, set to \"http://localhost\".")
 
 ;;;; Customization
 
@@ -137,6 +142,14 @@
 
 ;;;; Functions
 
+(defun plz-test-url (url-part)
+  "Return URL-PART appended to `plz-test-uri-prefix'.
+Also, any instance of \"URI-PREFIX\" in URL-PART is replaced with
+`plz-test-uri-prefix' in URL-encoded form."
+  (setf url-part (replace-regexp-in-string "URI-PREFIX" (url-hexify-string plz-test-uri-prefix)
+                                           url-part t t))
+  (concat plz-test-uri-prefix url-part))
+
 (defmacro plz-test-get-response (response)
   "Test parts of RESPONSE with `should'."
   `(and (should (plz-response-p ,response))
@@ -154,7 +167,7 @@
 
 (plz-deftest plz-get-string nil
   (let* ((test-string)
-         (process (plz 'get "https://httpbin.org/get"
+         (process (plz 'get (plz-test-url "/get")
                     :as 'string
                     :then (lambda (string)
                             (setf test-string string)))))
@@ -164,7 +177,7 @@
 (plz-deftest plz-get-buffer nil
   ;; The sentinel kills the buffer, so we get the buffer as a string.
   (let* ((test-buffer-string)
-         (process (plz 'get "https://httpbin.org/get"
+         (process (plz 'get (plz-test-url "/get")
                     :as 'buffer
                     :then (lambda (buffer)
                             (with-current-buffer buffer
@@ -174,7 +187,7 @@
 
 (plz-deftest plz-get-response nil
   (let* ((test-response)
-         (process (plz 'get "https://httpbin.org/get"
+         (process (plz 'get (plz-test-url "/get")
                     :as 'response
                     :then (lambda (response)
                             (setf test-response response)))))
@@ -183,7 +196,7 @@
 
 (plz-deftest plz-get-json nil
   (let* ((test-json)
-         (process (plz 'get "https://httpbin.org/get"
+         (process (plz 'get (plz-test-url "/get")
                     :as #'json-read
                     :then (lambda (json)
                             (setf test-json json)))))
@@ -194,7 +207,7 @@
 (plz-deftest plz-post-json-string nil
   (let* ((json-string (json-encode (list (cons "key" "value"))))
          (response-json)
-         (process (plz 'post "https://httpbin.org/post"
+         (process (plz 'post (plz-test-url "/post")
                     :headers '(("Content-Type" . "application/json"))
                     :body json-string
                     :as #'json-read
@@ -206,13 +219,13 @@
       (should (string= "value" (alist-get 'key (json-read-from-string .data)))))))
 
 (plz-deftest plz-post-jpeg-string nil
-  (let* ((jpeg-to-upload (plz 'get "https://httpbin.org/image/jpeg"
+  (let* ((jpeg-to-upload (plz 'get (plz-test-url "/image/jpeg")
                            :as 'binary :then 'sync))
          (_ (unless jpeg-to-upload
               (error "jpeg-to-upload is nil")))
          (response-json)
          (response-jpeg)
-         (process (plz 'post "https://httpbin.org/post"
+         (process (plz 'post (plz-test-url "/post")
                     :headers '(("Content-Type" . "image/jpeg"))
                     :body jpeg-to-upload :body-type 'binary
                     :as #'json-read
@@ -234,7 +247,7 @@
 (plz-deftest plz-put-json-string nil
   (let* ((json-string (json-encode (list (cons "key" "value"))))
          (response-json)
-         (process (plz 'put "https://httpbin.org/put"
+         (process (plz 'put (plz-test-url "/put")
                     :headers '(("Content-Type" . "application/json"))
                     :body json-string
                     :as #'json-read
@@ -250,21 +263,21 @@
 ;;;;; Sync
 
 (plz-deftest plz-get-string-sync nil
-  (let-alist (json-read-from-string (plz 'get "https://httpbin.org/get"
+  (let-alist (json-read-from-string (plz 'get (plz-test-url "/get")
                                       :as 'string :then 'sync))
-    (should (equal "https://httpbin.org/get" .url))))
+    (should (equal (plz-test-url "/get") .url))))
 
 (plz-deftest plz-get-response-sync nil
-  (plz-test-get-response (plz 'get "https://httpbin.org/get"
+  (plz-test-get-response (plz 'get (plz-test-url "/get")
                            :as 'response :then 'sync)))
 
 (plz-deftest plz-get-json-sync nil
-  (let-alist (plz 'get "https://httpbin.org/get"
+  (let-alist (plz 'get (plz-test-url "/get")
                :as #'json-read :then 'sync)
     (should (string-match "curl" .headers.User-Agent))))
 
 (plz-deftest plz-get-buffer-sync nil
-  (let ((buffer (plz 'get "https://httpbin.org/get"
+  (let ((buffer (plz 'get (plz-test-url "/get")
                   :as 'buffer :then 'sync)))
     (unwind-protect
         (should (buffer-live-p buffer))
@@ -277,7 +290,7 @@
 
 (plz-deftest plz-get-with-headers ()
   (let* ((response-json)
-         (process (plz 'get "https://httpbin.org/get"
+         (process (plz 'get (plz-test-url "/get")
                     :headers '(("X-Plz-Test-Header" . "plz-test-header-value"))
                     :as #'json-read
                     :then (lambda (json)
@@ -289,7 +302,7 @@
 (plz-deftest plz-post-with-headers ()
   (let* ((alist (list (cons "key" "value")))
          (response-json)
-         (process (plz 'post "https://httpbin.org/post"
+         (process (plz 'post (plz-test-url "/post")
                     :headers '(("Content-Type" . "application/json")
                                ("X-Plz-Test-Header" . "plz-test-header-value"))
                     :body (json-encode alist)
@@ -302,7 +315,7 @@
       (should (equal "value" (alist-get 'key (json-read-from-string .data)))))))
 
 (plz-deftest plz-get-json-with-headers-sync ()
-  (let-alist (plz 'get "https://httpbin.org/get"
+  (let-alist (plz 'get (plz-test-url "/get")
                :headers '(("X-Plz-Test-Header" . "plz-test-header-value"))
                :as #'json-read :then 'sync)
     (should (string-match "curl" .headers.User-Agent))
@@ -319,10 +332,10 @@
   ;; lightweight way to test a server's presence, so we should
   ;; probably support it.  This merely tests that no error is
   ;; signaled, which should mean that the HEAD request succeeded.
-  (should (plz 'head "https://httpbin.org/get")))
+  (should (plz 'head (plz-test-url "/get"))))
 
 (plz-deftest plz-head-as-response ()
-  (let ((response (plz 'head "https://httpbin.org/get"
+  (let ((response (plz 'head (plz-test-url "/get")
                     :as 'response)))
     (should (equal "application/json"
                    (alist-get 'content-type
@@ -334,53 +347,55 @@
   (should (equal ""
                  (alist-get 'data
                             (json-read-from-string
-                             (plz 'post "https://httpbin.org/post")))))
+                             (plz 'post (plz-test-url "/post"))))))
   (should (equal "application/json"
                  (alist-get 'content-type
                             (plz-response-headers
-                             (plz 'post "https://httpbin.org/post" :as 'response))))))
+                             (plz 'post (plz-test-url "/post") :as 'response))))))
 
 ;;;;; Status codes
 
 (plz-deftest plz-201-succeeds ()
   ;; This merely tests that a 201 response does not signal an error.
-  (should (plz 'get "https://httpbin.org/status/201")))
+  (should (plz 'get (plz-test-url "/status/201"))))
 
 (plz-deftest plz-400-errors ()
-  (should-error (plz 'get "https://httpbin.org/status/400")))
+  (should-error (plz 'get (plz-test-url "/status/400"))))
 
 (plz-deftest plz-500-errors ()
-  (should-error (plz 'get "https://httpbin.org/status/500")))
+  (should-error (plz 'get (plz-test-url "/status/500"))))
 
 ;;;;; Redirects
 
 (plz-deftest plz-301-redirects ()
   (plz-test-get-response
-   (plz 'get "https://httpbin.org/redirect-to?url=https%3A%2F%2Fhttpbin.org/get&status_code=301"
+   (plz 'get (plz-test-url "/redirect-to?url=URI-PREFIX%2Fget&status_code=301")
      :as 'response :then 'sync)))
 
 (plz-deftest plz-302-redirects ()
   (plz-test-get-response
-   (plz 'get "https://httpbin.org/redirect-to?url=https%3A%2F%2Fhttpbin.org/get&status_code=302"
+   (plz 'get (plz-test-url "/redirect-to?url=URI-PREFIX%2Fget&status_code=302")
      :as 'response :then 'sync)))
 
 (plz-deftest plz-307-redirects ()
   (plz-test-get-response
-   (plz 'get "https://httpbin.org/redirect-to?url=https%3A%2F%2Fhttpbin.org/get&status_code=307"
+   (plz 'get (plz-test-url "/redirect-to?url=URI-PREFIX%2Fget&status_code=307")
      :as 'response :then 'sync)))
 
 (plz-deftest plz-308-redirects ()
   (plz-test-get-response
-   (plz 'get "https://httpbin.org/redirect-to?url=https%3A%2F%2Fhttpbin.org/get&status_code=308"
+   (plz 'get (plz-test-url "/redirect-to?url=URI-PREFIX%2Fget&status_code=308")
      :as 'response :then 'sync)))
 
 ;;;;; Errors
 
-(plz-deftest plz-get-curl-error nil
+;; TODO: Sync requests with ":as 'response" should return response for errors rather than signaling.
+
+(plz-deftest plz-get-curl-error-async nil
   ;; Async.
   (let* ((err)
          (process (plz 'get "https://httpbinnnnnn.org/get/status/404"
-                    :as 'string
+                    :as 'string :then #'ignore
                     :else (lambda (e)
                             (setf err e)))))
     (plz-test-wait process)
@@ -408,70 +423,64 @@
 
 (plz-deftest plz-get-curl-error-sync nil
   ;; Sync.
-  (pcase-let ((`(,signal ,_message ,data)
+  (pcase-let ((`(,_signal . (,_message ,data))
 	       (should-error (plz 'get "https://httpbinnnnnn.org/get/status/404"
                                :as 'string :then 'sync)
-                             :type 'plz-curl-error)))
-    (should (eq 'plz-curl-error signal))
+                             :type 'plz-error)))
     (should (plz-error-p data))
     (should (equal '(6 . "Couldn't resolve host. The given remote host was not resolved.")
                    (plz-error-curl-error data)))))
 
-(plz-deftest plz-get-404-error nil
-  ;; FIXME: Wrap each test expression in `should' rather than using `should-and'.
+(plz-deftest plz-get-404-error-sync  nil
+  (pcase-let ((`(,_signal . (,_message ,data))
+	       (should-error (plz 'get (plz-test-url "/get/status/404")
+			       :as 'string :then 'sync)
+                             :type 'plz-error)))
+    (should (plz-error-p data))
+    (should (plz-response-p (plz-error-response data)))
+    (should (eq 404 (plz-response-status (plz-error-response data))))))
 
-  ;; Async.
+(plz-deftest plz-get-404-error-async nil
   (let* ((err)
-         (process (plz 'get "https://httpbin.org/get/status/404"
-                    :as 'string
+         (process (plz 'get (plz-test-url "/get/status/404")
+                    :as 'string :then #'ignore
                     :else (lambda (e)
                             (setf err e)))))
     (plz-test-wait process)
     (should (plz-error-p err))
     (should (plz-response-p (plz-error-response err)))
-    (should (eq 404 (plz-response-status (plz-error-response err)))))
+    (should (eq 404 (plz-response-status (plz-error-response err))))))
 
-  ;; Sync.
-  (pcase-let ((`(,signal ,_message ,data)
-	       (should-error (plz 'get "https://httpbin.org/get/status/404"
-			       :as 'string :then 'sync)
-                             :type 'plz-http-error)))
-    (should (eq 'plz-http-error signal))
-    (should (plz-error-p data))
-    (should (plz-response-p (plz-error-response data)))
-    (should (eq 404 (plz-response-status (plz-error-response data))))))
+(plz-deftest plz-get-timeout-error-sync nil
+  (pcase-let* ((start-time (current-time))
+               (`(,_signal . (,_string ,(cl-struct plz-error (curl-error `(,code . ,message)))))
+		(should-error (plz 'get (plz-test-url "/delay/5")
+				:as 'string :then 'sync :timeout 1)
+			      :type 'plz-error))
+               (end-time (current-time)))
+    (should (eq 28 code))
+    (should (equal "Operation timeout." message))
+    (should (< (time-to-seconds (time-subtract end-time start-time)) 1.1))))
 
-(plz-deftest plz-get-timeout-error nil
-  ;; Async.
+(plz-deftest plz-get-timeout-error-async nil
   (let* ((start-time (current-time))
          (end-time)
          (plz-error)
-         (process (plz 'get "https://httpbin.org/delay/5"
-                    :as 'response :timeout 1
+         (process (plz 'get (plz-test-url "/delay/5")
+                    :as 'response :timeout 1 :then #'ignore
                     :else (lambda (e)
                             (setf end-time (current-time)
                                   plz-error e)))))
     (plz-test-wait process)
     (should (eq 28 (car (plz-error-curl-error plz-error))))
     (should (equal "Operation timeout." (cdr (plz-error-curl-error plz-error))))
-    (should (< (time-to-seconds (time-subtract end-time start-time)) 1.1)))
-
-  ;; Sync.
-  (pcase-let* ((start-time (current-time))
-               (`(,_signal ,_message ,data)
-		(should-error (plz 'get "https://httpbin.org/delay/5"
-				:as 'string :then 'sync :timeout 1)
-			      :type 'plz-curl-error))
-               (end-time (current-time)))
-    (should (eq 28 (car (plz-error-curl-error data))))
-    (should (equal "Operation timeout." (cdr (plz-error-curl-error data))))
     (should (< (time-to-seconds (time-subtract end-time start-time)) 1.1))))
 
 ;;;;; Finally
 
 (plz-deftest plz-get-finally nil
   (let* ((finally-null t)
-         (process (plz 'get "https://httpbin.org/get"
+         (process (plz 'get (plz-test-url "/get")
                     :as 'string
                     :then #'ignore
                     :finally (lambda ()
@@ -483,7 +492,7 @@
 
 (plz-deftest plz-get-jpeg ()
   (let* ((test-jpeg)
-         (process (plz 'get "https://httpbin.org/image/jpeg"
+         (process (plz 'get (plz-test-url "/image/jpeg")
                     :as 'binary
                     :then (lambda (string)
                             (setf test-jpeg string)))))
@@ -491,14 +500,14 @@
     (should (equal 'jpeg (image-type-from-data test-jpeg)))))
 
 (plz-deftest plz-get-jpeg-sync ()
-  (let ((jpeg (plz 'get "https://httpbin.org/image/jpeg"
+  (let ((jpeg (plz 'get (plz-test-url "/image/jpeg")
                 :as 'binary :then 'sync)))
     (should (equal 'jpeg (image-type-from-data jpeg)))))
 
 ;;;;; Downloading to files
 
 (plz-deftest plz-get-temp-file ()
-  (let ((filename (plz 'get "https://httpbin.org/image/jpeg"
+  (let ((filename (plz 'get (plz-test-url "/image/jpeg")
                     :as 'file :then 'sync)))
     (unwind-protect
         (let ((jpeg-data (with-temp-buffer
@@ -515,7 +524,7 @@
     (delete-file filename)
     (unwind-protect
         (progn
-          (plz 'get "https://httpbin.org/image/jpeg"
+          (plz 'get (plz-test-url "/image/jpeg")
             :as `(file ,filename) :then 'sync)
           (let ((jpeg-data (with-temp-buffer
                              (insert-file-contents filename)
@@ -533,7 +542,7 @@
           (with-temp-file filename
             (insert "deadbeef"))
           (setf process
-                (plz 'put "https://httpbin.org/put"
+                (plz 'put (plz-test-url "/put")
                   :body `(file ,filename)
                   :as #'json-read
                   :then (lambda (json)
@@ -557,7 +566,7 @@ and only called once."
                                 :finally (lambda ()
                                            (setf finally-called-at (current-time))
                                            (cl-incf finally-called-times))))
-         (urls '("https://httpbin.org/delay/2"))
+         (urls (list (plz-test-url "/delay/2")))
          completed-urls queue-started-at)
     (dolist (url urls)
       (plz-queue queue
@@ -579,8 +588,8 @@ and only called once."
 (plz-deftest plz-queue-without-finally ()
   "Ensure that a queue without a FINALLY function doesn't signal an error."
   (let* ((queue (make-plz-queue :limit 2))
-         (urls '("https://httpbin.org/get?foo=0"
-                 "https://httpbin.org/get?foo=1"))
+         (urls (list (plz-test-url "/get?foo=0")
+                     (plz-test-url "/get?foo=1")))
          completed-urls)
     (dolist (url urls)
       (plz-queue queue

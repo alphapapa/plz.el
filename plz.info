@@ -311,6 +311,11 @@ File: README.info,  Node: 07-pre,  Next: 06,  Up: Changelog
      in v0.8.  Applications should be updated while using v0.7 to only
      expect ‘plz-error’.
 
+   *Internal*
+   • Tests now run against a local instance of httpbin
+     (https://github.com/postmanlabs/httpbin) (since the ‘httpbin.org’
+     server is often overloaded).
+
 
 File: README.info,  Node: 06,  Next: 054,  Prev: 07-pre,  Up: Changelog
 
@@ -514,21 +519,21 @@ Node: Queueing6859
 Node: Tips8242
 Node: Changelog8543
 Node: 07-pre8812
-Node: 069342
-Node: 0549957
-Node: 05310200
-Node: 05210516
-Node: 05110723
-Node: 0510975
-Node: 0411181
-Node: 0312087
-Node: 02112535
-Node: 0212686
-Node: 0112817
-Node: Credits12913
-Node: Development13279
-Node: Copyright assignment13793
-Node: License14381
+Node: 069523
+Node: 05410138
+Node: 05310381
+Node: 05210697
+Node: 05110904
+Node: 0511156
+Node: 0411362
+Node: 0312268
+Node: 02112716
+Node: 0212867
+Node: 0112998
+Node: Credits13094
+Node: Development13460
+Node: Copyright assignment13974
+Node: License14562
 
 End Tag Table
 
