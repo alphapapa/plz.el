@@ -800,8 +800,8 @@ argument passed to `plz--sentinel', which see."
 Arguments are PROCESS and STATUS (ok, checkdoc?)."
   (pcase status
     ((or "finished\n" "killed\n" "interrupt\n"
-         (and (pred numberp) code)
-         (rx "exited abnormally with code " (let code (group (1+ digit)))))
+         (pred numberp)
+         (rx "exited abnormally with code " (1+ digit)))
      (kill-buffer (process-buffer process)))))
 
 ;;;;;; HTTP Responses
