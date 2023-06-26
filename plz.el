@@ -747,60 +747,57 @@ argument passed to `plz--sentinel', which see."
   ;; "Respond" also means "to react to something," which is what this
   ;; does--react to receiving the HTTP response--and it's an internal
   ;; name, so why not.
-  (let ((finally (buffer-local-value 'plz-finally buffer))
-        sync)
-    (unwind-protect
-        (with-current-buffer buffer
-          (setf sync plz-sync)
-          (pcase-exhaustive status
-            ((or 0 "finished\n")
-             ;; Curl exited normally: check HTTP status code.
-             (goto-char (point-min))
-             (plz--skip-proxy-headers)
-             (while (plz--skip-redirect-headers))
-             (pcase (plz--http-status)
-               ((and status (guard (<= 200 status 299)))
-                ;; Any 2xx response is considered successful.
-                (ignore status) ; Byte-compiling in Emacs <28 complains without this.
-                (funcall plz-then))
-               (_
-                ;; TODO: If using ":as 'response", the HTTP response
-                ;; should be passed to the THEN function, regardless
-                ;; of the status code.  Only for curl errors should
-                ;; the ELSE function be called.  (Maybe in v0.8.)
+  (unwind-protect
+      (with-current-buffer buffer
+        (pcase-exhaustive status
+          ((or 0 "finished\n")
+           ;; Curl exited normally: check HTTP status code.
+           (goto-char (point-min))
+           (plz--skip-proxy-headers)
+           (while (plz--skip-redirect-headers))
+           (pcase (plz--http-status)
+             ((and status (guard (<= 200 status 299)))
+              ;; Any 2xx response is considered successful.
+              (ignore status) ; Byte-compiling in Emacs <28 complains without this.
+              (funcall plz-then))
+             (_
+              ;; TODO: If using ":as 'response", the HTTP response
+              ;; should be passed to the THEN function, regardless
+              ;; of the status code.  Only for curl errors should
+              ;; the ELSE function be called.  (Maybe in v0.8.)
 
-                ;; Any other status code is considered unsuccessful
-                ;; (for now, anyway).
-                (let ((err (make-plz-error :response (plz--response))))
-                  (pcase-exhaustive plz-else
-                    (`nil (process-put process :plz-result err))
-                    ((pred functionp) (funcall plz-else err)))))))
+              ;; Any other status code is considered unsuccessful
+              ;; (for now, anyway).
+              (let ((err (make-plz-error :response (plz--response))))
+                (pcase-exhaustive plz-else
+                  (`nil (process-put process :plz-result err))
+                  ((pred functionp) (funcall plz-else err)))))))
 
-            ((or (and (pred numberp) code)
-                 (rx "exited abnormally with code " (let code (group (1+ digit)))))
-             ;; Curl error.
-             (let* ((curl-exit-code (cl-typecase code
-                                      (string (string-to-number code))
-                                      (number code)))
-                    (curl-error-message (alist-get curl-exit-code plz-curl-errors))
-                    (err (make-plz-error :curl-error (cons curl-exit-code curl-error-message))))
-               (pcase-exhaustive plz-else
-                 (`nil (process-put process :plz-result err))
-                 ((pred functionp) (funcall plz-else err)))))
+          ((or (and (pred numberp) code)
+               (rx "exited abnormally with code " (let code (group (1+ digit)))))
+           ;; Curl error.
+           (let* ((curl-exit-code (cl-typecase code
+                                    (string (string-to-number code))
+                                    (number code)))
+                  (curl-error-message (alist-get curl-exit-code plz-curl-errors))
+                  (err (make-plz-error :curl-error (cons curl-exit-code curl-error-message))))
+             (pcase-exhaustive plz-else
+               (`nil (process-put process :plz-result err))
+               ((pred functionp) (funcall plz-else err)))))
 
-            ((and (or "killed\n" "interrupt\n") status)
-             ;; Curl process killed or interrupted.
-             (let* ((message (pcase status
-                               ("killed\n" "curl process killed")
-                               ("interrupt\n" "curl process interrupted")))
-                    (err (make-plz-error :message message)))
-               (pcase-exhaustive plz-else
-                 (`nil (process-put process :plz-result err))
-                 ((pred functionp) (funcall plz-else err)))))))
-      (when finally
-        (funcall finally))
-      (unless sync
-        (kill-buffer buffer)))))
+          ((and (or "killed\n" "interrupt\n") status)
+           ;; Curl process killed or interrupted.
+           (let* ((message (pcase status
+                             ("killed\n" "curl process killed")
+                             ("interrupt\n" "curl process interrupted")))
+                  (err (make-plz-error :message message)))
+             (pcase-exhaustive plz-else
+               (`nil (process-put process :plz-result err))
+               ((pred functionp) (funcall plz-else err)))))))
+    (when-let ((finally (buffer-local-value 'plz-finally buffer)))
+      (funcall finally))
+    (unless (buffer-local-value 'plz-sync buffer)
+      (kill-buffer buffer))))
 
 ;;;;;; HTTP Responses
 
