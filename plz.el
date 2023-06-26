@@ -750,7 +750,6 @@ argument passed to `plz--sentinel', which see."
   ;; name, so why not.
   (let ((finally (buffer-local-value 'plz-finally buffer))
         sync)
-    (cl-assert process nil "PROCESS IS NIL FOR BUFFER:%S" buffer)
     (unwind-protect
         (with-current-buffer buffer
           (setf sync plz-sync)
