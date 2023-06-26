@@ -606,6 +606,26 @@ and only called once."
 
 ;; TODO: Add test for canceling queue.
 
+;;;;; Process buffers, etc.
+
+(plz-deftest plz-kills-processes-and-buffers-async ()
+  "Ensure that the processes and buffers from an async request are killed."
+  (pcase-let* ((process (plz 'get (plz-test-url "/get")
+                          :then #'ignore))
+               (process-buffer (process-buffer process))
+	       ;; HACK: Since `process-contact' doesn't return anything but
+	       ;; t for an "ordinary child process" (apparently contrary to
+	       ;; the Info manual), we dig the stderr-process out of the
+	       ;; THEN closure's binding list.
+               (`(closure ((,_pcase-0 closure ,(map stderr-process))))
+	        (process-get process :plz-then))
+               (stderr-buffer (process-contact stderr-process :buffer)))
+    (plz-test-wait process)
+    (should-not (process-live-p process))
+    (should-not (process-live-p stderr-process))
+    (should-not (buffer-live-p process-buffer))
+    (should-not (buffer-live-p stderr-buffer))))
+
 ;;;; Footer
 
 (provide 'test-plz)
