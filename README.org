@@ -184,8 +184,13 @@ You may also clear a queue with ~plz-clear~, which cancels any active or queued 
 
   *NOTE:* The existing signals, ~plz-curl-error~ and ~plz-http-error~, are hereby deprecated, and they will be removed in v0.8.  Applications should be updated while using v0.7 to only expect ~plz-error~.
 
+*Fixes*
++ Significant improvement in reliability by implementing failsafes and workarounds for Emacs's process-handling code.  (See [[https://github.com/alphapapa/plz.el/issues/3][#3]].)
++ STDERR output from curl processes is not included in response bodies (which sometimes happened, depending on Emacs's internal race conditions).
+
 *Internal*
-+ Tests now run against a local instance of [[https://github.com/postmanlabs/httpbin][httpbin]] (since the ~httpbin.org~ server is often overloaded).
++ Response processing now happens outside the process sentinel, so any errors (e.g. in user callbacks) are not signaled from inside the sentinel.  (This avoids the 2-second pause Emacs imposes in such cases.)
++ Tests run against a local instance of [[https://github.com/postmanlabs/httpbin][httpbin]] (since the ~httpbin.org~ server is often overloaded).
 + No buffer-local variables are defined anymore; process properties are used instead.
 
 ** 0.6
