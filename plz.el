@@ -103,7 +103,6 @@
 
 ;;;; Errors
 
-;; FIXME: `condition-case' can't catch these...?
 (define-error 'plz-error "plz error")
 (define-error 'plz-curl-error "plz: Curl error" 'plz-error)
 (define-error 'plz-http-error "plz: HTTP error" 'plz-error)
@@ -765,10 +764,10 @@ argument passed to `plz--sentinel', which see."
                 (ignore status) ; Byte-compiling in Emacs <28 complains without this.
                 (funcall plz-then))
                (_
-                ;; FIXME: If using ":as 'response", the HTTP
-                ;; response should be passed to the THEN function,
-                ;; regardless of the status code.  Only for curl
-                ;; errors should the ELSE function be called.
+                ;; TODO: If using ":as 'response", the HTTP response
+                ;; should be passed to the THEN function, regardless
+                ;; of the status code.  Only for curl errors should
+                ;; the ELSE function be called.  (Maybe in v0.8.)
 
                 ;; Any other status code is considered unsuccessful
                 ;; (for now, anyway).
