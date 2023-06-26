@@ -326,10 +326,11 @@ directly from this function.
 
 ELSE is an optional callback function called when the request
 fails (i.e. if curl fails, or if the HTTP response has a non-2xx
-status code).  It is called with one argument, a `plz-error'
-structure.  If ELSE is nil, a `plz-error' is signaled when the
-request fails, with a `plz-error' structure as the error data.
-For synchronous requests, this argument is ignored.
+status code). It is called with one argument, a `plz-error'
+structure.  If ELSE is nil, a `plz-curl-error' or
+`plz-http-error' is signaled when the request fails, with a
+`plz-error' structure as the error data.  For synchronous
+requests, this argument is ignored.
 
 NOTE: In v0.8 of plz, only one error will be signaled:
 `plz-error'.  The existing errors, `plz-curl-error' and
@@ -347,6 +348,7 @@ from a host, respectively.
 
 NOQUERY is passed to `make-process', which see."
   ;; FIXME: Remove the note about error changes from the docstring in v0.8.
+  ;; FIXME: Update error signals in docstring in v0.8.
   ;; Inspired by and copied from `elfeed-curl-retrieve'.
   (declare (indent defun))
   (setf decode (if (and decode-s (not decode))
@@ -524,7 +526,10 @@ NOQUERY is passed to `make-process', which see."
                      ;; The AS function signaled an error, which was collected
                      ;; into a `plz-error' struct: re-signal the error here,
                      ;; outside of the sentinel.
-                     (signal 'plz-error (list data)))
+                     (if (plz-error-response data)
+                         ;; FIXME: Signal only plz-error in v0.8.
+                         (signal 'plz-http-error (list data))
+                       (signal 'plz-curl-error (list data))))
                     (else
                      ;; The AS function returned a value: return it.
                      else)))
@@ -839,7 +844,7 @@ argument passed to `plz--sentinel', which see."
         ;; Skip proxy headers (curl apparently offers no way to omit
         ;; them).
         (unless (re-search-forward "\r\n\r\n" nil t)
-          (signal 'plz-error '("plz--response: End of proxy headers not found")))))))
+          (signal 'plz-http-error '("plz--response: End of proxy headers not found")))))))
 
 (defun plz--skip-redirect-headers ()
   "Skip HTTP redirect headers in current buffer."
@@ -848,7 +853,7 @@ argument passed to `plz--sentinel', which see."
     ;; Skip redirect headers ("--dump-header" forces redirect headers to be included
     ;; even when used with "--location").
     (or (re-search-forward "\r\n\r\n" nil t)
-        (signal 'plz-error '("plz--response: End of redirect headers not found")))))
+        (signal 'plz-http-error '("plz--response: End of redirect headers not found")))))
 
 (cl-defun plz--response (&key (decode-p t))
   "Return response structure for HTTP response in current buffer.
@@ -859,7 +864,7 @@ Assumes that point is at beginning of HTTP response."
   (save-excursion
     ;; Parse HTTP version and status code.
     (unless (looking-at plz-http-response-status-line-regexp)
-      (signal 'plz-error
+      (signal 'plz-http-error
               (list "plz--response: Unable to parse HTTP response status line"
                     (buffer-substring (point) (line-end-position)))))
     (let* ((http-version (string-to-number (match-string 1)))
@@ -912,7 +917,7 @@ Assumes point is at start of HTTP response."
   "Narrow to body of HTTP response in current buffer.
 Assumes point is at start of HTTP response."
   (unless (re-search-forward plz-http-end-of-headers-regexp nil t)
-    (signal 'plz-error '("plz--narrow-to-body: Unable to find end of headers")))
+    (signal 'plz-http-error '("plz--narrow-to-body: Unable to find end of headers")))
   (narrow-to-region (point) (point-max)))
 
 ;;;; Footer
