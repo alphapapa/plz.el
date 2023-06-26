@@ -315,6 +315,8 @@ File: README.info,  Node: 07-pre,  Next: 06,  Up: Changelog
    • Tests now run against a local instance of httpbin
      (https://github.com/postmanlabs/httpbin) (since the ‘httpbin.org’
      server is often overloaded).
+   • No buffer-local variables are defined anymore; process properties
+     are used instead.
 
 
 File: README.info,  Node: 06,  Next: 054,  Prev: 07-pre,  Up: Changelog
@@ -519,21 +521,21 @@ Node: Queueing6859
 Node: Tips8242
 Node: Changelog8543
 Node: 07-pre8812
-Node: 069523
-Node: 05410138
-Node: 05310381
-Node: 05210697
-Node: 05110904
-Node: 0511156
-Node: 0411362
-Node: 0312268
-Node: 02112716
-Node: 0212867
-Node: 0112998
-Node: Credits13094
-Node: Development13460
-Node: Copyright assignment13974
-Node: License14562
+Node: 069619
+Node: 05410234
+Node: 05310477
+Node: 05210793
+Node: 05111000
+Node: 0511252
+Node: 0411458
+Node: 0312364
+Node: 02112812
+Node: 0212963
+Node: 0113094
+Node: Credits13190
+Node: Development13556
+Node: Copyright assignment14070
+Node: License14658
 
 End Tag Table
 

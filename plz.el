@@ -217,24 +217,6 @@ only LF).")
     (90 . "SSL public key does not matched pinned public key"))
   "Alist mapping curl error code integers to helpful error messages.")
 
-;;;; Variables
-
-(defvar-local plz-else nil
-  "Callback function for unsuccessful completion of request.
-Called in current curl process buffer.")
-
-(defvar-local plz-then nil
-  "Callback function for successful completion of request.
-Called in current curl process buffer.")
-
-(defvar-local plz-finally nil
-  "Function called unconditionally after completion of request.
-Called after the then/else function, without arguments, outside
-the curl process buffer.")
-
-(defvar-local plz-sync nil
-  "Used when `plz' is called synchronously.")
-
 ;;;; Customization
 
 (defgroup plz nil
@@ -483,11 +465,10 @@ NOQUERY is passed to `make-process', which see.
                                           (when decode
                                             (decode-coding-region (point) (point-max) coding-system))
                                           (funcall then (funcall as))))))))
-        ;; TODO: Consider using process properties for these instead of buffer-local vars.
-        (setf plz-then then
-              plz-else else
-              plz-finally finally
-              plz-sync sync-p
+        (setf (process-get process :plz-then) then
+              (process-get process :plz-else) else
+              (process-get process :plz-finally) finally
+              (process-get process :plz-sync) sync-p
               ;; Record list of arguments for debugging purposes (e.g. when
               ;; using Edebug in a process buffer, this allows determining
               ;; which request the buffer is for).
@@ -735,7 +716,7 @@ for asynchronous ones)."
          (pred numberp)
          (rx "exited abnormally with code " (group (1+ digit))))
      (let ((buffer (process-buffer process)))
-       (if (buffer-local-value 'plz-sync buffer)
+       (if (process-get process :plz-sync)
            (plz--respond process buffer status)
          (run-at-time 0 nil #'plz--respond process buffer status))))))
 
@@ -762,7 +743,7 @@ argument passed to `plz--sentinel', which see."
              ((and status (guard (<= 200 status 299)))
               ;; Any 2xx response is considered successful.
               (ignore status) ; Byte-compiling in Emacs <28 complains without this.
-              (funcall plz-then))
+              (funcall (process-get process :plz-then)))
              (_
               ;; TODO: If using ":as 'response", the HTTP response
               ;; should be passed to the THEN function, regardless
@@ -772,9 +753,9 @@ argument passed to `plz--sentinel', which see."
               ;; Any other status code is considered unsuccessful
               ;; (for now, anyway).
               (let ((err (make-plz-error :response (plz--response))))
-                (pcase-exhaustive plz-else
+                (pcase-exhaustive (process-get process :plz-else)
                   (`nil (process-put process :plz-result err))
-                  ((pred functionp) (funcall plz-else err)))))))
+                  ((and (pred functionp) fn) (funcall fn err)))))))
 
           ((or (and (pred numberp) code)
                (rx "exited abnormally with code " (let code (group (1+ digit)))))
@@ -784,9 +765,9 @@ argument passed to `plz--sentinel', which see."
                                     (number code)))
                   (curl-error-message (alist-get curl-exit-code plz-curl-errors))
                   (err (make-plz-error :curl-error (cons curl-exit-code curl-error-message))))
-             (pcase-exhaustive plz-else
+             (pcase-exhaustive (process-get process :plz-else)
                (`nil (process-put process :plz-result err))
-               ((pred functionp) (funcall plz-else err)))))
+               ((and (pred functionp) fn) (funcall fn err)))))
 
           ((and (or "killed\n" "interrupt\n") status)
            ;; Curl process killed or interrupted.
@@ -794,12 +775,12 @@ argument passed to `plz--sentinel', which see."
                              ("killed\n" "curl process killed")
                              ("interrupt\n" "curl process interrupted")))
                   (err (make-plz-error :message message)))
-             (pcase-exhaustive plz-else
+             (pcase-exhaustive (process-get process :plz-else)
                (`nil (process-put process :plz-result err))
-               ((pred functionp) (funcall plz-else err)))))))
-    (when-let ((finally (buffer-local-value 'plz-finally buffer)))
+               ((and (pred functionp) fn) (funcall fn err)))))))
+    (when-let ((finally (process-get process :plz-finally)))
       (funcall finally))
-    (unless (buffer-local-value 'plz-sync buffer)
+    (unless (process-get process :plz-sync)
       (kill-buffer buffer))))
 
 (defun plz--stderr-sentinel (process status)

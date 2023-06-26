@@ -186,6 +186,7 @@ You may also clear a queue with ~plz-clear~, which cancels any active or queued 
 
 *Internal*
 + Tests now run against a local instance of [[https://github.com/postmanlabs/httpbin][httpbin]] (since the ~httpbin.org~ server is often overloaded).
++ No buffer-local variables are defined anymore; process properties are used instead.
 
 ** 0.6
 
