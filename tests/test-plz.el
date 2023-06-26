@@ -423,7 +423,7 @@ Also, any instance of \"URI-PREFIX\" in URL-PART is replaced with
 
 (plz-deftest plz-get-curl-error-sync nil
   ;; Sync.
-  (pcase-let ((`(,_signal . (,_message ,data))
+  (pcase-let ((`(,_signal . (,data))
 	       (should-error (plz 'get "https://httpbinnnnnn.org/get/status/404"
                                :as 'string :then 'sync)
                              :type 'plz-error)))
@@ -432,7 +432,7 @@ Also, any instance of \"URI-PREFIX\" in URL-PART is replaced with
                    (plz-error-curl-error data)))))
 
 (plz-deftest plz-get-404-error-sync  nil
-  (pcase-let ((`(,_signal . (,_message ,data))
+  (pcase-let ((`(,_signal . (,data))
 	       (should-error (plz 'get (plz-test-url "/get/status/404")
 			       :as 'string :then 'sync)
                              :type 'plz-error)))
@@ -453,7 +453,7 @@ Also, any instance of \"URI-PREFIX\" in URL-PART is replaced with
 
 (plz-deftest plz-get-timeout-error-sync nil
   (pcase-let* ((start-time (current-time))
-               (`(,_signal . (,_string ,(cl-struct plz-error (curl-error `(,code . ,message)))))
+               (`(,_signal . (,(cl-struct plz-error (curl-error `(,code . ,message)))))
 		(should-error (plz 'get (plz-test-url "/delay/5")
 				:as 'string :then 'sync :timeout 1)
 			      :type 'plz-error))

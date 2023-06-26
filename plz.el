@@ -524,7 +524,7 @@ NOQUERY is passed to `make-process', which see."
                      ;; The AS function signaled an error, which was collected
                      ;; into a `plz-error' struct: re-signal the error here,
                      ;; outside of the sentinel.
-                     (signal 'plz-error data))
+                     (signal 'plz-error (list data)))
                     (else
                      ;; The AS function returned a value: return it.
                      else)))
