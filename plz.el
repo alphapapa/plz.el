@@ -511,11 +511,10 @@ NOQUERY is passed to `make-process', which see."
                   (while (accept-process-output process))
                   (while (accept-process-output (get-buffer-process stderr-buffer)))
                   (when (eq :plz-result (process-get process :plz-result))
-                    ;; HACK: Sentinel seems to not have been called:
-                    ;; call it again.  (Although this is a hack, it
-                    ;; seems to be a necessary one due to Emacs's
-                    ;; process handling.)
-                    ;; FIXME: Add link to relevant bug reports.
+                    ;; HACK: Sentinel seems to not have been called: call it again.  (Although
+                    ;; this is a hack, it seems to be a necessary one due to Emacs's process
+                    ;; handling.)  See <https://github.com/alphapapa/plz.el/issues/3> and
+                    ;; <https://debbugs.gnu.org/cgi/bugreport.cgi?bug=50166>.
                     (plz--sentinel process "finished\n")
                     (when (eq :plz-result (process-get process :plz-result))
                       (error "plz: NO RESULT FROM PROCESS:%S  BUFFER-STRING:%S"
