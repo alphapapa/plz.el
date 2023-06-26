@@ -318,20 +318,20 @@ DECODE is automatically set to nil.
 
 THEN is a callback function, whose sole argument is selected
 above with AS; if the request fails and no ELSE function is
-given (see below), the argument will be a `plz-error' struct
+given (see below), the argument will be a `plz-error' structure
 describing the error.  Or THEN may be `sync' to make a
 synchronous request, in which case the result is returned
 directly from this function.
 
 ELSE is an optional callback function called when the request
 fails (i.e. if curl fails, or if the HTTP response has a non-2xx
-status code). It is called with one argument, a `plz-error'
+status code).  It is called with one argument, a `plz-error'
 structure.  If ELSE is nil, a `plz-curl-error' or
 `plz-http-error' is signaled when the request fails, with a
 `plz-error' structure as the error data.  For synchronous
 requests, this argument is ignored.
 
-NOTE: In v0.8 of plz, only one error will be signaled:
+NOTE: In v0.8 of `plz', only one error will be signaled:
 `plz-error'.  The existing errors, `plz-curl-error' and
 `plz-http-error', inherit from `plz-error' to allow applications
 to update their code while using v0.7 (i.e. any `condition-case'
@@ -345,7 +345,9 @@ CONNECT-TIMEOUT and TIMEOUT are a number of seconds that limit
 how long it takes to connect to a host and to receive a response
 from a host, respectively.
 
-NOQUERY is passed to `make-process', which see."
+NOQUERY is passed to `make-process', which see.
+
+\(To silence checkdoc, we mention the internal argument REST.)"
   ;; FIXME: Remove the note about error changes from the docstring in v0.8.
   ;; FIXME: Update error signals in docstring in v0.8.
   (declare (indent defun))
@@ -857,7 +859,7 @@ Assumes that point is at beginning of HTTP response."
 (defun plz--coding-system (&optional headers)
   "Return coding system for HTTP response in current buffer.
 HEADERS may optionally be an alist of parsed HTTP headers to
-refer to rather than the current buffer's unparsed headers."
+refer to rather than the current buffer's un-parsed headers."
   (let* ((headers (or headers (plz--headers)))
          (content-type (alist-get 'content-type headers)))
     (when content-type
