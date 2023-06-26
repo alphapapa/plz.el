@@ -412,114 +412,115 @@ NOQUERY is passed to `make-process', which see.
             then (lambda (result)
                    (process-put process :plz-result result))
             else nil))
-    (with-current-buffer process-buffer
-      (let ((then (pcase-exhaustive as
-                    ((or 'binary 'string)
-                     (lambda ()
-                       (let ((coding-system (or (plz--coding-system) 'utf-8)))
-                         (pcase as
-                           ('binary (set-buffer-multibyte nil)))
-                         (plz--narrow-to-body)
-                         (when decode
-                           (decode-coding-region (point) (point-max) coding-system))
-                         (funcall then (or (buffer-string)
-                                           (make-plz-error :message (format "buffer-string is nil in buffer:%S" process-buffer)))))))
-                    ('buffer (lambda ()
-                               (funcall then (current-buffer))))
-                    ('response (lambda ()
-                                 (funcall then (or (plz--response :decode-p decode)
-                                                   (make-plz-error :message (format "response is nil for buffer:%S  buffer-string:%S"
-                                                                                    process-buffer (buffer-string)))))))
-                    ('file (lambda ()
-                             (set-buffer-multibyte nil)
+    (setf
+     ;; Set the callbacks, etc. as process properties.
+     (process-get process :plz-then)
+     (pcase-exhaustive as
+       ((or 'binary 'string)
+        (lambda ()
+          (let ((coding-system (or (plz--coding-system) 'utf-8)))
+            (pcase as
+              ('binary (set-buffer-multibyte nil)))
+            (plz--narrow-to-body)
+            (when decode
+              (decode-coding-region (point) (point-max) coding-system))
+            (funcall then (or (buffer-string)
+                              (make-plz-error :message (format "buffer-string is nil in buffer:%S" process-buffer)))))))
+       ('buffer (lambda ()
+                  (funcall then (current-buffer))))
+       ('response (lambda ()
+                    (funcall then (or (plz--response :decode-p decode)
+                                      (make-plz-error :message (format "response is nil for buffer:%S  buffer-string:%S"
+                                                                       process-buffer (buffer-string)))))))
+       ('file (lambda ()
+                (set-buffer-multibyte nil)
+                (plz--narrow-to-body)
+                (let ((filename (make-temp-file "plz-")))
+                  (condition-case err
+                      (progn
+                        (write-region (point-min) (point-max) filename)
+                        (funcall then filename))
+                    ;; In case of an error writing to the file, delete the temp file
+                    ;; and signal the error.  Ignore any errors encountered while
+                    ;; deleting the file, which would obscure the original error.
+                    (error (ignore-errors
+                             (delete-file filename))
+                           (funcall then (make-plz-error :message (format "error while writing to file %S: %S" filename err))))))))
+       (`(file ,(and (pred stringp) filename))
+        (lambda ()
+          (set-buffer-multibyte nil)
+          (plz--narrow-to-body)
+          (condition-case err
+              (progn
+                (write-region (point-min) (point-max) filename nil nil nil 'excl)
+                (funcall then filename))
+            ;; Since we are creating the file, it seems sensible to delete it in case of an
+            ;; error while writing to it (e.g. a disk-full error).  And we ignore any errors
+            ;; encountered while deleting the file, which would obscure the original error.
+            (error (ignore-errors
+                     (when (file-exists-p filename)
+                       (delete-file filename)))
+                   (funcall then (make-plz-error :message (format "error while writing to file %S: %S" filename err)))))))
+       ((pred functionp) (lambda ()
+                           (let ((coding-system (or (plz--coding-system) 'utf-8)))
                              (plz--narrow-to-body)
-                             (let ((filename (make-temp-file "plz-")))
-                               (condition-case err
-                                   (progn
-                                     (write-region (point-min) (point-max) filename)
-                                     (funcall then filename))
-                                 ;; In case of an error writing to the file, delete the temp file
-                                 ;; and signal the error.  Ignore any errors encountered while
-                                 ;; deleting the file, which would obscure the original error.
-                                 (error (ignore-errors
-                                          (delete-file filename))
-                                        (funcall then (make-plz-error :message (format "error while writing to file %S: %S" filename err))))))))
-                    (`(file ,(and (pred stringp) filename))
-                     (lambda ()
-                       (set-buffer-multibyte nil)
-                       (plz--narrow-to-body)
-                       (condition-case err
-                           (progn
-                             (write-region (point-min) (point-max) filename nil nil nil 'excl)
-                             (funcall then filename))
-                         ;; Since we are creating the file, it seems sensible to delete it in case of an
-                         ;; error while writing to it (e.g. a disk-full error).  And we ignore any errors
-                         ;; encountered while deleting the file, which would obscure the original error.
-                         (error (ignore-errors
-                                  (when (file-exists-p filename)
-                                    (delete-file filename)))
-                                (funcall then (make-plz-error :message (format "error while writing to file %S: %S" filename err)))))))
-                    ((pred functionp) (lambda ()
-                                        (let ((coding-system (or (plz--coding-system) 'utf-8)))
-                                          (plz--narrow-to-body)
-                                          (when decode
-                                            (decode-coding-region (point) (point-max) coding-system))
-                                          (funcall then (funcall as))))))))
-        (setf (process-get process :plz-then) then
-              (process-get process :plz-else) else
-              (process-get process :plz-finally) finally
-              (process-get process :plz-sync) sync-p
-              ;; Record list of arguments for debugging purposes (e.g. when
-              ;; using Edebug in a process buffer, this allows determining
-              ;; which request the buffer is for).
-              (process-get process :plz-args) (apply #'list method url rest))
-        ;; Send --config arguments.
-        (process-send-string process curl-config)
-        (when body
-          (cl-typecase body
-            (string (process-send-string process body))
-            (buffer (with-current-buffer body
-                      (process-send-region process (point-min) (point-max))))))
-        (process-send-eof process)
-	;; HACK: We set the result to a sentinel value so that any other
-	;; value, even nil, means that the response was processed, and
-	;; the sentinel does not need to be called again (see below).
-	(process-put process :plz-result :plz-result)
-        (if sync-p
-            (unwind-protect
-                (progn
-                  ;; See Info node `(elisp)Accepting Output'.
-                  (unless (and process stderr-process)
-                    (error "Process unexpectedly nil"))
-                  (while (accept-process-output process))
-                  (while (accept-process-output stderr-process))
-                  (when (eq :plz-result (process-get process :plz-result))
-                    ;; HACK: Sentinel seems to not have been called: call it again.  (Although
-                    ;; this is a hack, it seems to be a necessary one due to Emacs's process
-                    ;; handling.)  See <https://github.com/alphapapa/plz.el/issues/3> and
-                    ;; <https://debbugs.gnu.org/cgi/bugreport.cgi?bug=50166>.
-                    (plz--sentinel process "finished\n")
-                    (when (eq :plz-result (process-get process :plz-result))
-                      (error "Plz: NO RESULT FROM PROCESS:%S  ARGS:%S"
-                             process rest)))
-                  ;; Sentinel seems to have been called: check the result.
-                  (pcase (process-get process :plz-result)
-                    ((and (pred plz-error-p) data)
-                     ;; The AS function signaled an error, which was collected
-                     ;; into a `plz-error' struct: re-signal the error here,
-                     ;; outside of the sentinel.
-                     (if (plz-error-response data)
-                         ;; FIXME: Signal only plz-error in v0.8.
-                         (signal 'plz-http-error (list "HTTP error" data))
-                       (signal 'plz-curl-error (list "Curl error" data))))
-                    (else
-                     ;; The AS function returned a value: return it.
-                     else)))
-              (unless (eq as 'buffer)
-                (kill-buffer process-buffer))
-              (kill-buffer (process-buffer stderr-process)))
-          ;; Async request: return the process object.
-          process)))))
+                             (when decode
+                               (decode-coding-region (point) (point-max) coding-system))
+                             (funcall then (funcall as))))))
+     (process-get process :plz-else) else
+     (process-get process :plz-finally) finally
+     (process-get process :plz-sync) sync-p
+     ;; Record list of arguments for debugging purposes (e.g. when
+     ;; using Edebug in a process buffer, this allows determining
+     ;; which request the buffer is for).
+     (process-get process :plz-args) (apply #'list method url rest)
+     ;; HACK: We set the result to a sentinel value so that any other
+     ;; value, even nil, means that the response was processed, and
+     ;; the sentinel does not need to be called again (see below).
+     (process-get process :plz-result) :plz-result)
+    ;; Send --config arguments.
+    (process-send-string process curl-config)
+    (when body
+      (cl-typecase body
+        (string (process-send-string process body))
+        (buffer (with-current-buffer body
+                  (process-send-region process (point-min) (point-max))))))
+    (process-send-eof process)
+    (if sync-p
+        (unwind-protect
+            (progn
+              ;; See Info node `(elisp)Accepting Output'.
+              (unless (and process stderr-process)
+                (error "Process unexpectedly nil"))
+              (while (accept-process-output process))
+              (while (accept-process-output stderr-process))
+              (when (eq :plz-result (process-get process :plz-result))
+                ;; HACK: Sentinel seems to not have been called: call it again.  (Although
+                ;; this is a hack, it seems to be a necessary one due to Emacs's process
+                ;; handling.)  See <https://github.com/alphapapa/plz.el/issues/3> and
+                ;; <https://debbugs.gnu.org/cgi/bugreport.cgi?bug=50166>.
+                (plz--sentinel process "finished\n")
+                (when (eq :plz-result (process-get process :plz-result))
+                  (error "Plz: NO RESULT FROM PROCESS:%S  ARGS:%S"
+                         process rest)))
+              ;; Sentinel seems to have been called: check the result.
+              (pcase (process-get process :plz-result)
+                ((and (pred plz-error-p) data)
+                 ;; The AS function signaled an error, which was collected
+                 ;; into a `plz-error' struct: re-signal the error here,
+                 ;; outside of the sentinel.
+                 (if (plz-error-response data)
+                     ;; FIXME: Signal only plz-error in v0.8.
+                     (signal 'plz-http-error (list "HTTP error" data))
+                   (signal 'plz-curl-error (list "Curl error" data))))
+                (else
+                 ;; The AS function returned a value: return it.
+                 else)))
+          (unless (eq as 'buffer)
+            (kill-buffer process-buffer))
+          (kill-buffer (process-buffer stderr-process)))
+      ;; Async request: return the process object.
+      process)))
 
 ;;;;; Queue
 
