@@ -410,21 +410,18 @@ NOQUERY is passed to `make-process', which see."
            ;; directory is, but this seems to make sense, and it should still exist.
            temporary-file-directory)
          (process-buffer (generate-new-buffer " *plz-request-curl*"))
-         (stderr-buffer (generate-new-buffer " *plz-request-curl-stderr*"))
+         (stderr-process (make-pipe-process :name "plz-stderr"
+                                            :noquery t
+                                            :sentinel #'plz--stderr-sentinel))
          (process (make-process :name "plz-request-curl"
                                 :buffer process-buffer
                                 :coding 'binary
                                 :command (append (list plz-curl-program) curl-command-line-args)
                                 :connection-type 'pipe
                                 :sentinel #'plz--sentinel
-                                :stderr stderr-buffer
+                                :stderr stderr-process
                                 :noquery noquery))
          sync-p)
-    (set-process-sentinel
-     ;; Set the stderr process sentinel to ignore to prevent "process finished"
-     ;; garbage in the STDERR buffer (though that buffer's contents are
-     ;; currently ignored, this is a good idea, in case we change that).
-     (get-buffer-process stderr-buffer) #'ignore)
     (when (eq 'sync then)
       (setf sync-p t
             then (lambda (result)
@@ -504,10 +501,10 @@ NOQUERY is passed to `make-process', which see."
             (unwind-protect
                 (progn
                   ;; See Info node `(elisp)Accepting Output'.
-                  (unless (and process (get-buffer-process stderr-buffer))
+                  (unless (and process stderr-process)
                     (error "Process unexpectedly nil"))
                   (while (accept-process-output process))
-                  (while (accept-process-output (get-buffer-process stderr-buffer)))
+                  (while (accept-process-output stderr-process))
                   (when (eq :plz-result (process-get process :plz-result))
                     ;; HACK: Sentinel seems to not have been called: call it again.  (Although
                     ;; this is a hack, it seems to be a necessary one due to Emacs's process
@@ -532,7 +529,7 @@ NOQUERY is passed to `make-process', which see."
                      else)))
               (unless (eq as 'buffer)
                 (kill-buffer process-buffer))
-              (kill-buffer stderr-buffer))
+              (kill-buffer (process-buffer stderr-process)))
           ;; Async request: return the process object.
           process)))))
 
@@ -797,6 +794,15 @@ argument passed to `plz--sentinel', which see."
       (funcall finally))
     (unless (buffer-local-value 'plz-sync buffer)
       (kill-buffer buffer))))
+
+(defun plz--stderr-sentinel (process status)
+  "Sentinel for STDERR buffer.
+Arguments are PROCESS and STATUS (ok, checkdoc?)."
+  (pcase status
+    ((or "finished\n" "killed\n" "interrupt\n"
+         (and (pred numberp) code)
+         (rx "exited abnormally with code " (let code (group (1+ digit)))))
+     (kill-buffer (process-buffer process)))))
 
 ;;;;;; HTTP Responses
 
