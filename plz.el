@@ -348,7 +348,6 @@ from a host, respectively.
 NOQUERY is passed to `make-process', which see."
   ;; FIXME: Remove the note about error changes from the docstring in v0.8.
   ;; FIXME: Update error signals in docstring in v0.8.
-  ;; Inspired by and copied from `elfeed-curl-retrieve'.
   (declare (indent defun))
   (setf decode (if (and decode-s (not decode))
                    nil decode))
