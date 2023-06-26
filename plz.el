@@ -412,7 +412,8 @@ NOQUERY is passed to `make-process', which see.
            ;; directory is, but this seems to make sense, and it should still exist.
            temporary-file-directory)
          (process-buffer (generate-new-buffer " *plz-request-curl*"))
-         (stderr-process (make-pipe-process :name "plz-stderr"
+         (stderr-process (make-pipe-process :name "plz-request-curl-stderr"
+                                            :buffer (generate-new-buffer " *plz-request-curl-stderr*")
                                             :noquery t
                                             :sentinel #'plz--stderr-sentinel))
          (process (make-process :name "plz-request-curl"
