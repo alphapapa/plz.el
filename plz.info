@@ -186,35 +186,45 @@ File: README.info,  Node: Functions,  Next: Queueing,  Prev: Examples,  Up: Usag
      ‘THEN’, or the kind of result to return for synchronous requests.
      It may be:
 
-        • ‘buffer’ to pass the response buffer.
-        • ‘binary’ to pass the response body as an undecoded string.
+        • ‘buffer’ to pass the response buffer, which will be narrowed
+          to the response body and decoded according to ‘DECODE’.
+        • ‘binary’ to pass the response body as an un-decoded string.
         • ‘string’ to pass the response body as a decoded string.
-        • ‘response’ to pass a ‘plz-response’ struct.
-        • A function, to pass its return value; it is called in the
-          response buffer, which is narrowed to the response body
-          (suitable for, e.g.  ‘json-read’).
+        • ‘response’ to pass a ‘plz-response’ structure.
         • ‘file’ to pass a temporary filename to which the response body
           has been saved without decoding.
-        • ‘(file FILENAME)’ to pass ‘FILENAME’ after having saved the
+        • ‘(file ~FILENAME)’ to pass ‘FILENAME’ after having saved the
           response body to it without decoding.  ‘FILENAME’ must be a
           non-existent file; if it exists, it will not be overwritten,
           and an error will be signaled.
+        • A function, which is called in the response buffer with it
+          narrowed to the response body (suitable for, e.g.
+          ‘json-read’).
 
-     If ‘DECODE’ is non-nil, the response body is decoded automatically.
-     For binary content, it should be nil.  When ‘AS’ is ‘binary’,
-     ‘DECODE’ is automatically set to nil.
+     ‘If ~DECODE’ is non-nil, the response body is decoded
+     automatically.  For binary content, it should be nil.  When ‘AS’ is
+     ‘binary’, ‘DECODE’ is automatically set to nil.
 
      ‘THEN’ is a callback function, whose sole argument is selected
-     above with ‘AS’.  Or ‘THEN’ may be ‘sync’ to make a synchronous
-     request, in which case the result is returned directly.
+     above with ‘AS’; if the request fails and no ‘ELSE’ function is
+     given (see below), the argument will be a ‘plz-error’ structure
+     describing the error.  Or ‘THEN’ may be ‘sync’ to make a
+     synchronous request, in which case the result is returned directly
+     from this function.
 
      ‘ELSE’ is an optional callback function called when the request
-     fails (i.e.  if curl fails, or if the HTTP response has a non-2xx
+     fails (i.e.  if curl fails, or if the ‘HTTP’ response has a non-2xx
      status code).  It is called with one argument, a ‘plz-error’
-     structure.  If ‘ELSE’ is nil, an error is signaled when the request
-     fails, either ‘plz-curl-error’ or ‘plz-http-error’ as appropriate,
-     with a ‘plz-error’ structure as the error data.  For synchronous
-     requests, this argument is ignored.
+     structure.  If ‘ELSE’ is nil, a ‘plz-curl-error’ or
+     ‘plz-http-error’ is signaled when the request fails, with a
+     ‘plz-error’ structure as the error data.  For synchronous requests,
+     this argument is ignored.
+
+     ‘NOTE’: In v0.8 of ‘plz’, only one error will be signaled:
+     ‘plz-error’.  The existing errors, ‘plz-curl-error’ and
+     ‘plz-http-error’, inherit from ‘plz-error’ to allow applications to
+     update their code while using v0.7 (i.e.  any ‘condition-case’
+     forms should now handle only ‘plz-error’, not the other two).
 
      ‘FINALLY’ is an optional function called without argument after
      ‘THEN’ or ‘ELSE’, as appropriate.  For synchronous requests, this
@@ -536,25 +546,25 @@ Node: Manual1577
 Node: Usage1883
 Node: Examples2384
 Node: Functions3751
-Node: Queueing6859
-Node: Tips8242
-Node: Changelog8543
-Node: 07-pre8812
-Node: 0610630
-Node: 05411245
-Node: 05311488
-Node: 05211804
-Node: 05112011
-Node: 0512263
-Node: 0412469
-Node: 0313375
-Node: 02113823
-Node: 0213974
-Node: 0114105
-Node: Credits14201
-Node: Development14567
-Node: Copyright assignment15081
-Node: License15669
+Node: Queueing7450
+Node: Tips8833
+Node: Changelog9134
+Node: 07-pre9403
+Node: 0611221
+Node: 05411836
+Node: 05312079
+Node: 05212395
+Node: 05112602
+Node: 0512854
+Node: 0413060
+Node: 0313966
+Node: 02114414
+Node: 0214565
+Node: 0114696
+Node: Credits14792
+Node: Development15158
+Node: Copyright assignment15672
+Node: License16260
 
 End Tag Table
 
