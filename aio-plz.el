@@ -27,18 +27,14 @@
 
 ;;;; Requirements
 
-(require 'plz)
-
 (require 'aio)
+(require 'plz)
 
 ;;;; Variables
 
-
 ;;;; Customization
 
-
 ;;;; Commands
-
 
 ;;;; Functions
 
@@ -47,17 +43,16 @@
   (declare (indent defun))
   (cl-assert (not (plist-member rest :then)) nil "Argument THEN is not allowed for `aio-plz'")
   (cl-assert (not (plist-member rest :else)) nil "Argument ELSE is not allowed for `aio-plz'")
-  (let* ((promise (aio-promise))
-         (rest (plist-put rest :then
-                          (lambda (result)
-                            (aio-resolve promise (lambda ()
-                                                   result)))))
-         (rest (plist-put rest :else
-                          (lambda (plz-error)
-                            (aio-resolve promise (lambda ()
-                                                   ;; FIXME: When removing `plz-curl-error' and `plz-http-error',
-                                                   ;; also remove this string from the error data.
-                                                   (signal 'plz-error (list "error" plz-error))))))))
+  (let ((promise (aio-promise)))
+    (setf (plist-get rest :then)
+          (lambda (result)
+            (aio-resolve promise (lambda () result)))
+          (plist-get rest :else)
+          (lambda (plz-error)
+            (aio-resolve promise (lambda ()
+                                   ;; FIXME: When removing `plz-curl-error' and `plz-http-error',
+                                   ;; also remove this string from the error data.
+                                   (signal 'plz-error (list "error" plz-error))))))
     (prog1 promise
       (condition-case err
           (apply #'plz method url rest)
@@ -65,6 +60,7 @@
                                       (signal (car err) (cdr err)))))))))
 
 (defun aio-plz-run (queue)
+  "FIXME: Docstring."
   (cl-assert (not (plz-queue-finally queue)) nil "Queue already has a FINALLY function: %S" queue)
   (let ((promise (aio-promise)))
     (setf (plz-queue-finally queue)
