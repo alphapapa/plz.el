@@ -45,13 +45,34 @@
 (defun aio-plz (method url &rest rest)
   "FIXME: Docstring."
   (declare (indent defun))
+  (cl-assert (not (plist-member rest :then)) nil "Argument THEN is not allowed for `aio-plz'")
+  (cl-assert (not (plist-member rest :else)) nil "Argument ELSE is not allowed for `aio-plz'")
   (let* ((promise (aio-promise))
-         (then (lambda (result)
-                 (aio-resolve promise (lambda () result))))
-         (rest (plist-put rest :then then)))
+         (rest (plist-put rest :then
+                          (lambda (result)
+                            (aio-resolve promise (lambda ()
+                                                   result)))))
+         (rest (plist-put rest :else
+                          (lambda (plz-error)
+                            (aio-resolve promise (lambda ()
+                                                   ;; FIXME: When removing `plz-curl-error' and `plz-http-error',
+                                                   ;; also remove this string from the error data.
+                                                   (signal 'plz-error (list "error" plz-error))))))))
     (prog1 promise
       (condition-case err
           (apply #'plz method url rest)
+        (error (aio-resolve promise (lambda ()
+                                      (signal (car err) (cdr err)))))))))
+
+(defun aio-plz-run (queue)
+  (cl-assert (not (plz-queue-finally queue)) nil "Queue already has a FINALLY function: %S" queue)
+  (let ((promise (aio-promise)))
+    (setf (plz-queue-finally queue)
+          (lambda ()
+            (aio-resolve promise (lambda () t))))
+    (prog1 promise
+      (condition-case err
+          (plz-run queue)
         (error (aio-resolve promise (lambda ()
                                       (signal (car err) (cdr err)))))))))
 
