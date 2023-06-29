@@ -319,6 +319,9 @@ File: README.info,  Node: 07-pre,  Next: 06,  Up: Changelog
      bodies (which sometimes happened, depending on Emacs’s internal
      race conditions).  (Fixes #23
      (https://github.com/alphapapa/plz.el/issues/23).)
+   • Use ‘with-local-quit’ for synchronous requests (preventing Emacs
+     from complaining sometimes).  (Fixes #26
+     (https://github.com/alphapapa/plz.el/issues/26).)
 
    *Internal*
    • Response processing now happens outside the process sentinel, so
@@ -534,21 +537,21 @@ Node: Queueing6859
 Node: Tips8242
 Node: Changelog8543
 Node: 07-pre8812
-Node: 0610280
-Node: 05410895
-Node: 05311138
-Node: 05211454
-Node: 05111661
-Node: 0511913
-Node: 0412119
-Node: 0313025
-Node: 02113473
-Node: 0213624
-Node: 0113755
-Node: Credits13851
-Node: Development14217
-Node: Copyright assignment14731
-Node: License15319
+Node: 0610457
+Node: 05411072
+Node: 05311315
+Node: 05211631
+Node: 05111838
+Node: 0512090
+Node: 0412296
+Node: 0313202
+Node: 02113650
+Node: 0213801
+Node: 0113932
+Node: Credits14028
+Node: Development14394
+Node: Copyright assignment14908
+Node: License15496
 
 End Tag Table
 

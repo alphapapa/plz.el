@@ -488,7 +488,7 @@ NOQUERY is passed to `make-process', which see.
     (process-send-eof process)
     (if sync-p
         (unwind-protect
-            (progn
+            (with-local-quit
               ;; See Info node `(elisp)Accepting Output'.
               (unless (and process stderr-process)
                 (error "Process unexpectedly nil"))
