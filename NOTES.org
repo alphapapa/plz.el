@@ -541,8 +541,11 @@ So I don't think there's really a bug here.
 
 ** Similar projects
 
+*** [[https://nullprogram.com/blog/2016/06/16/][Elfeed, cURL, and You]] (elfeed-curl.el)
+
+This blog article by Chris Wellons describes problems with ~url-retrieve~ and why he wrote ~elfeed-curl~, which inspired ~plz~.
+
 *** [[https://github.com/ebpa/fetch.el][GitHub - ebpa/fetch.el: A simple HTTP request library modeled after the web browser API]]
 
 A nice-looking wrapper for =url.el=.
-
 
