@@ -122,7 +122,7 @@ Synchronously download a JPEG file, then create an Emacs image object from the d
    - ~(file ~FILENAME)~ to pass ~FILENAME~ after having saved the response body to it without decoding.  ~FILENAME~ must be a non-existent file; if it exists, it will not be overwritten, and an error will be signaled.
    - A function, which is called in the response buffer with it narrowed to the response body (suitable for, e.g. ~json-read~).
 
-   ~If ~DECODE~ is non-nil, the response body is decoded automatically.  For binary content, it should be nil.  When ~AS~ is ~binary~, ~DECODE~ is automatically set to nil.
+   If ~DECODE~ is non-nil, the response body is decoded automatically.  For binary content, it should be nil.  When ~AS~ is ~binary~, ~DECODE~ is automatically set to nil.
 
    ~THEN~ is a callback function, whose sole argument is selected above with ~AS~; if the request fails and no ~ELSE~ function is given (see below), the argument will be a ~plz-error~ structure describing the error.  Or ~THEN~ may be ~sync~ to make a synchronous request, in which case the result is returned directly from this function.
 

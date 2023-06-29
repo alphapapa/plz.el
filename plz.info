@@ -201,9 +201,9 @@ File: README.info,  Node: Functions,  Next: Queueing,  Prev: Examples,  Up: Usag
           narrowed to the response body (suitable for, e.g.
           ‘json-read’).
 
-     ‘If ~DECODE’ is non-nil, the response body is decoded
-     automatically.  For binary content, it should be nil.  When ‘AS’ is
-     ‘binary’, ‘DECODE’ is automatically set to nil.
+     If ‘DECODE’ is non-nil, the response body is decoded automatically.
+     For binary content, it should be nil.  When ‘AS’ is ‘binary’,
+     ‘DECODE’ is automatically set to nil.
 
      ‘THEN’ is a callback function, whose sole argument is selected
      above with ‘AS’; if the request fails and no ‘ELSE’ function is
@@ -546,25 +546,25 @@ Node: Manual1577
 Node: Usage1883
 Node: Examples2384
 Node: Functions3751
-Node: Queueing7450
-Node: Tips8833
-Node: Changelog9134
-Node: 07-pre9403
-Node: 0611221
-Node: 05411836
-Node: 05312079
-Node: 05212395
-Node: 05112602
-Node: 0512854
-Node: 0413060
-Node: 0313966
-Node: 02114414
-Node: 0214565
-Node: 0114696
-Node: Credits14792
-Node: Development15158
-Node: Copyright assignment15672
-Node: License16260
+Node: Queueing7448
+Node: Tips8831
+Node: Changelog9132
+Node: 07-pre9401
+Node: 0611219
+Node: 05411834
+Node: 05312077
+Node: 05212393
+Node: 05112600
+Node: 0512852
+Node: 0413058
+Node: 0313964
+Node: 02114412
+Node: 0214563
+Node: 0114694
+Node: Credits14790
+Node: Development15156
+Node: Copyright assignment15670
+Node: License16258
 
 End Tag Table
 
