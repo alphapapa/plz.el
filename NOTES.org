@@ -34,6 +34,25 @@ We've been noticing this happening in hyperdrive.el sometimes.  It may be necess
 
 In the ~pcase-exhaustive~ form, need to handle ~interrupt\n~, and should have a failsafe as well.
 
+** DONE Run httpbin in GitHub CI for testing
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2023-06-29 Thu 06:25] \\
+  This is now on master.
+- State "TODO"       from              [2023-06-25 Sun 22:25]
+:END:
+
++ The httpbin.org site is regularly overloaded, returning 504 and other errors, making the CI useless.  But running the ~kennethreitz/httpbin~ Docker image locally works well, so it should solve the problem on CI as well.
++ The question is how to properly set up the ~test.yml~ file to run the image on GitHub CI.  Locally, I just do ~docker pull kennethreitz/httpbin~ and then ~docker run -p 80 kennethreitz/httpbin~, and set ~plz-test-uri-prefix~ to point to ~localhost~, and it works.  But I expect that there's a more idiomatic way to do that in GitHub CI than to run those commands manually.  Let's see if I can find out...
+  + [[https://docs.github.com/en/actions/creating-actions/creating-a-docker-container-action#writing-the-action-code][This page]] seems to cover at least some of it, but I don't want to make a custom "action" if I don't have to.  Surely there's already one for httpbin...
+  + The [[https://github.com/postmanlabs/httpbin][httpbin repo page]] doesn't seem to have one in the readme, but maybe it's mentioned elsewhere.  I can't be the first to want to do this.
+  + Interestingly, [[https://github.com/postmanlabs/httpbin/pull/637][this PR]] purports to reduce the Docker image's size from 534 MB to 287 MB by basing it on Alpine instead of Ubuntu.  Looking at its Dockerfile, it ends up by just doing ~pip3 install --on-cache-dir /httpbin~.  Maybe I don't even need to use Docker; maybe I can just install the Python package and run it that way.  Unfortunately, the readme's only instructions say to use Docker.
+  + [[https://github.com/postmanlabs/httpbin/issues/703][This issue]] also links to some alternatives to httpbin.
+    + [[https://github.com/mccutchen/go-httpbin][GitHub - mccutchen/go-httpbin: A reasonably complete and well-tested golang port of httpbin, with zero dependencies outside the go stdlib.]] looks like it might be a good alternative.  Maybe I can just run its Docker image: ~docker run -P mccutchen/go-httpbin~.  The [[https://hub.docker.com/r/mccutchen/go-httpbin/][Docker image page]] has better directions.
+      + Looks like this command should work: ~docker run -e PORT=80 -p 80:80 -P mccutchen/go-httpbin~.  Let's try it...
+      + Looks like it can work, but ~go-httpbin~ returns slightly different results.  So rather than updating all of the tests to fix that, let's just try using the Python one...
+      + And that works!  Now if I tidy up what checkdoc is complaining about, the whole lint/test pass should be green...
+      + Yep, everything passes, all lints and tests (except that on Emacs 29, some indentation settings changed, which causes the check-indent pass to fail).
+
 ** DONE Ensure that secrets are not leaked via command line or temp files
 CLOSED: [2021-08-15 Sun 15:34]
 :LOGBOOK:
@@ -488,6 +507,37 @@ This issue notes that sending large files (e.g. 25 MB) to curl via UNIX pipes is
 **** [[https://debbugs.gnu.org/cgi/bugreport.cgi?bug=33018][#33018 - 26.1.50; thread starvation with async processes and accept-process-output - GNU bug report logs]]
 
 **** [[https://debbugs.gnu.org/cgi/bugreport.cgi?bug=24201][#24201 - 25.1.50; TLS connections sometimes hang - GNU bug report logs]]
+
+**** [[https://debbugs.gnu.org/cgi/bugreport.cgi?bug=20159][#20159 - 24.4; url-retrieve invokes same callback twice with kill-buffer - GNU bug report logs]]
+
+Chris Wellons file this report on 21 Mar 2015.
+
+[[https://debbugs.gnu.org/cgi/bugreport.cgi?bug=20159#43][This comment]] by Lars seems especially relevant:
+
+#+begin_quote
+I've done some further debugging, and what's happening is (simply, ahem)
+that when we get a "connection failed" message from the sentinel, and
+then kill the buffer, we also kill the process, and then the sentinel is
+called again, and then it calls our callback again.
+
+So the weird thing is that the process isn't already dead, kinda...  Or
+something...
+#+end_quote
+
+As well as [[https://debbugs.gnu.org/cgi/bugreport.cgi?bug=20159#48][the following one]]:
+
+#+begin_quote
+The two statuses are these:
+
+Process status failed
+Process status closed
+
+But I kinda think that url.el is behaving as specified.  The callbacks
+may be called many times, and you're supposed to check the status.  And
+if you're killing the same buffer twice, this is pilot error.
+
+So I don't think there's really a bug here.
+#+end_quote
 
 ** Similar projects
 
