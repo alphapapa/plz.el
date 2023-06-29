@@ -176,15 +176,19 @@ Also, any instance of \"URI-PREFIX\" in URL-PART is replaced with
     (should (string-match "curl" test-string))))
 
 (plz-deftest plz-get-buffer nil
-  ;; The sentinel kills the buffer, so we get the buffer as a string.
-  (let* ((test-buffer-string)
+  (let* ((result-buffer)
          (process (plz 'get (plz-test-url "/get")
-                    :as 'buffer
-                    :then (lambda (buffer)
-                            (with-current-buffer buffer
-                              (setf test-buffer-string (buffer-string)))))))
-    (plz-test-wait process)
-    (should (string-match "curl" test-buffer-string))))
+                    :as 'buffer :then (lambda (buffer)
+                                        (setf result-buffer buffer)))))
+    (unwind-protect
+        (progn
+          (plz-test-wait process)
+          (should (buffer-live-p result-buffer))
+          (with-current-buffer result-buffer
+            (should-not (looking-at-p plz-http-response-status-line-regexp))
+            (should (string-match "curl" (buffer-string)))))
+      (kill-buffer result-buffer)
+      (should-not (buffer-live-p result-buffer)))))
 
 (plz-deftest plz-get-response nil
   (let* ((test-response)

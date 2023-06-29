@@ -275,7 +275,8 @@ AS selects the kind of result to pass to the callback function
 THEN, or the kind of result to return for synchronous requests.
 It may be:
 
-- `buffer' to pass the response buffer.
+- `buffer' to pass the response buffer, which will be narrowed to
+  the response body and decoded according to DECODE.
 
 - `binary' to pass the response body as an un-decoded string.
 
@@ -426,8 +427,16 @@ NOQUERY is passed to `make-process', which see.
               (decode-coding-region (point) (point-max) coding-system))
             (funcall then (or (buffer-string)
                               (make-plz-error :message (format "buffer-string is nil in buffer:%S" process-buffer)))))))
-       ('buffer (lambda ()
-                  (funcall then (current-buffer))))
+       ('buffer (progn
+                  (setf (process-get process :plz-as) 'buffer)
+                  (lambda ()
+                    (let ((coding-system (or (plz--coding-system) 'utf-8)))
+                      (pcase as
+                        ('binary (set-buffer-multibyte nil)))
+                      (plz--narrow-to-body)
+                      (when decode
+                        (decode-coding-region (point) (point-max) coding-system)))
+                    (funcall then (current-buffer)))))
        ('response (lambda ()
                     (funcall then (or (plz--response :decode-p decode)
                                       (make-plz-error :message (format "response is nil for buffer:%S  buffer-string:%S"
@@ -781,7 +790,8 @@ argument passed to `plz--sentinel', which see."
                ((and (pred functionp) fn) (funcall fn err)))))))
     (when-let ((finally (process-get process :plz-finally)))
       (funcall finally))
-    (unless (process-get process :plz-sync)
+    (unless (or (process-get process :plz-sync)
+                (eq 'buffer (process-get process :plz-as)))
       (kill-buffer buffer))))
 
 (defun plz--stderr-sentinel (process status)

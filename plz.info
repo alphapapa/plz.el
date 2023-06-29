@@ -322,6 +322,9 @@ File: README.info,  Node: 07-pre,  Next: 06,  Up: Changelog
    • Use ‘with-local-quit’ for synchronous requests (preventing Emacs
      from complaining sometimes).  (Fixes #26
      (https://github.com/alphapapa/plz.el/issues/26).)
+   • Various fixes for ‘:as 'buffer’ result type: decode body when
+     appropriate; unset multibyte for binary; narrow to body; don’t kill
+     buffer prematurely.
 
    *Internal*
    • Response processing now happens outside the process sentinel, so
@@ -537,21 +540,21 @@ Node: Queueing6859
 Node: Tips8242
 Node: Changelog8543
 Node: 07-pre8812
-Node: 0610457
-Node: 05411072
-Node: 05311315
-Node: 05211631
-Node: 05111838
-Node: 0512090
-Node: 0412296
-Node: 0313202
-Node: 02113650
-Node: 0213801
-Node: 0113932
-Node: Credits14028
-Node: Development14394
-Node: Copyright assignment14908
-Node: License15496
+Node: 0610630
+Node: 05411245
+Node: 05311488
+Node: 05211804
+Node: 05112011
+Node: 0512263
+Node: 0412469
+Node: 0313375
+Node: 02113823
+Node: 0213974
+Node: 0114105
+Node: Credits14201
+Node: Development14567
+Node: Copyright assignment15081
+Node: License15669
 
 End Tag Table
 
