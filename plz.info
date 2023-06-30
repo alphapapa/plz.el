@@ -335,6 +335,7 @@ File: README.info,  Node: 07-pre,  Next: 06,  Up: Changelog
    • Various fixes for ‘:as 'buffer’ result type: decode body when
      appropriate; unset multibyte for binary; narrow to body; don’t kill
      buffer prematurely.
+   • When clearing a queue, don’t try to kill finished processes.
 
    *Internal*
    • Response processing now happens outside the process sentinel, so
@@ -550,21 +551,21 @@ Node: Queueing7448
 Node: Tips8831
 Node: Changelog9132
 Node: 07-pre9401
-Node: 0611219
-Node: 05411834
-Node: 05312077
-Node: 05212393
-Node: 05112600
-Node: 0512852
-Node: 0413058
-Node: 0313964
-Node: 02114412
-Node: 0214563
-Node: 0114694
-Node: Credits14790
-Node: Development15156
-Node: Copyright assignment15670
-Node: License16258
+Node: 0611289
+Node: 05411904
+Node: 05312147
+Node: 05212463
+Node: 05112670
+Node: 0512922
+Node: 0413128
+Node: 0314034
+Node: 02114482
+Node: 0214633
+Node: 0114764
+Node: Credits14860
+Node: Development15226
+Node: Copyright assignment15740
+Node: License16328
 
 End Tag Table
 

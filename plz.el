@@ -692,7 +692,8 @@ have their curl processes killed and their ELSE functions called
 with the corresponding data."
   (setf (plz-queue-canceled-p queue) t)
   (dolist (request (plz-queue-active queue))
-    (kill-process (plz-queued-request-process request))
+    (when (process-live-p (plz-queued-request-process request))
+      (kill-process (plz-queued-request-process request)))
     (setf (plz-queue-active queue) (delq request (plz-queue-active queue))))
   (dolist (request (plz-queue-requests queue))
     (funcall (plz-queued-request-else request)

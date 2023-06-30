@@ -191,6 +191,7 @@ You may also clear a queue with ~plz-clear~, which cancels any active or queued 
 + STDERR output from curl processes is not included in response bodies (which sometimes happened, depending on Emacs's internal race conditions).  (Fixes [[https://github.com/alphapapa/plz.el/issues/23][#23]].)
 + Use ~with-local-quit~ for synchronous requests (preventing Emacs from complaining sometimes).  (Fixes [[https://github.com/alphapapa/plz.el/issues/26][#26]].)
 + Various fixes for ~:as 'buffer~ result type: decode body when appropriate; unset multibyte for binary; narrow to body; don't kill buffer prematurely.
++ When clearing a queue, don't try to kill finished processes.
 
 *Internal*
 + Response processing now happens outside the process sentinel, so any errors (e.g. in user callbacks) are not signaled from inside the sentinel.  (This avoids the 2-second pause Emacs imposes in such cases.)
