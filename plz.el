@@ -649,6 +649,9 @@ QUEUE should be a `plz-queue' structure."
                              (setf (plz-queue-active queue) (delq request (plz-queue-active queue)))
                              (plz-run queue))))
                    (else (lambda (arg)
+                           ;; FIXME: This should be done in `plz-queue' because
+                           ;; `plz-clear' will call the second queued-request's
+                           ;; ELSE before it can be set by `plz-run'.
                            (unwind-protect
                                ;; Ensure any errors in the THEN function don't abort the queue.
                                (when orig-else
