@@ -546,7 +546,7 @@ For more details on these slots, see arguments to the function
 
 (cl-defstruct plz-queue
   "Structure forming a queue for `plz' requests.
-The queue may be appended to (the default) and prepended to, and
+The queue may be appended to (the default) and pre-pended to, and
 items may be removed from the front of the queue (i.e. by
 default, it's FIFO).  Use functions `plz-queue', `plz-run', and
 `plz-clear' to queue, run, and clear requests, respectively."
@@ -564,8 +564,8 @@ default, it's FIFO).  Use functions `plz-queue', `plz-run', and
            :documentation "Function called with no arguments after queue has been emptied or canceled."))
 
 (defun plz-queue (queue &rest args)
-  "Enqueue request for ARGS on QUEUE and return QUEUE.
-To prepend to QUEUE rather than append, it may be a list of the
+  "Queue request for ARGS on QUEUE and return QUEUE.
+To pre-pend to QUEUE rather than append, it may be a list of the
 form (`prepend' QUEUE).  QUEUE is a `plz-request' queue.  ARGS
 are those passed to `plz', which see.  Use `plz-run' to start
 making QUEUE's requests."
@@ -581,7 +581,7 @@ making QUEUE's requests."
   queue)
 
 (defun plz--queue-append (request queue)
-  "Append REQUEST to QUEUE and return QUEUE."
+  "Add REQUEST to end of QUEUE and return QUEUE."
   (cl-check-type request plz-queued-request
                  "REQUEST must be a `plz-queued-request' structure.")
   (cl-check-type queue plz-queue
@@ -598,7 +598,7 @@ making QUEUE's requests."
   queue)
 
 (defun plz--queue-prepend (request queue)
-  "Prepend REQUEST to QUEUE and return QUEUE."
+  "Add REQUEST to front of QUEUE and return QUEUE."
   (cl-check-type request plz-queued-request
                  "REQUEST must be a `plz-queued-request' structure.")
   (cl-check-type queue plz-queue
