@@ -179,7 +179,7 @@ You may also clear a queue with ~plz-clear~, which cancels any active or queued 
 :TOC:      :depth 0
 :END:
 
-** 0.7-pre
+** 0.7
 
 *Changes*
 + A new error signal, ~plz-error~, is defined.  The existing signals, ~plz-curl-error~ and ~plz-http-error~, inherit from it, so handling ~plz-error~ catches both.
