@@ -46,7 +46,7 @@
 
 ;;;; Usage:
 
-;; FIXME: Remove the following note in v0.8.
+;; FIXME(v0.8): Remove the following note.
 
 ;; NOTE: In v0.8 of plz, only one error will be signaled: `plz-error'.
 ;; The existing errors, `plz-curl-error' and `plz-http-error', inherit
@@ -331,8 +331,8 @@ from a host, respectively.
 NOQUERY is passed to `make-process', which see.
 
 \(To silence checkdoc, we mention the internal argument REST.)"
-  ;; FIXME: Remove the note about error changes from the docstring in v0.8.
-  ;; FIXME: Update error signals in docstring in v0.8.
+  ;; FIXME(v0.8): Remove the note about error changes from the docstring.
+  ;; FIXME(v0.8): Update error signals in docstring.
   (declare (indent defun))
   (setf decode (if (and decode-s (not decode))
                    nil decode))
@@ -519,7 +519,7 @@ NOQUERY is passed to `make-process', which see.
                  ;; into a `plz-error' struct: re-signal the error here,
                  ;; outside of the sentinel.
                  (if (plz-error-response data)
-                     ;; FIXME: Signal only plz-error in v0.8.
+                     ;; FIXME(v0.8): Signal only plz-error.
                      (signal 'plz-http-error (list "HTTP error" data))
                    (signal 'plz-curl-error (list "Curl error" data))))
                 (else
@@ -649,9 +649,9 @@ QUEUE should be a `plz-queue' structure."
                              (setf (plz-queue-active queue) (delq request (plz-queue-active queue)))
                              (plz-run queue))))
                    (else (lambda (arg)
-                           ;; FIXME: This should be done in `plz-queue' because
-                           ;; `plz-clear' will call the second queued-request's
-                           ;; ELSE before it can be set by `plz-run'.
+                           ;; FIXME(v0.8): This should be done in `plz-queue' because
+                           ;; `plz-clear' will call the second queued-request's ELSE
+                           ;; before it can be set by `plz-run'.
                            (unwind-protect
                                ;; Ensure any errors in the THEN function don't abort the queue.
                                (when orig-else
