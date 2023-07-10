@@ -24,67 +24,14 @@
 
 ;;; Commentary:
 
-;; NOTE: NOTE: NOTE: NOTE: Yes, four NOTEs, because this is important:
-;; As of this moment, all of the tests pass when run with makem.sh.
-;; And when running them in an interactive Emacs with ERT, one test at
-;; a time, individual tests pass, or almost always do (depending on
-;; whether the httpbin.org server is overloaded).  But when running
-;; multiple tests in ERT at one time,
-;; i.e. (ert-run-tests-interactively "plz-"), multiple, if not most,
-;; tests fail, but not the same ones every time.
-
-;; I have now spent hours trying to figure out why, inserting many
-;; debug statements in many functions, and come up with nothing.  I
-;; tried changing the way `accept-process-output' is called, like
-;; using timeouts or JUST-THIS-ONE, but it made no difference.  I
-;; tried calling it extra times, nope.  I tried calling the sentinel
-;; extra times when it seemed that it hadn't run the THEN function,
-;; nope.  Nothing seems to make a difference.
-
-;; I even checked out an earlier commit, before the commit that
-;; rewrote/merged the synchronous request code into the `plz'
-;; function, thinking that surely I broke something--but, nope, they
-;; apparently failed the same way back then: passing with makem.sh,
-;; passing individually, but failing when run in close succession by
-;; ERT.
-
-;; After inserting enough debug statements, I noticed that the process
-;; sentinel sometimes seemed to run for the last time after the ERT
-;; test had returned, which suggests that ERT might be doing something
-;; weird, or somehow its instrumentation interferes with the
-;; process-handling code.  But if that's not the cause, then I'm out
-;; of ideas.
-
-;; So then I tried rewriting the synchronous request code to use
-;; `call-process-region', instead of calling `accept-process-output'
-;; in a loop to block on the curl process (which is how the Elisp
-;; manual says to do it), but that still made no difference: even the
-;; async requests fail in the same way with ERT.  So that doesn't
-;; appear to be the problem, either.
-
-;; So is there some kind of fundamental flaw in the `plz' design?
-;; Maybe.  Is there a simple, logical oversight in its code that only
-;; manifests under certain conditions?  Maybe.  Is ERT doing something
-;; weird that's interfering with process-related code?  Maybe.  Is
-;; Emacs's own process-handling code still broken in some mysterious
-;; way?  Maybe.
-
-;; But despite all of that, when using `plz' "in anger", in `ement',
-;; it seems to work reliably for me.  I did get one report from one
-;; user that sounded like the same kind of problem I'm seeing with ERT
-;; here, but then he tried `ement-connect' again, and it worked.  And
-;; I'm sitting here watching `ement' constantly using `plz' to talk to
-;; the matrix.org server, and I haven't had a single error or failure,
-;; even after hours of being connected.  It *seems* to *actually*
-;; work.
-
-;; So, if you're reading this, and you're wondering whether you should
-;; use `plz': Well, please do, and please let me know if you have any
-;; problems; I do need to know whether it's working for other users.
-;; And if you think you might know what's going wrong when running the
-;; tests in ERT, please let me know, because I'm out of ideas: as far
-;; as I can tell, when it comes to process-handling in Emacs, "there
-;; be dragons."
+;; This file implements tests for `plz'.  By default, the requests are
+;; made to "localhost", expecting an instance of httpbin
+;; <https://github.com/postmanlabs/httpbin> running on port 80; it's
+;; convenient to use the Docker image "kennethreitz/httpbin".  By
+;; changing the variable `plz-test-uri-prefix', the tests can be run
+;; against other URLs, such as <https://httpbin.org> (but that server
+;; is often overloaded, making for unreliable tests, so a local
+;; instance is preferred).
 
 ;;; Code:
 
