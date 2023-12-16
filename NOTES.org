@@ -12,6 +12,12 @@
   - [[#similar-projects][Similar projects]]
 :END:
 
+* Development
+
+** Releasing
+
++ Stable releases are made by pushing to the ~stable~ branch, which the GNU ELPA package definition refers to.  This allows bug-fix versions to be tagged and pushed to the ~stable~ branch while the next stable release is in development on ~master~.  After pushing a bug-fix version, the ~stable~ branch is merged into ~master~ to get the same fixes.
+
 * Tasks
 :PROPERTIES:
 :ID:       bc93ae30-b483-4113-977f-16bb55e6c73c
