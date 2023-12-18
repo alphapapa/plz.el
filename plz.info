@@ -46,6 +46,7 @@ Usage
 
 Changelog
 
+* 0.7.1-pre: 071-pre.
 * 0.7: 07.
 * 0.6: 06.
 * 0.5.4: 054.
@@ -292,6 +293,7 @@ File: README.info,  Node: Changelog,  Next: Credits,  Prev: Usage,  Up: Top
 
 * Menu:
 
+* 0.7.1-pre: 071-pre.
 * 0.7: 07.
 * 0.6: 06.
 * 0.5.4: 054.
@@ -306,9 +308,17 @@ File: README.info,  Node: Changelog,  Next: Credits,  Prev: Usage,  Up: Top
 * 0.1: 01.
 
 
-File: README.info,  Node: 07,  Next: 06,  Up: Changelog
+File: README.info,  Node: 071-pre,  Next: 07,  Up: Changelog
 
-3.1 0.7
+3.1 0.7.1-pre
+=============
+
+Nothing new yet.
+
+
+File: README.info,  Node: 07,  Next: 06,  Prev: 071-pre,  Up: Changelog
+
+3.2 0.7
 =======
 
 *Changes*
@@ -351,7 +361,7 @@ File: README.info,  Node: 07,  Next: 06,  Up: Changelog
 
 File: README.info,  Node: 06,  Next: 054,  Prev: 07,  Up: Changelog
 
-3.2 0.6
+3.3 0.6
 =======
 
 *Additions*
@@ -369,7 +379,7 @@ File: README.info,  Node: 06,  Next: 054,  Prev: 07,  Up: Changelog
 
 File: README.info,  Node: 054,  Next: 053,  Prev: 06,  Up: Changelog
 
-3.3 0.5.4
+3.4 0.5.4
 =========
 
 *Fixes*
@@ -379,7 +389,7 @@ File: README.info,  Node: 054,  Next: 053,  Prev: 06,  Up: Changelog
 
 File: README.info,  Node: 053,  Next: 052,  Prev: 054,  Up: Changelog
 
-3.4 0.5.3
+3.5 0.5.3
 =========
 
 *Fixes*
@@ -390,7 +400,7 @@ File: README.info,  Node: 053,  Next: 052,  Prev: 054,  Up: Changelog
 
 File: README.info,  Node: 052,  Next: 051,  Prev: 053,  Up: Changelog
 
-3.5 0.5.2
+3.6 0.5.2
 =========
 
 *Fixes*
@@ -400,7 +410,7 @@ File: README.info,  Node: 052,  Next: 051,  Prev: 053,  Up: Changelog
 
 File: README.info,  Node: 051,  Next: 05,  Prev: 052,  Up: Changelog
 
-3.6 0.5.1
+3.7 0.5.1
 =========
 
 *Fixes*
@@ -410,7 +420,7 @@ File: README.info,  Node: 051,  Next: 05,  Prev: 052,  Up: Changelog
 
 File: README.info,  Node: 05,  Next: 04,  Prev: 051,  Up: Changelog
 
-3.7 0.5
+3.8 0.5
 =======
 
 *Additions*
@@ -420,7 +430,7 @@ File: README.info,  Node: 05,  Next: 04,  Prev: 051,  Up: Changelog
 
 File: README.info,  Node: 04,  Next: 03,  Prev: 05,  Up: Changelog
 
-3.8 0.4
+3.9 0.4
 =======
 
 *Additions*
@@ -447,8 +457,8 @@ File: README.info,  Node: 04,  Next: 03,  Prev: 05,  Up: Changelog
 
 File: README.info,  Node: 03,  Next: 021,  Prev: 04,  Up: Changelog
 
-3.9 0.3
-=======
+3.10 0.3
+========
 
 *Additions*
    • Handle HTTP proxy headers from Curl.  (#2
@@ -463,7 +473,7 @@ File: README.info,  Node: 03,  Next: 021,  Prev: 04,  Up: Changelog
 
 File: README.info,  Node: 021,  Next: 02,  Prev: 03,  Up: Changelog
 
-3.10 0.2.1
+3.11 0.2.1
 ==========
 
 *Fixes*
@@ -472,7 +482,7 @@ File: README.info,  Node: 021,  Next: 02,  Prev: 03,  Up: Changelog
 
 File: README.info,  Node: 02,  Next: 01,  Prev: 021,  Up: Changelog
 
-3.11 0.2
+3.12 0.2
 ========
 
 *Added*
@@ -481,7 +491,7 @@ File: README.info,  Node: 02,  Next: 01,  Prev: 021,  Up: Changelog
 
 File: README.info,  Node: 01,  Prev: 02,  Up: Changelog
 
-3.12 0.1
+3.13 0.1
 ========
 
 Initial release.
@@ -541,31 +551,32 @@ GPLv3
 
 Tag Table:
 Node: Top199
-Node: Installation1180
-Node: GNU ELPA1323
-Node: Manual1569
-Node: Usage1875
-Node: Examples2376
-Node: Functions3743
-Node: Queueing7440
-Node: Tips8823
-Node: Changelog9124
-Node: 079385
-Node: 0611261
-Node: 05411872
-Node: 05312115
-Node: 05212431
-Node: 05112638
-Node: 0512890
-Node: 0413096
-Node: 0314002
-Node: 02114450
-Node: 0214601
-Node: 0114732
-Node: Credits14828
-Node: Development15194
-Node: Copyright assignment15708
-Node: License16296
+Node: Installation1202
+Node: GNU ELPA1345
+Node: Manual1591
+Node: Usage1897
+Node: Examples2398
+Node: Functions3765
+Node: Queueing7462
+Node: Tips8845
+Node: Changelog9146
+Node: 071-pre9429
+Node: 079540
+Node: 0611432
+Node: 05412043
+Node: 05312286
+Node: 05212602
+Node: 05112809
+Node: 0513061
+Node: 0413267
+Node: 0314173
+Node: 02114623
+Node: 0214774
+Node: 0114905
+Node: Credits15001
+Node: Development15367
+Node: Copyright assignment15881
+Node: License16469
 
 End Tag Table
 
