@@ -47,6 +47,7 @@ Usage
 Changelog
 
 * 0.8-pre: 08-pre.
+* 0.7.1: 071.
 * 0.7: 07.
 * 0.6: 06.
 * 0.5.4: 054.
@@ -294,6 +295,7 @@ File: README.info,  Node: Changelog,  Next: Credits,  Prev: Usage,  Up: Top
 * Menu:
 
 * 0.8-pre: 08-pre.
+* 0.7.1: 071.
 * 0.7: 07.
 * 0.6: 06.
 * 0.5.4: 054.
@@ -308,7 +310,7 @@ File: README.info,  Node: Changelog,  Next: Credits,  Prev: Usage,  Up: Top
 * 0.1: 01.
 
 
-File: README.info,  Node: 08-pre,  Next: 07,  Up: Changelog
+File: README.info,  Node: 08-pre,  Next: 071,  Up: Changelog
 
 3.1 0.8-pre
 ===========
@@ -316,9 +318,19 @@ File: README.info,  Node: 08-pre,  Next: 07,  Up: Changelog
 Nothing new yet.
 
 
-File: README.info,  Node: 07,  Next: 06,  Prev: 08-pre,  Up: Changelog
+File: README.info,  Node: 071,  Next: 07,  Prev: 08-pre,  Up: Changelog
 
-3.2 0.7
+3.2 0.7.1
+=========
+
+*Fixes*
+   • Handle HTTP 303 redirects.  (Thanks to Daniel Hubmann
+     (https://github.com/hubisan) for reporting.)
+
+
+File: README.info,  Node: 07,  Next: 06,  Prev: 071,  Up: Changelog
+
+3.3 0.7
 =======
 
 *Changes*
@@ -361,7 +373,7 @@ File: README.info,  Node: 07,  Next: 06,  Prev: 08-pre,  Up: Changelog
 
 File: README.info,  Node: 06,  Next: 054,  Prev: 07,  Up: Changelog
 
-3.3 0.6
+3.4 0.6
 =======
 
 *Additions*
@@ -379,7 +391,7 @@ File: README.info,  Node: 06,  Next: 054,  Prev: 07,  Up: Changelog
 
 File: README.info,  Node: 054,  Next: 053,  Prev: 06,  Up: Changelog
 
-3.4 0.5.4
+3.5 0.5.4
 =========
 
 *Fixes*
@@ -389,7 +401,7 @@ File: README.info,  Node: 054,  Next: 053,  Prev: 06,  Up: Changelog
 
 File: README.info,  Node: 053,  Next: 052,  Prev: 054,  Up: Changelog
 
-3.5 0.5.3
+3.6 0.5.3
 =========
 
 *Fixes*
@@ -400,7 +412,7 @@ File: README.info,  Node: 053,  Next: 052,  Prev: 054,  Up: Changelog
 
 File: README.info,  Node: 052,  Next: 051,  Prev: 053,  Up: Changelog
 
-3.6 0.5.2
+3.7 0.5.2
 =========
 
 *Fixes*
@@ -410,7 +422,7 @@ File: README.info,  Node: 052,  Next: 051,  Prev: 053,  Up: Changelog
 
 File: README.info,  Node: 051,  Next: 05,  Prev: 052,  Up: Changelog
 
-3.7 0.5.1
+3.8 0.5.1
 =========
 
 *Fixes*
@@ -420,7 +432,7 @@ File: README.info,  Node: 051,  Next: 05,  Prev: 052,  Up: Changelog
 
 File: README.info,  Node: 05,  Next: 04,  Prev: 051,  Up: Changelog
 
-3.8 0.5
+3.9 0.5
 =======
 
 *Additions*
@@ -430,8 +442,8 @@ File: README.info,  Node: 05,  Next: 04,  Prev: 051,  Up: Changelog
 
 File: README.info,  Node: 04,  Next: 03,  Prev: 05,  Up: Changelog
 
-3.9 0.4
-=======
+3.10 0.4
+========
 
 *Additions*
    • Support for HTTP ‘HEAD’ requests.  (Thanks to Inc.  for
@@ -457,7 +469,7 @@ File: README.info,  Node: 04,  Next: 03,  Prev: 05,  Up: Changelog
 
 File: README.info,  Node: 03,  Next: 021,  Prev: 04,  Up: Changelog
 
-3.10 0.3
+3.11 0.3
 ========
 
 *Additions*
@@ -473,7 +485,7 @@ File: README.info,  Node: 03,  Next: 021,  Prev: 04,  Up: Changelog
 
 File: README.info,  Node: 021,  Next: 02,  Prev: 03,  Up: Changelog
 
-3.11 0.2.1
+3.12 0.2.1
 ==========
 
 *Fixes*
@@ -482,7 +494,7 @@ File: README.info,  Node: 021,  Next: 02,  Prev: 03,  Up: Changelog
 
 File: README.info,  Node: 02,  Next: 01,  Prev: 021,  Up: Changelog
 
-3.12 0.2
+3.13 0.2
 ========
 
 *Added*
@@ -491,7 +503,7 @@ File: README.info,  Node: 02,  Next: 01,  Prev: 021,  Up: Changelog
 
 File: README.info,  Node: 01,  Prev: 02,  Up: Changelog
 
-3.13 0.1
+3.14 0.1
 ========
 
 Initial release.
@@ -551,32 +563,33 @@ GPLv3
 
 Tag Table:
 Node: Top199
-Node: Installation1199
-Node: GNU ELPA1342
-Node: Manual1588
-Node: Usage1894
-Node: Examples2395
-Node: Functions3762
-Node: Queueing7459
-Node: Tips8842
-Node: Changelog9143
-Node: 08-pre9423
-Node: 079529
-Node: 0611420
-Node: 05412031
-Node: 05312274
-Node: 05212590
-Node: 05112797
-Node: 0513049
-Node: 0413255
-Node: 0314161
-Node: 02114611
-Node: 0214762
-Node: 0114893
-Node: Credits14989
-Node: Development15355
-Node: Copyright assignment15869
-Node: License16457
+Node: Installation1213
+Node: GNU ELPA1356
+Node: Manual1602
+Node: Usage1908
+Node: Examples2409
+Node: Functions3776
+Node: Queueing7473
+Node: Tips8856
+Node: Changelog9157
+Node: 08-pre9451
+Node: 0719558
+Node: 079774
+Node: 0611662
+Node: 05412273
+Node: 05312516
+Node: 05212832
+Node: 05113039
+Node: 0513291
+Node: 0413497
+Node: 0314405
+Node: 02114855
+Node: 0215006
+Node: 0115137
+Node: Credits15233
+Node: Development15599
+Node: Copyright assignment16113
+Node: License16701
 
 End Tag Table
 
