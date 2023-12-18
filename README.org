@@ -181,7 +181,8 @@ You may also clear a queue with ~plz-clear~, which cancels any active or queued 
 
 ** 0.7.1-pre
 
-Nothing new yet.
+*Fixes*
++ Handle HTTP 303 redirects.  (Thanks to [[https://github.com/hubisan][Daniel Hubmann]] for reporting.)
 
 ** 0.7
 

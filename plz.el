@@ -826,7 +826,7 @@ Arguments are PROCESS and STATUS (ok, checkdoc?)."
 (defun plz--skip-redirect-headers ()
   "Skip HTTP redirect headers in current buffer."
   (when (and (looking-at plz-http-response-status-line-regexp)
-             (member (string-to-number (match-string 2)) '(301 302 307 308)))
+             (member (string-to-number (match-string 2)) '(301 302 303 307 308)))
     ;; Skip redirect headers ("--dump-header" forces redirect headers to be included
     ;; even when used with "--location").
     (or (re-search-forward "\r\n\r\n" nil t)

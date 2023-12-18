@@ -313,7 +313,9 @@ File: README.info,  Node: 071-pre,  Next: 07,  Up: Changelog
 3.1 0.7.1-pre
 =============
 
-Nothing new yet.
+*Fixes*
+   • Handle HTTP 303 redirects.  (Thanks to Daniel Hubmann
+     (https://github.com/hubisan) for reporting.)
 
 
 File: README.info,  Node: 07,  Next: 06,  Prev: 071-pre,  Up: Changelog
@@ -561,22 +563,22 @@ Node: Queueing7462
 Node: Tips8845
 Node: Changelog9146
 Node: 071-pre9429
-Node: 079540
-Node: 0611432
-Node: 05412043
-Node: 05312286
-Node: 05212602
-Node: 05112809
-Node: 0513061
-Node: 0413267
-Node: 0314173
-Node: 02114623
-Node: 0214774
-Node: 0114905
-Node: Credits15001
-Node: Development15367
-Node: Copyright assignment15881
-Node: License16469
+Node: 079642
+Node: 0611534
+Node: 05412145
+Node: 05312388
+Node: 05212704
+Node: 05112911
+Node: 0513163
+Node: 0413369
+Node: 0314275
+Node: 02114725
+Node: 0214876
+Node: 0115007
+Node: Credits15103
+Node: Development15469
+Node: Copyright assignment15983
+Node: License16571
 
 End Tag Table
 
