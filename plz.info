@@ -46,7 +46,7 @@ Usage
 
 Changelog
 
-* 0.7.1-pre: 071-pre.
+* 0.7.1: 071.
 * 0.7: 07.
 * 0.6: 06.
 * 0.5.4: 054.
@@ -293,7 +293,7 @@ File: README.info,  Node: Changelog,  Next: Credits,  Prev: Usage,  Up: Top
 
 * Menu:
 
-* 0.7.1-pre: 071-pre.
+* 0.7.1: 071.
 * 0.7: 07.
 * 0.6: 06.
 * 0.5.4: 054.
@@ -308,17 +308,17 @@ File: README.info,  Node: Changelog,  Next: Credits,  Prev: Usage,  Up: Top
 * 0.1: 01.
 
 
-File: README.info,  Node: 071-pre,  Next: 07,  Up: Changelog
+File: README.info,  Node: 071,  Next: 07,  Up: Changelog
 
-3.1 0.7.1-pre
-=============
+3.1 0.7.1
+=========
 
 *Fixes*
    • Handle HTTP 303 redirects.  (Thanks to Daniel Hubmann
      (https://github.com/hubisan) for reporting.)
 
 
-File: README.info,  Node: 07,  Next: 06,  Prev: 071-pre,  Up: Changelog
+File: README.info,  Node: 07,  Next: 06,  Prev: 071,  Up: Changelog
 
 3.2 0.7
 =======
@@ -553,32 +553,32 @@ GPLv3
 
 Tag Table:
 Node: Top199
-Node: Installation1202
-Node: GNU ELPA1345
-Node: Manual1591
-Node: Usage1897
-Node: Examples2398
-Node: Functions3765
-Node: Queueing7462
-Node: Tips8845
-Node: Changelog9146
-Node: 071-pre9429
-Node: 079642
-Node: 0611534
-Node: 05412145
-Node: 05312388
-Node: 05212704
-Node: 05112911
-Node: 0513163
-Node: 0413369
-Node: 0314275
-Node: 02114725
-Node: 0214876
-Node: 0115007
-Node: Credits15103
-Node: Development15469
-Node: Copyright assignment15983
-Node: License16571
+Node: Installation1194
+Node: GNU ELPA1337
+Node: Manual1583
+Node: Usage1889
+Node: Examples2390
+Node: Functions3757
+Node: Queueing7454
+Node: Tips8837
+Node: Changelog9138
+Node: 0719413
+Node: 079614
+Node: 0611502
+Node: 05412113
+Node: 05312356
+Node: 05212672
+Node: 05112879
+Node: 0513131
+Node: 0413337
+Node: 0314243
+Node: 02114693
+Node: 0214844
+Node: 0114975
+Node: Credits15071
+Node: Development15437
+Node: Copyright assignment15951
+Node: License16539
 
 End Tag Table
 
