@@ -315,7 +315,10 @@ File: README.info,  Node: 072-pre,  Next: 071,  Up: Changelog
 3.1 0.7.2-pre
 =============
 
-Nothing new yet.
+*Fixes*
+   • Don’t delete preexisting files when downloading to a file.  (#41
+     (https://github.com/alphapapa/plz.el/pull/41).  Thanks to Joseph
+     Turner (https://github.com/josephmturner).)
 
 
 File: README.info,  Node: 071,  Next: 07,  Prev: 072-pre,  Up: Changelog
@@ -573,23 +576,23 @@ Node: Queueing7476
 Node: Tips8859
 Node: Changelog9160
 Node: 072-pre9457
-Node: 0719569
-Node: 079786
-Node: 0611674
-Node: 05412285
-Node: 05312528
-Node: 05212844
-Node: 05113051
-Node: 0513303
-Node: 0413509
-Node: 0314417
-Node: 02114867
-Node: 0215018
-Node: 0115149
-Node: Credits15245
-Node: Development15611
-Node: Copyright assignment16125
-Node: License16713
+Node: 0719753
+Node: 079970
+Node: 0611858
+Node: 05412469
+Node: 05312712
+Node: 05213028
+Node: 05113235
+Node: 0513487
+Node: 0413693
+Node: 0314601
+Node: 02115051
+Node: 0215202
+Node: 0115333
+Node: Credits15429
+Node: Development15795
+Node: Copyright assignment16309
+Node: License16897
 
 End Tag Table
 
