@@ -183,6 +183,11 @@ You may also clear a queue with ~plz-clear~, which cancels any active or queued 
 
 Nothing new yet.
 
+** 0.7.2
+
+*Fixes*
++ Don't delete preexisting files when downloading to a file.  ([[https://github.com/alphapapa/plz.el/pull/41][#41]]. Thanks to [[https://github.com/josephmturner][Joseph Turner]].)
+
 ** 0.7.1
 
 *Fixes*

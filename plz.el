@@ -449,6 +449,8 @@ NOQUERY is passed to `make-process', which see.
                       (progn
                         (write-region (point-min) (point-max) filename)
                         (funcall then filename))
+                    (file-already-exists
+                     (funcall then (make-plz-error :message (format "error while writing to file %S: %S" filename err))))
                     ;; In case of an error writing to the file, delete the temp file
                     ;; and signal the error.  Ignore any errors encountered while
                     ;; deleting the file, which would obscure the original error.
@@ -463,6 +465,8 @@ NOQUERY is passed to `make-process', which see.
               (progn
                 (write-region (point-min) (point-max) filename nil nil nil 'excl)
                 (funcall then filename))
+            (file-already-exists
+             (funcall then (make-plz-error :message (format "error while writing to file %S: %S" filename err))))
             ;; Since we are creating the file, it seems sensible to delete it in case of an
             ;; error while writing to it (e.g. a disk-full error).  And we ignore any errors
             ;; encountered while deleting the file, which would obscure the original error.

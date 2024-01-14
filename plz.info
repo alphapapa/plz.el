@@ -47,6 +47,7 @@ Usage
 Changelog
 
 * 0.8-pre: 08-pre.
+* 0.7.2: 072.
 * 0.7.1: 071.
 * 0.7: 07.
 * 0.6: 06.
@@ -295,6 +296,7 @@ File: README.info,  Node: Changelog,  Next: Credits,  Prev: Usage,  Up: Top
 * Menu:
 
 * 0.8-pre: 08-pre.
+* 0.7.2: 072.
 * 0.7.1: 071.
 * 0.7: 07.
 * 0.6: 06.
@@ -310,7 +312,7 @@ File: README.info,  Node: Changelog,  Next: Credits,  Prev: Usage,  Up: Top
 * 0.1: 01.
 
 
-File: README.info,  Node: 08-pre,  Next: 071,  Up: Changelog
+File: README.info,  Node: 08-pre,  Next: 072,  Up: Changelog
 
 3.1 0.8-pre
 ===========
@@ -318,9 +320,20 @@ File: README.info,  Node: 08-pre,  Next: 071,  Up: Changelog
 Nothing new yet.
 
 
-File: README.info,  Node: 071,  Next: 07,  Prev: 08-pre,  Up: Changelog
+File: README.info,  Node: 072,  Next: 071,  Prev: 08-pre,  Up: Changelog
 
-3.2 0.7.1
+3.2 0.7.2
+=========
+
+*Fixes*
+   • Don’t delete preexisting files when downloading to a file.  (#41
+     (https://github.com/alphapapa/plz.el/pull/41).  Thanks to Joseph
+     Turner (https://github.com/josephmturner).)
+
+
+File: README.info,  Node: 071,  Next: 07,  Prev: 072,  Up: Changelog
+
+3.3 0.7.1
 =========
 
 *Fixes*
@@ -330,7 +343,7 @@ File: README.info,  Node: 071,  Next: 07,  Prev: 08-pre,  Up: Changelog
 
 File: README.info,  Node: 07,  Next: 06,  Prev: 071,  Up: Changelog
 
-3.3 0.7
+3.4 0.7
 =======
 
 *Changes*
@@ -373,7 +386,7 @@ File: README.info,  Node: 07,  Next: 06,  Prev: 071,  Up: Changelog
 
 File: README.info,  Node: 06,  Next: 054,  Prev: 07,  Up: Changelog
 
-3.4 0.6
+3.5 0.6
 =======
 
 *Additions*
@@ -391,7 +404,7 @@ File: README.info,  Node: 06,  Next: 054,  Prev: 07,  Up: Changelog
 
 File: README.info,  Node: 054,  Next: 053,  Prev: 06,  Up: Changelog
 
-3.5 0.5.4
+3.6 0.5.4
 =========
 
 *Fixes*
@@ -401,7 +414,7 @@ File: README.info,  Node: 054,  Next: 053,  Prev: 06,  Up: Changelog
 
 File: README.info,  Node: 053,  Next: 052,  Prev: 054,  Up: Changelog
 
-3.6 0.5.3
+3.7 0.5.3
 =========
 
 *Fixes*
@@ -412,7 +425,7 @@ File: README.info,  Node: 053,  Next: 052,  Prev: 054,  Up: Changelog
 
 File: README.info,  Node: 052,  Next: 051,  Prev: 053,  Up: Changelog
 
-3.7 0.5.2
+3.8 0.5.2
 =========
 
 *Fixes*
@@ -422,7 +435,7 @@ File: README.info,  Node: 052,  Next: 051,  Prev: 053,  Up: Changelog
 
 File: README.info,  Node: 051,  Next: 05,  Prev: 052,  Up: Changelog
 
-3.8 0.5.1
+3.9 0.5.1
 =========
 
 *Fixes*
@@ -432,8 +445,8 @@ File: README.info,  Node: 051,  Next: 05,  Prev: 052,  Up: Changelog
 
 File: README.info,  Node: 05,  Next: 04,  Prev: 051,  Up: Changelog
 
-3.9 0.5
-=======
+3.10 0.5
+========
 
 *Additions*
    • Struct ‘plz-queue’’s ‘finally’ slot, a function called when the
@@ -442,7 +455,7 @@ File: README.info,  Node: 05,  Next: 04,  Prev: 051,  Up: Changelog
 
 File: README.info,  Node: 04,  Next: 03,  Prev: 05,  Up: Changelog
 
-3.10 0.4
+3.11 0.4
 ========
 
 *Additions*
@@ -469,7 +482,7 @@ File: README.info,  Node: 04,  Next: 03,  Prev: 05,  Up: Changelog
 
 File: README.info,  Node: 03,  Next: 021,  Prev: 04,  Up: Changelog
 
-3.11 0.3
+3.12 0.3
 ========
 
 *Additions*
@@ -485,7 +498,7 @@ File: README.info,  Node: 03,  Next: 021,  Prev: 04,  Up: Changelog
 
 File: README.info,  Node: 021,  Next: 02,  Prev: 03,  Up: Changelog
 
-3.12 0.2.1
+3.13 0.2.1
 ==========
 
 *Fixes*
@@ -494,7 +507,7 @@ File: README.info,  Node: 021,  Next: 02,  Prev: 03,  Up: Changelog
 
 File: README.info,  Node: 02,  Next: 01,  Prev: 021,  Up: Changelog
 
-3.13 0.2
+3.14 0.2
 ========
 
 *Added*
@@ -503,7 +516,7 @@ File: README.info,  Node: 02,  Next: 01,  Prev: 021,  Up: Changelog
 
 File: README.info,  Node: 01,  Prev: 02,  Up: Changelog
 
-3.14 0.1
+3.15 0.1
 ========
 
 Initial release.
@@ -563,33 +576,34 @@ GPLv3
 
 Tag Table:
 Node: Top199
-Node: Installation1213
-Node: GNU ELPA1356
-Node: Manual1602
-Node: Usage1908
-Node: Examples2409
-Node: Functions3776
-Node: Queueing7473
-Node: Tips8856
-Node: Changelog9157
-Node: 08-pre9451
-Node: 0719558
-Node: 079774
-Node: 0611662
-Node: 05412273
-Node: 05312516
-Node: 05212832
-Node: 05113039
-Node: 0513291
-Node: 0413497
-Node: 0314405
-Node: 02114855
-Node: 0215006
-Node: 0115137
-Node: Credits15233
-Node: Development15599
-Node: Copyright assignment16113
-Node: License16701
+Node: Installation1227
+Node: GNU ELPA1370
+Node: Manual1616
+Node: Usage1922
+Node: Examples2423
+Node: Functions3790
+Node: Queueing7487
+Node: Tips8870
+Node: Changelog9171
+Node: 08-pre9479
+Node: 0729586
+Node: 0719885
+Node: 0710098
+Node: 0611986
+Node: 05412597
+Node: 05312840
+Node: 05213156
+Node: 05113363
+Node: 0513615
+Node: 0413823
+Node: 0314731
+Node: 02115181
+Node: 0215332
+Node: 0115463
+Node: Credits15559
+Node: Development15925
+Node: Copyright assignment16439
+Node: License17027
 
 End Tag Table
 
