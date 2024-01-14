@@ -5,7 +5,7 @@
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Maintainer: Adam Porter <adam@alphapapa.net>
 ;; URL: https://github.com/alphapapa/plz.el
-;; Version: 0.7.2-pre
+;; Version: 0.7.2
 ;; Package-Requires: ((emacs "26.3"))
 ;; Keywords: comm, network, http
 

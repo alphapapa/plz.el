@@ -46,7 +46,7 @@ Usage
 
 Changelog
 
-* 0.7.2-pre: 072-pre.
+* 0.7.2: 072.
 * 0.7.1: 071.
 * 0.7: 07.
 * 0.6: 06.
@@ -294,7 +294,7 @@ File: README.info,  Node: Changelog,  Next: Credits,  Prev: Usage,  Up: Top
 
 * Menu:
 
-* 0.7.2-pre: 072-pre.
+* 0.7.2: 072.
 * 0.7.1: 071.
 * 0.7: 07.
 * 0.6: 06.
@@ -310,10 +310,10 @@ File: README.info,  Node: Changelog,  Next: Credits,  Prev: Usage,  Up: Top
 * 0.1: 01.
 
 
-File: README.info,  Node: 072-pre,  Next: 071,  Up: Changelog
+File: README.info,  Node: 072,  Next: 071,  Up: Changelog
 
-3.1 0.7.2-pre
-=============
+3.1 0.7.2
+=========
 
 *Fixes*
    • Don’t delete preexisting files when downloading to a file.  (#41
@@ -321,7 +321,7 @@ File: README.info,  Node: 072-pre,  Next: 071,  Up: Changelog
      Turner (https://github.com/josephmturner).)
 
 
-File: README.info,  Node: 071,  Next: 07,  Prev: 072-pre,  Up: Changelog
+File: README.info,  Node: 071,  Next: 07,  Prev: 072,  Up: Changelog
 
 3.2 0.7.1
 =========
@@ -566,33 +566,33 @@ GPLv3
 
 Tag Table:
 Node: Top199
-Node: Installation1216
-Node: GNU ELPA1359
-Node: Manual1605
-Node: Usage1911
-Node: Examples2412
-Node: Functions3779
-Node: Queueing7476
-Node: Tips8859
-Node: Changelog9160
-Node: 072-pre9457
-Node: 0719753
-Node: 079970
-Node: 0611858
-Node: 05412469
-Node: 05312712
-Node: 05213028
-Node: 05113235
-Node: 0513487
-Node: 0413693
-Node: 0314601
-Node: 02115051
-Node: 0215202
-Node: 0115333
-Node: Credits15429
-Node: Development15795
-Node: Copyright assignment16309
-Node: License16897
+Node: Installation1208
+Node: GNU ELPA1351
+Node: Manual1597
+Node: Usage1903
+Node: Examples2404
+Node: Functions3771
+Node: Queueing7468
+Node: Tips8851
+Node: Changelog9152
+Node: 0729441
+Node: 0719725
+Node: 079938
+Node: 0611826
+Node: 05412437
+Node: 05312680
+Node: 05212996
+Node: 05113203
+Node: 0513455
+Node: 0413661
+Node: 0314569
+Node: 02115019
+Node: 0215170
+Node: 0115301
+Node: Credits15397
+Node: Development15763
+Node: Copyright assignment16277
+Node: License16865
 
 End Tag Table
 
