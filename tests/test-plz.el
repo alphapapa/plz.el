@@ -91,10 +91,10 @@ in URL-encoded form)."
                              (let ((plz-curl-default-args
                                     ',(append plz-curl-default-args (list (format "--http%s" http-version)))))
                                (cl-labels ((url (part)
-                                                (setf part (replace-regexp-in-string
-                                                            "URI-PREFIX" (url-hexify-string plz-test-uri-prefix)
-                                                            part t t))
-                                                (concat plz-test-uri-prefix part)))
+                                             (setf part (replace-regexp-in-string
+                                                         "URI-PREFIX" (url-hexify-string plz-test-uri-prefix)
+                                                         part t t))
+                                             (concat plz-test-uri-prefix part)))
                                  ,@docstring-keys-and-body)))))))
 
 ;;;; Functions
