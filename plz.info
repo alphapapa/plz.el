@@ -46,6 +46,7 @@ Usage
 
 Changelog
 
+* 0.7.2-pre: 072-pre.
 * 0.7.1: 071.
 * 0.7: 07.
 * 0.6: 06.
@@ -293,6 +294,7 @@ File: README.info,  Node: Changelog,  Next: Credits,  Prev: Usage,  Up: Top
 
 * Menu:
 
+* 0.7.2-pre: 072-pre.
 * 0.7.1: 071.
 * 0.7: 07.
 * 0.6: 06.
@@ -308,9 +310,17 @@ File: README.info,  Node: Changelog,  Next: Credits,  Prev: Usage,  Up: Top
 * 0.1: 01.
 
 
-File: README.info,  Node: 071,  Next: 07,  Up: Changelog
+File: README.info,  Node: 072-pre,  Next: 071,  Up: Changelog
 
-3.1 0.7.1
+3.1 0.7.2-pre
+=============
+
+Nothing new yet.
+
+
+File: README.info,  Node: 071,  Next: 07,  Prev: 072-pre,  Up: Changelog
+
+3.2 0.7.1
 =========
 
 *Fixes*
@@ -320,7 +330,7 @@ File: README.info,  Node: 071,  Next: 07,  Up: Changelog
 
 File: README.info,  Node: 07,  Next: 06,  Prev: 071,  Up: Changelog
 
-3.2 0.7
+3.3 0.7
 =======
 
 *Changes*
@@ -363,7 +373,7 @@ File: README.info,  Node: 07,  Next: 06,  Prev: 071,  Up: Changelog
 
 File: README.info,  Node: 06,  Next: 054,  Prev: 07,  Up: Changelog
 
-3.3 0.6
+3.4 0.6
 =======
 
 *Additions*
@@ -381,7 +391,7 @@ File: README.info,  Node: 06,  Next: 054,  Prev: 07,  Up: Changelog
 
 File: README.info,  Node: 054,  Next: 053,  Prev: 06,  Up: Changelog
 
-3.4 0.5.4
+3.5 0.5.4
 =========
 
 *Fixes*
@@ -391,7 +401,7 @@ File: README.info,  Node: 054,  Next: 053,  Prev: 06,  Up: Changelog
 
 File: README.info,  Node: 053,  Next: 052,  Prev: 054,  Up: Changelog
 
-3.5 0.5.3
+3.6 0.5.3
 =========
 
 *Fixes*
@@ -402,7 +412,7 @@ File: README.info,  Node: 053,  Next: 052,  Prev: 054,  Up: Changelog
 
 File: README.info,  Node: 052,  Next: 051,  Prev: 053,  Up: Changelog
 
-3.6 0.5.2
+3.7 0.5.2
 =========
 
 *Fixes*
@@ -412,7 +422,7 @@ File: README.info,  Node: 052,  Next: 051,  Prev: 053,  Up: Changelog
 
 File: README.info,  Node: 051,  Next: 05,  Prev: 052,  Up: Changelog
 
-3.7 0.5.1
+3.8 0.5.1
 =========
 
 *Fixes*
@@ -422,7 +432,7 @@ File: README.info,  Node: 051,  Next: 05,  Prev: 052,  Up: Changelog
 
 File: README.info,  Node: 05,  Next: 04,  Prev: 051,  Up: Changelog
 
-3.8 0.5
+3.9 0.5
 =======
 
 *Additions*
@@ -432,8 +442,8 @@ File: README.info,  Node: 05,  Next: 04,  Prev: 051,  Up: Changelog
 
 File: README.info,  Node: 04,  Next: 03,  Prev: 05,  Up: Changelog
 
-3.9 0.4
-=======
+3.10 0.4
+========
 
 *Additions*
    • Support for HTTP ‘HEAD’ requests.  (Thanks to Inc.  for
@@ -459,7 +469,7 @@ File: README.info,  Node: 04,  Next: 03,  Prev: 05,  Up: Changelog
 
 File: README.info,  Node: 03,  Next: 021,  Prev: 04,  Up: Changelog
 
-3.10 0.3
+3.11 0.3
 ========
 
 *Additions*
@@ -475,7 +485,7 @@ File: README.info,  Node: 03,  Next: 021,  Prev: 04,  Up: Changelog
 
 File: README.info,  Node: 021,  Next: 02,  Prev: 03,  Up: Changelog
 
-3.11 0.2.1
+3.12 0.2.1
 ==========
 
 *Fixes*
@@ -484,7 +494,7 @@ File: README.info,  Node: 021,  Next: 02,  Prev: 03,  Up: Changelog
 
 File: README.info,  Node: 02,  Next: 01,  Prev: 021,  Up: Changelog
 
-3.12 0.2
+3.13 0.2
 ========
 
 *Added*
@@ -493,7 +503,7 @@ File: README.info,  Node: 02,  Next: 01,  Prev: 021,  Up: Changelog
 
 File: README.info,  Node: 01,  Prev: 02,  Up: Changelog
 
-3.13 0.1
+3.14 0.1
 ========
 
 Initial release.
@@ -553,32 +563,33 @@ GPLv3
 
 Tag Table:
 Node: Top199
-Node: Installation1194
-Node: GNU ELPA1337
-Node: Manual1583
-Node: Usage1889
-Node: Examples2390
-Node: Functions3757
-Node: Queueing7454
-Node: Tips8837
-Node: Changelog9138
-Node: 0719413
-Node: 079614
-Node: 0611502
-Node: 05412113
-Node: 05312356
-Node: 05212672
-Node: 05112879
-Node: 0513131
-Node: 0413337
-Node: 0314243
-Node: 02114693
-Node: 0214844
-Node: 0114975
-Node: Credits15071
-Node: Development15437
-Node: Copyright assignment15951
-Node: License16539
+Node: Installation1216
+Node: GNU ELPA1359
+Node: Manual1605
+Node: Usage1911
+Node: Examples2412
+Node: Functions3779
+Node: Queueing7476
+Node: Tips8859
+Node: Changelog9160
+Node: 072-pre9457
+Node: 0719569
+Node: 079786
+Node: 0611674
+Node: 05412285
+Node: 05312528
+Node: 05212844
+Node: 05113051
+Node: 0513303
+Node: 0413509
+Node: 0314417
+Node: 02114867
+Node: 0215018
+Node: 0115149
+Node: Credits15245
+Node: Development15611
+Node: Copyright assignment16125
+Node: License16713
 
 End Tag Table
 
