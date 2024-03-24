@@ -254,7 +254,7 @@ connection phase and waiting to receive the response (the
 
 ;;;;; Public
 
-(cl-defun plz (method url &rest rest &key headers body else finally noquery
+(cl-defun plz (method url &rest rest &key headers body else finally noquery process-filter
                       (as 'string) (then 'sync)
                       (body-type 'text) (decode t decode-s)
                       (connect-timeout plz-connect-timeout) (timeout plz-timeout))
@@ -404,6 +404,7 @@ NOQUERY is passed to `make-process', which see.
                                 :coding 'binary
                                 :command (append (list plz-curl-program) curl-command-line-args)
                                 :connection-type 'pipe
+                                :filter process-filter
                                 :sentinel #'plz--sentinel
                                 :stderr stderr-process
                                 :noquery noquery))
@@ -754,6 +755,7 @@ argument passed to `plz--sentinel', which see."
         (pcase-exhaustive status
           ((or 0 "finished\n")
            ;; Curl exited normally: check HTTP status code.
+           (widen)
            (goto-char (point-min))
            (plz--skip-proxy-headers)
            (while (plz--skip-redirect-headers))
