@@ -2,6 +2,12 @@
 
 #+PROPERTY: LOGGING nil
 
+# NOTE: It would be preferable to put these at the bottom of the file under the export options heading, but it seems that "TEXINFO_DIR_CATEGORY" only works at the top of the file.
+#+EXPORT_FILE_NAME: plz.texi
+#+TEXINFO_DIR_CATEGORY: Emacs
+#+TEXINFO_DIR_TITLE: Plz: (plz)
+#+TEXINFO_DIR_DESC: HTTP library using Curl as a backend
+
 # Note: This readme works with the org-make-toc <https://github.com/alphapapa/org-make-toc> package, which automatically updates the table of contents.
 
 [[http://elpa.gnu.org/packages/plz.html][file:http://elpa.gnu.org/packages/plz.svg]]
@@ -183,6 +189,11 @@ You may also clear a queue with ~plz-clear~, which cancels any active or queued 
 
 Nothing new yet.
 
+** 0.7.3
+
+*Fixes*
++ Info manual generation on GNU ELPA.  (Also, the Info manual is no longer committed to Git.)
+
 ** 0.7.2
 
 *Fixes*
@@ -316,13 +327,7 @@ GPLv3
 
 ** Info export options
 
-#+TEXINFO_DIR_CATEGORY: Emacs
-#+TEXINFO_DIR_TITLE: Plz: (plz)
-#+TEXINFO_DIR_DESC: HTTP library using Curl as a backend
-
-# NOTE: We could use these, but that causes a pointless error, "org-compile-file: File "..README.info" wasn't produced...", so we just rename the files in the after-save-hook instead.
-# #+TEXINFO_FILENAME: plz.info
-# #+EXPORT_FILE_NAME: plz.texi
+# NOTE: These are moved to the top of the file.
 
 ** File-local variables
 
@@ -330,7 +335,6 @@ GPLv3
 
 # Local Variables:
 # eval: (require 'org-make-toc)
-# after-save-hook: (lambda nil (when (and (require 'ox-texinfo nil t) (org-texinfo-export-to-info)) (delete-file "README.texi") (rename-file "README.info" "plz.info" t)))
 # before-save-hook: org-make-toc
 # org-export-with-properties: ()
 # org-export-with-title: t
