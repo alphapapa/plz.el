@@ -142,6 +142,9 @@ Synchronously download a JPEG file, then create an Emacs image object from the d
 
    ~NOQUERY~ is passed to ~make-process~, which see.
 
+   ~FILTER~ is an optional function to be used as the process filter for the curl process.  It can be used to handle HTTP responses in a streaming way.  The function must accept 2 arguments, the process object running curl, and a string which is output received from the process.  The default process filter inserts the output of the process into the process buffer.  The provided ~FILTER~ function should at least insert output up to the HTTP body into the process buffer.
+
+
 ** Queueing
 
 ~plz~ provides a simple system for queueing HTTP requests.  First, make a ~plz-queue~ struct by calling ~make-plz-queue~.  Then call ~plz-queue~ with the struct as the first argument, and the rest of the arguments being the same as those passed to ~plz~.  Then call ~plz-run~ to run the queued requests.
@@ -187,7 +190,9 @@ You may also clear a queue with ~plz-clear~, which cancels any active or queued 
 
 ** 0.8-pre
 
-Nothing new yet.
+*Additions*
+
++ Function ~plz~ now accepts a ~:filter~ argument which can be used to override the default process filter (e.g. for streaming responses).  ([[https://github.com/alphapapa/plz.el/pull/43][#43]], [[https://github.com/alphapapa/plz.el/pull/50][#50]].  Thanks to [[https://github.com/r0man][Roman Scherer]].)
 
 ** 0.7.3
 
