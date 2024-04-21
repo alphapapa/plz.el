@@ -190,7 +190,9 @@ You may also clear a queue with ~plz-clear~, which cancels any active or queued 
 
 ** 0.8-pre
 
-Nothing new yet.
+*Additions*
+
++ Function ~plz~ now accepts a ~:filter~ argument which can be used to override the default process filter (e.g. for streaming responses).  ([[https://github.com/alphapapa/plz.el/pull/43][#43]], [[https://github.com/alphapapa/plz.el/pull/50][#50]].  Thanks to [[https://github.com/r0man][Roman Scherer]].)
 
 ** 0.7.3
 
