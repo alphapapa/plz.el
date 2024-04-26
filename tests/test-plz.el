@@ -565,12 +565,13 @@ and only called once."
   "Write OUTPUT to the PROCESS buffer."
   (when (buffer-live-p (process-buffer process))
     (with-current-buffer (process-buffer process)
-      (let ((moving (= (point) (process-mark process))))
+      (let ((movingp (= (point) (process-mark process))))
         (save-excursion
           (goto-char (process-mark process))
           (insert output)
           (set-marker (process-mark process) (point)))
-        (if moving (goto-char (process-mark process)))))))
+        (when movingp
+          (goto-char (process-mark process)))))))
 
 (plz-deftest plz-get-json-process-filter-async ()
   (let* ((test-json) (outputs)
@@ -583,24 +584,24 @@ and only called once."
                               (push output outputs)))))
     (plz-test-wait process)
     (let-alist test-json
-      (should (string-match "curl" .headers.User-Agent)))
+      (should (string-match-p "curl" .headers.User-Agent)))
     (let ((output (string-join (reverse outputs))))
-      (should (string-match "HTTP.*\s+200" output))
-      (should (string-match "Server: gunicorn" output))
-      (should (string-match "\"args\":\s*{}" output)))))
+      (should (string-match-p "HTTP.*\s+200" output))
+      (should (string-match-p "Server: gunicorn" output))
+      (should (string-match-p "\"args\":\s*{}" output)))))
 
 (plz-deftest plz-get-json-process-filter-sync ()
   (let* ((outputs)
          (response (plz 'get (url "/get")
-                    :as 'response
-                    :filter (lambda (process output)
-                              (test-plz-process-filter process output)
-                              (push output outputs)))))
+                     :as 'response
+                     :filter (lambda (process output)
+                               (test-plz-process-filter process output)
+                               (push output outputs)))))
     (plz-test-get-response response)
     (let ((output (string-join (reverse outputs))))
-      (should (string-match "HTTP.*\s+200" output))
-      (should (string-match "Server: gunicorn" output))
-      (should (string-match "\"args\":\s*{}" output)))))
+      (should (string-match-p "HTTP.*\s+200" output))
+      (should (string-match-p "Server: gunicorn" output))
+      (should (string-match-p "\"args\":\s*{}" output)))))
 
 ;;;; Footer
 
