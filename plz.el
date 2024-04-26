@@ -5,7 +5,7 @@
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Maintainer: Adam Porter <adam@alphapapa.net>
 ;; URL: https://github.com/alphapapa/plz.el
-;; Version: 0.7.3
+;; Version: 0.8
 ;; Package-Requires: ((emacs "26.3"))
 ;; Keywords: comm, network, http
 
@@ -254,7 +254,7 @@ connection phase and waiting to receive the response (the
 
 ;;;;; Public
 
-(cl-defun plz (method url &rest rest &key headers body else finally noquery
+(cl-defun plz (method url &rest rest &key headers body else filter finally noquery
                       (as 'string) (then 'sync)
                       (body-type 'text) (decode t decode-s)
                       (connect-timeout plz-connect-timeout) (timeout plz-timeout))
@@ -330,6 +330,15 @@ from a host, respectively.
 
 NOQUERY is passed to `make-process', which see.
 
+FILTER is an optional function to be used as the process filter
+for the curl process.  It can be used to handle HTTP responses in
+a streaming way.  The function must accept 2 arguments, the
+process object running curl, and a string which is output
+received from the process.  The default process filter inserts
+the output of the process into the process buffer.  The provided
+FILTER function should at least insert output up to the HTTP body
+into the process buffer.
+
 \(To silence checkdoc, we mention the internal argument REST.)"
   ;; FIXME(v0.8): Remove the note about error changes from the docstring.
   ;; FIXME(v0.8): Update error signals in docstring.
@@ -390,10 +399,10 @@ NOQUERY is passed to `make-process', which see.
                    ('binary nil)
                    (_ decode)))
          (default-directory
-           ;; Avoid making process in a nonexistent directory (in case the current
-           ;; default-directory has since been removed).  It's unclear what the best
-           ;; directory is, but this seems to make sense, and it should still exist.
-           temporary-file-directory)
+          ;; Avoid making process in a nonexistent directory (in case the current
+          ;; default-directory has since been removed).  It's unclear what the best
+          ;; directory is, but this seems to make sense, and it should still exist.
+          temporary-file-directory)
          (process-buffer (generate-new-buffer " *plz-request-curl*"))
          (stderr-process (make-pipe-process :name "plz-request-curl-stderr"
                                             :buffer (generate-new-buffer " *plz-request-curl-stderr*")
@@ -404,6 +413,7 @@ NOQUERY is passed to `make-process', which see.
                                 :coding 'binary
                                 :command (append (list plz-curl-program) curl-command-line-args)
                                 :connection-type 'pipe
+                                :filter filter
                                 :sentinel #'plz--sentinel
                                 :stderr stderr-process
                                 :noquery noquery))
@@ -635,11 +645,11 @@ making QUEUE's requests."
 Return when QUEUE is at limit or has no more queued requests.
 
 QUEUE should be a `plz-queue' structure."
-  (cl-labels ((readyp
-               (queue) (and (not (plz-queue-canceled-p queue))
-                            (plz-queue-requests queue)
-                            ;; With apologies to skeeto...
-                            (< (length (plz-queue-active queue)) (plz-queue-limit queue)))))
+  (cl-labels ((readyp (queue)
+                (and (not (plz-queue-canceled-p queue))
+                     (plz-queue-requests queue)
+                     ;; With apologies to skeeto...
+                     (< (length (plz-queue-active queue)) (plz-queue-limit queue)))))
     (while (readyp queue)
       (pcase-let* ((request (plz--queue-pop queue))
                    ((cl-struct plz-queued-request method url
