@@ -188,6 +188,10 @@ You may also clear a queue with ~plz-clear~, which cancels any active or queued 
 :TOC:      :depth 0
 :END:
 
+** 0.9-pre
+
+Nothing new yet.
+
 ** 0.8
 
 *Additions*
