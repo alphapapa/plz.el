@@ -457,6 +457,7 @@ into the process buffer.
                 (let ((filename (make-temp-file "plz-")))
                   (condition-case err
                       (progn
+                        ;; FIXME: Separate condition-case for writing the file.
                         (write-region (point-min) (point-max) filename)
                         (funcall then filename))
                     (file-already-exists
