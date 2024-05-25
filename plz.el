@@ -826,8 +826,9 @@ for asynchronous ones)."
                  (plz--respond process buffer status)
                (run-at-time 0 nil #'plz--respond process buffer status))))))
     ;; Result already set (likely indicating that Emacs did not call
-    ;; the sentinel when `accept-process-output' was called, so we are
-    ;; calling it from our "hack"): do nothing.
+    ;; the sentinel when `accept-process-output' was called, then we
+    ;; called it from our "hack" and set :plz-result, and now Emacs is
+    ;; calling the sentinel after `plz' returned): do nothing.
     (plz-debug (float-time) ":PLZ-RESULT ALREADY CHANGED"
                process status (process-get process :plz-result))))
 
