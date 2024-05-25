@@ -256,7 +256,7 @@ connection phase and waiting to receive the response (the
 
 (cl-defmacro plz-debug (&rest args)
   ;; Copied from `ement-debug' in Ement.el, which see.
-  "Display a debug warning showing the runtime value of ARGS.
+  "Display a debug warning showing the run-time value of ARGS.
 The warning automatically includes the name of the containing
 function, and it is only displayed if `warning-minimum-log-level'
 is `:debug' at expansion time (otherwise the macro expands to a
