@@ -830,7 +830,10 @@ for asynchronous ones)."
     ;; called it from our "hack" and set :plz-result, and now Emacs is
     ;; calling the sentinel after `plz' returned): do nothing.
     (plz-debug (float-time) ":PLZ-RESULT ALREADY CHANGED"
-               process status (process-get process :plz-result))))
+               process status (process-get process :plz-result))
+    (message (format "`plz' sentinel unexpectedly called after result (%S) has been set.  (status: %S)
+Please report this bug to the `plz' maintainer."
+                     (process-get process :plz-result) status))))
 
 (defun plz--respond (process buffer status)
   "Respond to HTTP response from PROCESS in BUFFER.
