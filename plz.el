@@ -811,23 +811,26 @@ for asynchronous ones)."
   (plz-debug (float-time) "BEFORE CONDITION"
              process status (process-get process :plz-result))
   (if (eq :plz-result (process-get process :plz-result))
-      ;; Result not yet set: call `plz--respond'.
+      ;; Result not yet set: check process status (we call
+      ;; `process-status' because the STATUS argument might not be
+      ;; accurate--see "hack" in `plz').
       (if (member (process-status process) '(run stop))
+          ;; Process still alive: do nothing.
           (plz-debug "Doing nothing because:" (process-status process))
-        ;; Process should have exited (otherwise we should do
-        ;; nothing).  We check `process-status' because the STATUS
-        ;; variable might not be accurate (see "hack" in `plz').
+        ;; Process appears to be dead: check STATUS argument.
         (pcase status
           ((or "finished\n" "killed\n" "interrupt\n" "workaround"
                (pred numberp)
                (rx "exited abnormally with code " (group (1+ digit))))
+           ;; STATUS seems okay: call `plz--respond'.
            (let ((buffer (process-buffer process)))
              (if (process-get process :plz-sync)
                  (plz--respond process buffer status)
                (run-at-time 0 nil #'plz--respond process buffer status))))))
     ;; Result already set (likely indicating that Emacs did not call
     ;; the sentinel when `accept-process-output' was called, so we are
-    ;; calling it from our "hack"): do nothing.
+    ;; either being called from our "hack", or being called a second
+    ;; time, after `plz' returned): do nothing.
     (plz-debug (float-time) ":PLZ-RESULT ALREADY CHANGED"
                process status (process-get process :plz-result))))
 
