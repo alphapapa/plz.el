@@ -244,6 +244,8 @@ This limits how long the connection phase may last (the
   :type 'number)
 
 (defcustom plz-timeout 60
+  ;; TODO(v0.9): Remove the `plz-timeout' option.  Requests shouldn't
+  ;; have a "max-time" timeout by default, anyway.
   "Default request timeout in seconds.
 This limits how long an entire request may take, including the
 connection phase and waiting to receive the response (the
