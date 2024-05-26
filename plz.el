@@ -314,6 +314,16 @@ keywords are supported:
            nil)
       `(ignore ,@args))))
 
+;;;; Compatibility
+
+(defalias 'plz--generate-new-buffer
+  (if (version< emacs-version "28.1")
+      (lambda (name &optional _inhibit-buffer-hooks)
+        "Call `generate-new-buffer' with NAME.
+Compatibility function for Emacs versions <28.1."
+        (generate-new-buffer name))
+    #'generate-new-buffer))
+
 ;;;; Functions
 
 ;;;;; Public
@@ -467,9 +477,9 @@ into the process buffer.
           ;; default-directory has since been removed).  It's unclear what the best
           ;; directory is, but this seems to make sense, and it should still exist.
           temporary-file-directory)
-         (process-buffer (generate-new-buffer " *plz-request-curl*" t))
+         (process-buffer (plz--generate-new-buffer " *plz-request-curl*" t))
          (stderr-process (make-pipe-process :name "plz-request-curl-stderr"
-                                            :buffer (generate-new-buffer " *plz-request-curl-stderr*" t)
+                                            :buffer (plz--generate-new-buffer " *plz-request-curl-stderr*" t)
                                             :noquery t
                                             :sentinel #'plz--stderr-sentinel))
          (process (make-process :name "plz-request-curl"
