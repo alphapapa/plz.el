@@ -244,15 +244,6 @@ This limits how long the connection phase may last (the
 \"--connect-timeout\" argument to curl)."
   :type 'number)
 
-(defcustom plz-timeout 60
-  ;; TODO(v0.9): Remove the `plz-timeout' option.  Requests shouldn't
-  ;; have a "max-time" timeout by default, anyway.
-  "Default request timeout in seconds.
-This limits how long an entire request may take, including the
-connection phase and waiting to receive the response (the
-\"--max-time\" argument to curl)."
-  :type 'number)
-
 ;;;; Macros
 
 (require 'warnings)
@@ -331,10 +322,10 @@ Compatibility function for Emacs versions <28.1."
 
 ;;;;; Public
 
-(cl-defun plz (method url &rest rest &key headers body else filter finally noquery
+(cl-defun plz (method url &rest rest &key headers body else filter finally noquery timeout
                       (as 'string) (then 'sync)
                       (body-type 'text) (decode t decode-s)
-                      (connect-timeout plz-connect-timeout) (timeout plz-timeout))
+                      (connect-timeout plz-connect-timeout))
   "Request METHOD from URL with curl.
 Return the curl process object or, for a synchronous request, the
 selected result.
