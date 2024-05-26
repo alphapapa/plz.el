@@ -6,7 +6,7 @@
 ;; Maintainer: Adam Porter <adam@alphapapa.net>
 ;; URL: https://github.com/alphapapa/plz.el
 ;; Version: 0.9-pre
-;; Package-Requires: ((emacs "27.1"))
+;; Package-Requires: ((emacs "27.1") (compat "29.1.4.5"))
 ;; Keywords: comm, network, http
 
 ;; This file is part of GNU Emacs.
@@ -100,6 +100,8 @@
 (require 'cl-lib)
 (require 'rx)
 (require 'subr-x)
+
+(require 'compat)
 
 ;;;; Errors
 
@@ -467,9 +469,9 @@ into the process buffer.
           ;; default-directory has since been removed).  It's unclear what the best
           ;; directory is, but this seems to make sense, and it should still exist.
           temporary-file-directory)
-         (process-buffer (generate-new-buffer " *plz-request-curl*" t))
+         (process-buffer (compat-call generate-new-buffer " *plz-request-curl*" t))
          (stderr-process (make-pipe-process :name "plz-request-curl-stderr"
-                                            :buffer (generate-new-buffer " *plz-request-curl-stderr*" t)
+                                            :buffer (compat-call generate-new-buffer " *plz-request-curl-stderr*" t)
                                             :noquery t
                                             :sentinel #'plz--stderr-sentinel))
          (process (make-process :name "plz-request-curl"
