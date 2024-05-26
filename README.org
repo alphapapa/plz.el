@@ -275,13 +275,13 @@ You may also clear a queue with ~plz-clear~, which cancels any active or queued 
 ** 0.4
 
 *Additions*
-+ Support for HTTP ~HEAD~ requests.  (Thanks to [[https://ushin.org/][USHIN, Inc.]] for sponsoring.)
++ Support for HTTP ~HEAD~ requests.  (Thanks to [[https://ushin.org/][USHIN]] for sponsoring.)
 
 *Changes*
-+ Allow sending ~POST~ and ~PUT~ requests without bodies.  ([[https://github.com/alphapapa/plz.el/issues/16][#16]].  Thanks to [[https://github.com/josephmturner][Joseph Turner]] for reporting.  Thanks to [[https://ushin.org/][USHIN, Inc.]] for sponsoring.)
++ Allow sending ~POST~ and ~PUT~ requests without bodies.  ([[https://github.com/alphapapa/plz.el/issues/16][#16]].  Thanks to [[https://github.com/josephmturner][Joseph Turner]] for reporting.  Thanks to [[https://ushin.org/][USHIN]] for sponsoring.)
 
 *Fixes*
-+ All 2xx HTTP status codes are considered successful.  ([[https://github.com/alphapapa/plz.el/issues/17][#17]].  Thanks to [[https://github.com/josephmturner][Joseph Turner]] for reporting.  Thanks to [[https://ushin.org/][USHIN, Inc.]] for sponsoring.)
++ All 2xx HTTP status codes are considered successful.  ([[https://github.com/alphapapa/plz.el/issues/17][#17]].  Thanks to [[https://github.com/josephmturner][Joseph Turner]] for reporting.  Thanks to [[https://ushin.org/][USHIN]] for sponsoring.)
 + Errors are signaled with error data correctly.
 
 *Internal*
