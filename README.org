@@ -197,6 +197,7 @@ You may also clear a queue with ~plz-clear~, which cancels any active or queued 
 *Changes*
 
 + Option ~plz-timeout~ is removed.  (It was the default value for ~plz~'s ~:timeout~ argument, which is passed to Curl as its ~--max-time~ argument, limiting the total duration of a request operation.  This argument should be unset by default, because larger or slower downloads might not finish within a certain duration, and it is surprising to the user to have this option set by default, potentially causing requests to timeout unnecessarily.)
++ Using arguments ~:as 'file~ or ~:as '(file FILENAME)~ now passes the filename to Curl, allowing it to write the data to the file itself (rather than receiving the data into an Emacs buffer and then writing it to a file.  This improves performance when downloading large files, significantly reducing Emacs's CPU and memory usage).
 
 *Fixes*
 

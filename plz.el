@@ -419,7 +419,8 @@ into the process buffer.
   ;; the empty string.  See <https://gms.tf/when-curl-sends-100-continue.html>.
   ;; TODO: Handle "100 Continue" responses and remove this workaround.
   (push (cons "Expect" "") headers)
-  (let* ((data-arg (pcase-exhaustive body-type
+  (let* (filename
+         (data-arg (pcase-exhaustive body-type
                      ('binary "--data-binary")
                      ('text "--data")))
          (curl-command-line-args (append plz-curl-default-args
@@ -443,21 +444,49 @@ into the process buffer.
                                    ;; method.
                                    (pcase method
                                      ('get
-                                      (list (cons "--dump-header" "-")))
+                                      (append (list (cons "--dump-header" "-"))
+                                              (pcase as
+                                                ('file
+                                                 (setf filename (make-temp-file "plz-"))
+                                                 (list (cons "--output" filename)))
+                                                (`(file ,(and (pred stringp) as-filename))
+                                                 (when (file-exists-p as-filename)
+                                                   (error "File exists, will not overwrite: %S" as-filename))
+                                                 (setf filename as-filename)
+                                                 (list (cons "--output" filename))))))
                                      ((or 'put 'post)
-                                      (list (cons "--dump-header" "-")
-                                            (cons "--request" (upcase (symbol-name method)))
-                                            ;; It appears that this must be the last argument
-                                            ;; in order to pass data on the rest of STDIN.
-                                            (pcase body
-                                              (`(file ,filename)
-                                               ;; Use `expand-file-name' because curl doesn't
-                                               ;; expand, e.g. "~" into "/home/...".
-                                               (cons "--upload-file" (expand-file-name filename)))
-                                              (_ (cons data-arg "@-")))))
+                                      (append (list (cons "--dump-header" "-")
+                                                    (cons "--request" (upcase (symbol-name method))))
+                                              (pcase as
+                                                ('file
+                                                 (setf filename (make-temp-file "plz-"))
+                                                 (list (cons "--output" filename)))
+                                                (`(file ,(and (pred stringp) as-filename))
+                                                 (when (file-exists-p as-filename)
+                                                   (error "File exists, will not overwrite: %S" as-filename))
+                                                 (setf filename as-filename)
+                                                 (list (cons "--output" filename))))
+                                              (list
+                                               ;; It appears that this must be the last argument
+                                               ;; in order to pass data on the rest of STDIN.
+                                               (pcase body
+                                                 (`(file ,filename)
+                                                  ;; Use `expand-file-name' because curl doesn't
+                                                  ;; expand, e.g. "~" into "/home/...".
+                                                  (cons "--upload-file" (expand-file-name filename)))
+                                                 (_ (cons data-arg "@-"))))))
                                      ('delete
-                                      (list (cons "--dump-header" "-")
-                                            (cons "--request" (upcase (symbol-name method)))))
+                                      (append (list (cons "--dump-header" "-")
+                                                    (cons "--request" (upcase (symbol-name method))))
+                                              (pcase as
+                                                ('file
+                                                 (setf filename (make-temp-file "plz-"))
+                                                 (list (cons "--output" filename)))
+                                                (`(file ,(and (pred stringp) as-filename))
+                                                 (when (file-exists-p as-filename)
+                                                   (error "File exists, will not overwrite: %S" as-filename))
+                                                 (setf filename as-filename)
+                                                 (list (cons "--output" filename))))))
                                      ('head
                                       (list (cons "--head" "")
                                             (cons "--request" "HEAD"))))))
@@ -520,39 +549,11 @@ into the process buffer.
                                       (make-plz-error :message (format "response is nil for buffer:%S  buffer-string:%S"
                                                                        process-buffer (buffer-string)))))))
        ('file (lambda ()
-                (set-buffer-multibyte nil)
-                (plz--narrow-to-body)
-                (let ((filename (make-temp-file "plz-")))
-                  (condition-case err
-                      (progn
-                        ;; FIXME: Separate condition-case for writing the file.
-                        (write-region (point-min) (point-max) filename)
-                        (funcall then filename))
-                    (file-already-exists
-                     (funcall then (make-plz-error :message (format "error while writing to file %S: %S" filename err))))
-                    ;; In case of an error writing to the file, delete the temp file
-                    ;; and signal the error.  Ignore any errors encountered while
-                    ;; deleting the file, which would obscure the original error.
-                    (error (ignore-errors
-                             (delete-file filename))
-                           (funcall then (make-plz-error :message (format "error while writing to file %S: %S" filename err))))))))
+                (funcall then filename)))
        (`(file ,(and (pred stringp) filename))
+        ;; This requires a separate clause due to the FILENAME binding.
         (lambda ()
-          (set-buffer-multibyte nil)
-          (plz--narrow-to-body)
-          (condition-case err
-              (progn
-                (write-region (point-min) (point-max) filename nil nil nil 'excl)
-                (funcall then filename))
-            (file-already-exists
-             (funcall then (make-plz-error :message (format "error while writing to file %S: %S" filename err))))
-            ;; Since we are creating the file, it seems sensible to delete it in case of an
-            ;; error while writing to it (e.g. a disk-full error).  And we ignore any errors
-            ;; encountered while deleting the file, which would obscure the original error.
-            (error (ignore-errors
-                     (when (file-exists-p filename)
-                       (delete-file filename)))
-                   (funcall then (make-plz-error :message (format "error while writing to file %S: %S" filename err)))))))
+          (funcall then filename)))
        ((pred functionp) (lambda ()
                            (let ((coding-system (or (plz--coding-system) 'utf-8)))
                              (plz--narrow-to-body)
