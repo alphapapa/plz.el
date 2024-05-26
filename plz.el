@@ -98,6 +98,7 @@
 ;;;; Requirements
 
 (require 'cl-lib)
+(require 'map)
 (require 'rx)
 (require 'subr-x)
 
