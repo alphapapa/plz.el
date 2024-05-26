@@ -393,8 +393,8 @@ THEN or ELSE, as appropriate.  For synchronous requests, this
 argument is ignored.
 
 CONNECT-TIMEOUT and TIMEOUT are a number of seconds that limit
-how long it takes to connect to a host and to receive a response
-from a host, respectively.
+how long it takes to connect to a host and to receive a complete
+response from a host, respectively.
 
 NOQUERY is passed to `make-process', which see.
 
