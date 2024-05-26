@@ -446,25 +446,19 @@ into the process buffer.
                                      ('get
                                       (append (list (cons "--dump-header" "-"))
                                               (pcase as
-                                                ('file
-                                                 (setf filename (make-temp-file "plz-"))
-                                                 (list (cons "--output" filename)))
-                                                (`(file ,(and (pred stringp) as-filename))
-                                                 (when (file-exists-p as-filename)
+                                                ((or 'file `(file ,(and (pred stringp) as-filename)))
+                                                 (when (and as-filename (file-exists-p as-filename))
                                                    (error "File exists, will not overwrite: %S" as-filename))
-                                                 (setf filename as-filename)
+                                                 (setf filename (or as-filename (make-temp-file "plz-")))
                                                  (list (cons "--output" filename))))))
                                      ((or 'put 'post)
                                       (append (list (cons "--dump-header" "-")
                                                     (cons "--request" (upcase (symbol-name method))))
                                               (pcase as
-                                                ('file
-                                                 (setf filename (make-temp-file "plz-"))
-                                                 (list (cons "--output" filename)))
-                                                (`(file ,(and (pred stringp) as-filename))
-                                                 (when (file-exists-p as-filename)
+                                                ((or 'file `(file ,(and (pred stringp) as-filename)))
+                                                 (when (and as-filename (file-exists-p as-filename))
                                                    (error "File exists, will not overwrite: %S" as-filename))
-                                                 (setf filename as-filename)
+                                                 (setf filename (or as-filename (make-temp-file "plz-")))
                                                  (list (cons "--output" filename))))
                                               (list
                                                ;; It appears that this must be the last argument
@@ -479,13 +473,10 @@ into the process buffer.
                                       (append (list (cons "--dump-header" "-")
                                                     (cons "--request" (upcase (symbol-name method))))
                                               (pcase as
-                                                ('file
-                                                 (setf filename (make-temp-file "plz-"))
-                                                 (list (cons "--output" filename)))
-                                                (`(file ,(and (pred stringp) as-filename))
-                                                 (when (file-exists-p as-filename)
+                                                ((or 'file `(file ,(and (pred stringp) as-filename)))
+                                                 (when (and as-filename (file-exists-p as-filename))
                                                    (error "File exists, will not overwrite: %S" as-filename))
-                                                 (setf filename as-filename)
+                                                 (setf filename (or as-filename (make-temp-file "plz-")))
                                                  (list (cons "--output" filename))))))
                                      ('head
                                       (list (cons "--head" "")
@@ -548,12 +539,8 @@ into the process buffer.
                     (funcall then (or (plz--response :decode-p decode)
                                       (make-plz-error :message (format "response is nil for buffer:%S  buffer-string:%S"
                                                                        process-buffer (buffer-string)))))))
-       ('file (lambda ()
-                (funcall then filename)))
-       (`(file ,(and (pred stringp) filename))
-        ;; This requires a separate clause due to the FILENAME binding.
-        (lambda ()
-          (funcall then filename)))
+       ((or 'file `(file ,(pred stringp))) (lambda ()
+                                             (funcall then filename)))
        ((pred functionp) (lambda ()
                            (let ((coding-system (or (plz--coding-system) 'utf-8)))
                              (plz--narrow-to-body)
