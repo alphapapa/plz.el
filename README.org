@@ -199,6 +199,10 @@ You may also clear a queue with ~plz-clear~, which cancels any active or queued 
 + Improve workaround for Emacs's process sentinel-related issues.  (Don't try to process response a second time if Emacs calls the sentinel after ~plz~ has returned for a synchronous request.  See [[https://github.com/alphapapa/plz.el/issues/53][#53]].  Thanks to [[https://github.com/josephmturner][Joseph Turner]] for extensive help debugging, and to [[https://ushin.org/][USHIN]] for sponsoring some of this work.)
 + Inhibit buffer hooks when calling ~generate-new-buffer~ (as extra protection against "kill buffer?" prompts in case of errors).  (See [[https://github.com/alphapapa/plz.el/pull/52][#52]].  Thanks to [[https://github.com/mkcms][Michał Krzywkowski]].)
 
+*Development*
+
++ ~plz~ is now automatically tested against Emacs versions 27.1, 27.2, 28.1, 28.2, 29.1, 29.2, 29.3, and a recent snapshot of the ~master~ branch (adding 29.2 and 29.3).
+
 ** 0.8
 
 *Additions*
