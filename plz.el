@@ -467,9 +467,9 @@ into the process buffer.
           ;; default-directory has since been removed).  It's unclear what the best
           ;; directory is, but this seems to make sense, and it should still exist.
           temporary-file-directory)
-         (process-buffer (generate-new-buffer " *plz-request-curl*"))
+         (process-buffer (generate-new-buffer " *plz-request-curl*" t))
          (stderr-process (make-pipe-process :name "plz-request-curl-stderr"
-                                            :buffer (generate-new-buffer " *plz-request-curl-stderr*")
+                                            :buffer (generate-new-buffer " *plz-request-curl-stderr*" t)
                                             :noquery t
                                             :sentinel #'plz--stderr-sentinel))
          (process (make-process :name "plz-request-curl"
