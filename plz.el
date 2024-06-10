@@ -46,13 +46,14 @@
 
 ;;;; Usage:
 
-;; FIXME(v0.8): Remove the following note.
+;; FIXME(v0.10): Remove the following note.
 
-;; NOTE: In v0.8 of plz, only one error will be signaled: `plz-error'.
-;; The existing errors, `plz-curl-error' and `plz-http-error', inherit
-;; from `plz-error' to allow applications to update their code while
-;; using v0.7 (i.e. any `condition-case' forms should now handle only
-;; `plz-error', not the other two).
+;; NOTE: In a future version of plz, only one error will be signaled:
+;; `plz-error'.  The existing errors, `plz-curl-error' and
+;; `plz-http-error', inherit from `plz-error' to allow applications to
+;; update their code while using earlier versions (i.e. any
+;; `condition-case' forms should now handle only `plz-error', not the
+;; other two).
 
 ;; Call function `plz' to make an HTTP request.  Its docstring
 ;; explains its arguments.  `plz' also supports other HTTP methods,
@@ -382,11 +383,12 @@ structure.  If ELSE is nil, a `plz-curl-error' or
 `plz-error' structure as the error data.  For synchronous
 requests, this argument is ignored.
 
-NOTE: In v0.8 of `plz', only one error will be signaled:
-`plz-error'.  The existing errors, `plz-curl-error' and
+NOTE: In a future version of `plz', only one error will be
+signaled: `plz-error'.  The existing errors, `plz-curl-error' and
 `plz-http-error', inherit from `plz-error' to allow applications
-to update their code while using v0.7 (i.e. any `condition-case'
-forms should now handle only `plz-error', not the other two).
+to update their code while using earlier versions (i.e. any
+`condition-case' forms should now handle only `plz-error', not
+the other two).
 
 FINALLY is an optional function called without argument after
 THEN or ELSE, as appropriate.  For synchronous requests, this
@@ -408,8 +410,8 @@ FILTER function should at least insert output up to the HTTP body
 into the process buffer.
 
 \(To silence checkdoc, we mention the internal argument REST.)"
-  ;; FIXME(v0.8): Remove the note about error changes from the docstring.
-  ;; FIXME(v0.8): Update error signals in docstring.
+  ;; FIXME(v0.10): Remove the note about error changes from the docstring.
+  ;; FIXME(v0.10): Update error signals in docstring.
   (declare (indent defun))
   (setf decode (if (and decode-s (not decode))
                    nil decode))
@@ -607,7 +609,7 @@ into the process buffer.
                  ;; into a `plz-error' struct: re-signal the error here,
                  ;; outside of the sentinel.
                  (if (plz-error-response data)
-                     ;; FIXME(v0.8): Signal only plz-error.
+                     ;; FIXME(v0.10): Signal only plz-error.
                      (signal 'plz-http-error (list "HTTP error" data))
                    (signal 'plz-curl-error (list "Curl error" data))))
                 (else
@@ -737,7 +739,7 @@ QUEUE should be a `plz-queue' structure."
                              (setf (plz-queue-active queue) (delq request (plz-queue-active queue)))
                              (plz-run queue))))
                    (else (lambda (arg)
-                           ;; FIXME(v0.8): This should be done in `plz-queue' because
+                           ;; FIXME(v0.10): This should be done in `plz-queue' because
                            ;; `plz-clear' will call the second queued-request's ELSE
                            ;; before it can be set by `plz-run'.
                            (unwind-protect
@@ -870,7 +872,7 @@ argument passed to `plz--sentinel', which see."
               ;; TODO: If using ":as 'response", the HTTP response
               ;; should be passed to the THEN function, regardless
               ;; of the status code.  Only for curl errors should
-              ;; the ELSE function be called.  (Maybe in v0.8.)
+              ;; the ELSE function be called.  (Maybe in v0.10.)
 
               ;; Any other status code is considered unsuccessful
               ;; (for now, anyway).
