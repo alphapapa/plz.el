@@ -614,8 +614,8 @@ into the process buffer.
                  ;; The AS function returned a value: return it.
                  else)))
           (unless (eq as 'buffer)
-            (kill-buffer process-buffer))
-          (kill-buffer (process-buffer stderr-process)))
+            (plz--kill-buffer process-buffer))
+          (plz--kill-buffer (process-buffer stderr-process)))
       ;; Async request: return the process object.
       process)))
 
@@ -911,7 +911,7 @@ argument passed to `plz--sentinel', which see."
       (funcall finally))
     (unless (or (process-get process :plz-sync)
                 (eq 'buffer (process-get process :plz-as)))
-      (kill-buffer buffer))))
+      (plz--kill-buffer buffer))))
 
 (defun plz--stderr-sentinel (process status)
   "Sentinel for STDERR buffer.
@@ -920,7 +920,14 @@ Arguments are PROCESS and STATUS (ok, checkdoc?)."
     ((or "finished\n" "killed\n" "interrupt\n"
          (pred numberp)
          (rx "exited abnormally with code " (1+ digit)))
-     (kill-buffer (process-buffer process)))))
+     (plz--kill-buffer (process-buffer process)))))
+
+(defun plz--kill-buffer (&optional buffer)
+  "Kill BUFFER unconditionally, without asking for confirmation.
+Binds `kill-buffer-query-functions' to nil."
+  ;; TODO(emacs-28): Remove this workaround when requiring Emacs 28+.
+  (let (kill-buffer-query-functions)
+    (kill-buffer buffer)))
 
 ;;;;;; HTTP Responses
 
