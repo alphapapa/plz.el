@@ -188,6 +188,27 @@ You may also clear a queue with ~plz-clear~, which cancels any active or queued 
 :TOC:      :depth 0
 :END:
 
+** 0.9
+
+*Compatibility*
+
++ The minimum supported Emacs version is now 27.1.  (It is no longer practical to test ~plz~ with Emacs versions older than 27.1.  For Emacs 26.3, an earlier version of ~plz~ may be used, or this version might be compatible, with or without minor changes, which the maintainer cannot offer support for.)
+
+*Changes*
+
++ Option ~plz-timeout~ is removed.  (It was the default value for ~plz~'s ~:timeout~ argument, which is passed to Curl as its ~--max-time~ argument, limiting the total duration of a request operation.  This argument should be unset by default, because larger or slower downloads might not finish within a certain duration, and it is surprising to the user to have this option set by default, potentially causing requests to timeout unnecessarily.)
++ Using arguments ~:as 'file~ or ~:as '(file FILENAME)~ now passes the filename to Curl, allowing it to write the data to the file itself (rather than receiving the data into an Emacs buffer and then writing it to a file.  This improves performance when downloading large files, significantly reducing Emacs's CPU and memory usage).
+
+*Fixes*
+
++ Improve workaround for Emacs's process sentinel-related issues.  (Don't try to process response a second time if Emacs calls the sentinel after ~plz~ has returned for a synchronous request.  See [[https://github.com/alphapapa/plz.el/issues/53][#53]].  Thanks to [[https://github.com/josephmturner][Joseph Turner]] for extensive help debugging, and to [[https://ushin.org/][USHIN]] for sponsoring some of this work.)
++ Inhibit buffer hooks when calling ~generate-new-buffer~ (as extra protection against "kill buffer?" prompts in case of errors).  (See [[https://github.com/alphapapa/plz.el/pull/52][#52]].  Thanks to [[https://github.com/mkcms][Michał Krzywkowski]].)
+  - Avoid "kill buffer?" prompts in case of errors on Emacs versions before 28.  (See [[https://github.com/alphapapa/plz.el/pull/52][#52]] and [[https://github.com/alphapapa/plz.el/issues/57][#57]].  Thanks to [[https://github.com/mkcms][Michał Krzywkowski]].)  
+
+*Development*
+
++ ~plz~ is now automatically tested against Emacs versions 27.1, 27.2, 28.1, 28.2, 29.1, 29.2, 29.3, and a recent snapshot of the ~master~ branch (adding 29.2 and 29.3).
+
 ** 0.8
 
 *Additions*
@@ -265,13 +286,13 @@ You may also clear a queue with ~plz-clear~, which cancels any active or queued 
 ** 0.4
 
 *Additions*
-+ Support for HTTP ~HEAD~ requests.  (Thanks to [[https://ushin.org/][USHIN, Inc.]] for sponsoring.)
++ Support for HTTP ~HEAD~ requests.  (Thanks to [[https://ushin.org/][USHIN]] for sponsoring.)
 
 *Changes*
-+ Allow sending ~POST~ and ~PUT~ requests without bodies.  ([[https://github.com/alphapapa/plz.el/issues/16][#16]].  Thanks to [[https://github.com/josephmturner][Joseph Turner]] for reporting.  Thanks to [[https://ushin.org/][USHIN, Inc.]] for sponsoring.)
++ Allow sending ~POST~ and ~PUT~ requests without bodies.  ([[https://github.com/alphapapa/plz.el/issues/16][#16]].  Thanks to [[https://github.com/josephmturner][Joseph Turner]] for reporting.  Thanks to [[https://ushin.org/][USHIN]] for sponsoring.)
 
 *Fixes*
-+ All 2xx HTTP status codes are considered successful.  ([[https://github.com/alphapapa/plz.el/issues/17][#17]].  Thanks to [[https://github.com/josephmturner][Joseph Turner]] for reporting.  Thanks to [[https://ushin.org/][USHIN, Inc.]] for sponsoring.)
++ All 2xx HTTP status codes are considered successful.  ([[https://github.com/alphapapa/plz.el/issues/17][#17]].  Thanks to [[https://github.com/josephmturner][Joseph Turner]] for reporting.  Thanks to [[https://ushin.org/][USHIN]] for sponsoring.)
 + Errors are signaled with error data correctly.
 
 *Internal*

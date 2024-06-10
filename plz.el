@@ -5,8 +5,8 @@
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Maintainer: Adam Porter <adam@alphapapa.net>
 ;; URL: https://github.com/alphapapa/plz.el
-;; Version: 0.8
-;; Package-Requires: ((emacs "26.3"))
+;; Version: 0.9
+;; Package-Requires: ((emacs "27.1"))
 ;; Keywords: comm, network, http
 
 ;; This file is part of GNU Emacs.
@@ -46,13 +46,14 @@
 
 ;;;; Usage:
 
-;; FIXME(v0.8): Remove the following note.
+;; FIXME(v0.10): Remove the following note.
 
-;; NOTE: In v0.8 of plz, only one error will be signaled: `plz-error'.
-;; The existing errors, `plz-curl-error' and `plz-http-error', inherit
-;; from `plz-error' to allow applications to update their code while
-;; using v0.7 (i.e. any `condition-case' forms should now handle only
-;; `plz-error', not the other two).
+;; NOTE: In a future version of plz, only one error will be signaled:
+;; `plz-error'.  The existing errors, `plz-curl-error' and
+;; `plz-http-error', inherit from `plz-error' to allow applications to
+;; update their code while using earlier versions (i.e. any
+;; `condition-case' forms should now handle only `plz-error', not the
+;; other two).
 
 ;; Call function `plz' to make an HTTP request.  Its docstring
 ;; explains its arguments.  `plz' also supports other HTTP methods,
@@ -98,6 +99,7 @@
 ;;;; Requirements
 
 (require 'cl-lib)
+(require 'map)
 (require 'rx)
 (require 'subr-x)
 
@@ -243,21 +245,88 @@ This limits how long the connection phase may last (the
 \"--connect-timeout\" argument to curl)."
   :type 'number)
 
-(defcustom plz-timeout 60
-  "Default request timeout in seconds.
-This limits how long an entire request may take, including the
-connection phase and waiting to receive the response (the
-\"--max-time\" argument to curl)."
-  :type 'number)
+;;;; Macros
+
+(require 'warnings)
+
+(cl-defmacro plz-debug (&rest args)
+  ;; Copied from `ement-debug' in Ement.el, which see.
+  "Display a debug warning showing the run-time value of ARGS.
+The warning automatically includes the name of the containing
+function, and it is only displayed if `warning-minimum-log-level'
+is `:debug' at expansion time (otherwise the macro expands to a
+call to `ignore' with ARGS and is eliminated by the
+byte-compiler).  When debugging, the form also returns nil so,
+e.g. it may be used in a conditional in place of nil.
+
+Each of ARGS may be a string, which is displayed as-is, or a
+symbol, the value of which is displayed prefixed by its name, or
+a Lisp form, which is displayed prefixed by its first symbol.
+
+Before the actual ARGS arguments, you can write keyword
+arguments, i.e. alternating keywords and values.  The following
+keywords are supported:
+
+  :buffer BUFFER   Name of buffer to pass to `display-warning'.
+  :level  LEVEL    Level passed to `display-warning', which see.
+                   Default is :debug."
+  ;; TODO: Can we use a compiler macro to handle this more elegantly?
+  (pcase-let* ((fn-name (when byte-compile-current-buffer
+                          (with-current-buffer byte-compile-current-buffer
+                            ;; This is a hack, but a nifty one.
+                            (save-excursion
+                              (beginning-of-defun)
+                              (cl-second (read (current-buffer)))))))
+               (plist-args (cl-loop while (keywordp (car args))
+                                    collect (pop args)
+                                    collect (pop args)))
+               ((map (:buffer buffer) (:level level)) plist-args)
+               (level (or level :debug))
+               (string (cl-loop for arg in args
+                                concat (pcase arg
+                                         ((pred stringp) "%S ")
+                                         ((pred symbolp)
+                                          (concat (upcase (symbol-name arg)) ":%S "))
+                                         ((pred listp)
+                                          (concat "(" (upcase (symbol-name (car arg)))
+                                                  (pcase (length arg)
+                                                    (1 ")")
+                                                    (_ "...)"))
+                                                  ":%S "))))))
+    (if (eq :debug warning-minimum-log-level)
+        `(let ((fn-name ,(if fn-name
+                             `',fn-name
+                           ;; In an interpreted function: use `backtrace-frame' to get the
+                           ;; function name (we have to use a little hackery to figure out
+                           ;; how far up the frame to look, but this seems to work).
+                           `(cl-loop for frame in (backtrace-frames)
+                                     for fn = (cl-second frame)
+                                     when (not (or (subrp fn)
+                                                   (special-form-p fn)
+                                                   (eq 'backtrace-frames fn)))
+                                     return (make-symbol (format "%s [interpreted]" fn))))))
+           (display-warning fn-name (format ,string ,@args) ,level ,buffer)
+           nil)
+      `(ignore ,@args))))
+
+;;;; Compatibility
+
+(defalias 'plz--generate-new-buffer
+  (if (version< emacs-version "28.1")
+      (lambda (name &optional _inhibit-buffer-hooks)
+        "Call `generate-new-buffer' with NAME.
+Compatibility function for Emacs versions <28.1."
+        (generate-new-buffer name))
+    #'generate-new-buffer))
 
 ;;;; Functions
 
 ;;;;; Public
 
-(cl-defun plz (method url &rest rest &key headers body else filter finally noquery
+(cl-defun plz (method url &rest rest &key headers body else filter finally noquery timeout
                       (as 'string) (then 'sync)
                       (body-type 'text) (decode t decode-s)
-                      (connect-timeout plz-connect-timeout) (timeout plz-timeout))
+                      (connect-timeout plz-connect-timeout))
   "Request METHOD from URL with curl.
 Return the curl process object or, for a synchronous request, the
 selected result.
@@ -314,19 +383,20 @@ structure.  If ELSE is nil, a `plz-curl-error' or
 `plz-error' structure as the error data.  For synchronous
 requests, this argument is ignored.
 
-NOTE: In v0.8 of `plz', only one error will be signaled:
-`plz-error'.  The existing errors, `plz-curl-error' and
+NOTE: In a future version of `plz', only one error will be
+signaled: `plz-error'.  The existing errors, `plz-curl-error' and
 `plz-http-error', inherit from `plz-error' to allow applications
-to update their code while using v0.7 (i.e. any `condition-case'
-forms should now handle only `plz-error', not the other two).
+to update their code while using earlier versions (i.e. any
+`condition-case' forms should now handle only `plz-error', not
+the other two).
 
 FINALLY is an optional function called without argument after
 THEN or ELSE, as appropriate.  For synchronous requests, this
 argument is ignored.
 
 CONNECT-TIMEOUT and TIMEOUT are a number of seconds that limit
-how long it takes to connect to a host and to receive a response
-from a host, respectively.
+how long it takes to connect to a host and to receive a complete
+response from a host, respectively.
 
 NOQUERY is passed to `make-process', which see.
 
@@ -340,8 +410,8 @@ FILTER function should at least insert output up to the HTTP body
 into the process buffer.
 
 \(To silence checkdoc, we mention the internal argument REST.)"
-  ;; FIXME(v0.8): Remove the note about error changes from the docstring.
-  ;; FIXME(v0.8): Update error signals in docstring.
+  ;; FIXME(v0.10): Remove the note about error changes from the docstring.
+  ;; FIXME(v0.10): Update error signals in docstring.
   (declare (indent defun))
   (setf decode (if (and decode-s (not decode))
                    nil decode))
@@ -351,7 +421,8 @@ into the process buffer.
   ;; the empty string.  See <https://gms.tf/when-curl-sends-100-continue.html>.
   ;; TODO: Handle "100 Continue" responses and remove this workaround.
   (push (cons "Expect" "") headers)
-  (let* ((data-arg (pcase-exhaustive body-type
+  (let* (filename
+         (data-arg (pcase-exhaustive body-type
                      ('binary "--data-binary")
                      ('text "--data")))
          (curl-command-line-args (append plz-curl-default-args
@@ -375,21 +446,49 @@ into the process buffer.
                                    ;; method.
                                    (pcase method
                                      ('get
-                                      (list (cons "--dump-header" "-")))
+                                      (append (list (cons "--dump-header" "-"))
+                                              (pcase as
+                                                ('file
+                                                 (setf filename (make-temp-file "plz-"))
+                                                 (list (cons "--output" filename)))
+                                                (`(file ,(and (pred stringp) as-filename))
+                                                 (when (file-exists-p as-filename)
+                                                   (error "File exists, will not overwrite: %S" as-filename))
+                                                 (setf filename as-filename)
+                                                 (list (cons "--output" filename))))))
                                      ((or 'put 'post)
-                                      (list (cons "--dump-header" "-")
-                                            (cons "--request" (upcase (symbol-name method)))
-                                            ;; It appears that this must be the last argument
-                                            ;; in order to pass data on the rest of STDIN.
-                                            (pcase body
-                                              (`(file ,filename)
-                                               ;; Use `expand-file-name' because curl doesn't
-                                               ;; expand, e.g. "~" into "/home/...".
-                                               (cons "--upload-file" (expand-file-name filename)))
-                                              (_ (cons data-arg "@-")))))
+                                      (append (list (cons "--dump-header" "-")
+                                                    (cons "--request" (upcase (symbol-name method))))
+                                              (pcase as
+                                                ('file
+                                                 (setf filename (make-temp-file "plz-"))
+                                                 (list (cons "--output" filename)))
+                                                (`(file ,(and (pred stringp) as-filename))
+                                                 (when (file-exists-p as-filename)
+                                                   (error "File exists, will not overwrite: %S" as-filename))
+                                                 (setf filename as-filename)
+                                                 (list (cons "--output" filename))))
+                                              (list
+                                               ;; It appears that this must be the last argument
+                                               ;; in order to pass data on the rest of STDIN.
+                                               (pcase body
+                                                 (`(file ,filename)
+                                                  ;; Use `expand-file-name' because curl doesn't
+                                                  ;; expand, e.g. "~" into "/home/...".
+                                                  (cons "--upload-file" (expand-file-name filename)))
+                                                 (_ (cons data-arg "@-"))))))
                                      ('delete
-                                      (list (cons "--dump-header" "-")
-                                            (cons "--request" (upcase (symbol-name method)))))
+                                      (append (list (cons "--dump-header" "-")
+                                                    (cons "--request" (upcase (symbol-name method))))
+                                              (pcase as
+                                                ('file
+                                                 (setf filename (make-temp-file "plz-"))
+                                                 (list (cons "--output" filename)))
+                                                (`(file ,(and (pred stringp) as-filename))
+                                                 (when (file-exists-p as-filename)
+                                                   (error "File exists, will not overwrite: %S" as-filename))
+                                                 (setf filename as-filename)
+                                                 (list (cons "--output" filename))))))
                                      ('head
                                       (list (cons "--head" "")
                                             (cons "--request" "HEAD"))))))
@@ -403,9 +502,9 @@ into the process buffer.
           ;; default-directory has since been removed).  It's unclear what the best
           ;; directory is, but this seems to make sense, and it should still exist.
           temporary-file-directory)
-         (process-buffer (generate-new-buffer " *plz-request-curl*"))
+         (process-buffer (plz--generate-new-buffer " *plz-request-curl*" t))
          (stderr-process (make-pipe-process :name "plz-request-curl-stderr"
-                                            :buffer (generate-new-buffer " *plz-request-curl-stderr*")
+                                            :buffer (plz--generate-new-buffer " *plz-request-curl-stderr*" t)
                                             :noquery t
                                             :sentinel #'plz--stderr-sentinel))
          (process (make-process :name "plz-request-curl"
@@ -452,38 +551,11 @@ into the process buffer.
                                       (make-plz-error :message (format "response is nil for buffer:%S  buffer-string:%S"
                                                                        process-buffer (buffer-string)))))))
        ('file (lambda ()
-                (set-buffer-multibyte nil)
-                (plz--narrow-to-body)
-                (let ((filename (make-temp-file "plz-")))
-                  (condition-case err
-                      (progn
-                        (write-region (point-min) (point-max) filename)
-                        (funcall then filename))
-                    (file-already-exists
-                     (funcall then (make-plz-error :message (format "error while writing to file %S: %S" filename err))))
-                    ;; In case of an error writing to the file, delete the temp file
-                    ;; and signal the error.  Ignore any errors encountered while
-                    ;; deleting the file, which would obscure the original error.
-                    (error (ignore-errors
-                             (delete-file filename))
-                           (funcall then (make-plz-error :message (format "error while writing to file %S: %S" filename err))))))))
+                (funcall then filename)))
        (`(file ,(and (pred stringp) filename))
+        ;; This requires a separate clause due to the FILENAME binding.
         (lambda ()
-          (set-buffer-multibyte nil)
-          (plz--narrow-to-body)
-          (condition-case err
-              (progn
-                (write-region (point-min) (point-max) filename nil nil nil 'excl)
-                (funcall then filename))
-            (file-already-exists
-             (funcall then (make-plz-error :message (format "error while writing to file %S: %S" filename err))))
-            ;; Since we are creating the file, it seems sensible to delete it in case of an
-            ;; error while writing to it (e.g. a disk-full error).  And we ignore any errors
-            ;; encountered while deleting the file, which would obscure the original error.
-            (error (ignore-errors
-                     (when (file-exists-p filename)
-                       (delete-file filename)))
-                   (funcall then (make-plz-error :message (format "error while writing to file %S: %S" filename err)))))))
+          (funcall then filename)))
        ((pred functionp) (lambda ()
                            (let ((coding-system (or (plz--coding-system) 'utf-8)))
                              (plz--narrow-to-body)
@@ -517,15 +589,19 @@ into the process buffer.
                 (error "Process unexpectedly nil"))
               (while (accept-process-output process))
               (while (accept-process-output stderr-process))
+              (plz-debug (float-time) "BEFORE HACK" (process-buffer process))
               (when (eq :plz-result (process-get process :plz-result))
+                (plz-debug (float-time) "INSIDE HACK" (process-buffer process))
                 ;; HACK: Sentinel seems to not have been called: call it again.  (Although
                 ;; this is a hack, it seems to be a necessary one due to Emacs's process
                 ;; handling.)  See <https://github.com/alphapapa/plz.el/issues/3> and
                 ;; <https://debbugs.gnu.org/cgi/bugreport.cgi?bug=50166>.
-                (plz--sentinel process "finished\n")
+                (plz--sentinel process "workaround")
+                (plz-debug (float-time) "INSIDE HACK, AFTER CALLING SENTINEL" (process-buffer process))
                 (when (eq :plz-result (process-get process :plz-result))
                   (error "Plz: NO RESULT FROM PROCESS:%S  ARGS:%S"
                          process rest)))
+              (plz-debug (float-time) "AFTER HACK" (process-buffer process))
               ;; Sentinel seems to have been called: check the result.
               (pcase (process-get process :plz-result)
                 ((and (pred plz-error-p) data)
@@ -533,15 +609,15 @@ into the process buffer.
                  ;; into a `plz-error' struct: re-signal the error here,
                  ;; outside of the sentinel.
                  (if (plz-error-response data)
-                     ;; FIXME(v0.8): Signal only plz-error.
+                     ;; FIXME(v0.10): Signal only plz-error.
                      (signal 'plz-http-error (list "HTTP error" data))
                    (signal 'plz-curl-error (list "Curl error" data))))
                 (else
                  ;; The AS function returned a value: return it.
                  else)))
           (unless (eq as 'buffer)
-            (kill-buffer process-buffer))
-          (kill-buffer (process-buffer stderr-process)))
+            (plz--kill-buffer process-buffer))
+          (plz--kill-buffer (process-buffer stderr-process)))
       ;; Async request: return the process object.
       process)))
 
@@ -663,7 +739,7 @@ QUEUE should be a `plz-queue' structure."
                              (setf (plz-queue-active queue) (delq request (plz-queue-active queue)))
                              (plz-run queue))))
                    (else (lambda (arg)
-                           ;; FIXME(v0.8): This should be done in `plz-queue' because
+                           ;; FIXME(v0.10): This should be done in `plz-queue' because
                            ;; `plz-clear' will call the second queued-request's ELSE
                            ;; before it can be set by `plz-run'.
                            (unwind-protect
@@ -739,14 +815,31 @@ STATUS should be the process's event string (see info
 node `(elisp) Sentinels').  Calls `plz--respond' to process the
 HTTP response (directly for synchronous requests, or from a timer
 for asynchronous ones)."
-  (pcase status
-    ((or "finished\n" "killed\n" "interrupt\n"
-         (pred numberp)
-         (rx "exited abnormally with code " (group (1+ digit))))
-     (let ((buffer (process-buffer process)))
-       (if (process-get process :plz-sync)
-           (plz--respond process buffer status)
-         (run-at-time 0 nil #'plz--respond process buffer status))))))
+  (plz-debug (float-time) "BEFORE CONDITION"
+             process status (process-get process :plz-result))
+  (if (eq :plz-result (process-get process :plz-result))
+      ;; Result not yet set: check process status (we call
+      ;; `process-status' because the STATUS argument might not be
+      ;; accurate--see "hack" in `plz').
+      (if (member (process-status process) '(run stop))
+          ;; Process still alive: do nothing.
+          (plz-debug "Doing nothing because:" (process-status process))
+        ;; Process appears to be dead: check STATUS argument.
+        (pcase status
+          ((or "finished\n" "killed\n" "interrupt\n" "workaround"
+               (pred numberp)
+               (rx "exited abnormally with code " (group (1+ digit))))
+           ;; STATUS seems okay: call `plz--respond'.
+           (let ((buffer (process-buffer process)))
+             (if (process-get process :plz-sync)
+                 (plz--respond process buffer status)
+               (run-at-time 0 nil #'plz--respond process buffer status))))))
+    ;; Result already set (likely indicating that Emacs did not call
+    ;; the sentinel when `accept-process-output' was called, so we are
+    ;; either being called from our "hack", or being called a second
+    ;; time, after `plz' returned): do nothing.
+    (plz-debug (float-time) ":PLZ-RESULT ALREADY CHANGED"
+               process status (process-get process :plz-result))))
 
 (defun plz--respond (process buffer status)
   "Respond to HTTP response from PROCESS in BUFFER.
@@ -759,11 +852,14 @@ argument passed to `plz--sentinel', which see."
   ;; "Respond" also means "to react to something," which is what this
   ;; does--react to receiving the HTTP response--and it's an internal
   ;; name, so why not.
+  (plz-debug (float-time) process status (process-status process) buffer)
   (unwind-protect
-      (with-current-buffer buffer
-        (pcase-exhaustive status
-          ((or 0 "finished\n")
-           ;; Curl exited normally: check HTTP status code.
+      (pcase-exhaustive (process-exit-status process)
+        (0
+         ;; Curl exited normally: check HTTP status code.
+         (with-current-buffer buffer
+           ;; NOTE: We only switch to the process's buffer if curl
+           ;; exited successfully.
            (goto-char (point-min))
            (plz--skip-proxy-headers)
            (while (plz--skip-redirect-headers))
@@ -776,41 +872,48 @@ argument passed to `plz--sentinel', which see."
               ;; TODO: If using ":as 'response", the HTTP response
               ;; should be passed to the THEN function, regardless
               ;; of the status code.  Only for curl errors should
-              ;; the ELSE function be called.  (Maybe in v0.8.)
+              ;; the ELSE function be called.  (Maybe in v0.10.)
 
               ;; Any other status code is considered unsuccessful
               ;; (for now, anyway).
               (let ((err (make-plz-error :response (plz--response))))
                 (pcase-exhaustive (process-get process :plz-else)
                   (`nil (process-put process :plz-result err))
-                  ((and (pred functionp) fn) (funcall fn err)))))))
-
-          ((or (and (pred numberp) code)
-               (rx "exited abnormally with code " (let code (group (1+ digit)))))
-           ;; Curl error.
-           (let* ((curl-exit-code (cl-typecase code
-                                    (string (string-to-number code))
-                                    (number code)))
-                  (curl-error-message (alist-get curl-exit-code plz-curl-errors))
-                  (err (make-plz-error :curl-error (cons curl-exit-code curl-error-message))))
-             (pcase-exhaustive (process-get process :plz-else)
-               (`nil (process-put process :plz-result err))
-               ((and (pred functionp) fn) (funcall fn err)))))
-
-          ((and (or "killed\n" "interrupt\n") status)
-           ;; Curl process killed or interrupted.
-           (let* ((message (pcase status
-                             ("killed\n" "curl process killed")
-                             ("interrupt\n" "curl process interrupted")))
-                  (err (make-plz-error :message message)))
-             (pcase-exhaustive (process-get process :plz-else)
-               (`nil (process-put process :plz-result err))
-               ((and (pred functionp) fn) (funcall fn err)))))))
+                  ((and (pred functionp) fn) (funcall fn err))))))))
+        ((and code (guard (<= 1 code 90)))
+         ;; Curl exited non-zero.
+         (let* ((curl-exit-code (cl-typecase code
+                                  (string (string-to-number code))
+                                  (number code)))
+                (curl-error-message (alist-get curl-exit-code plz-curl-errors))
+                (err (make-plz-error :curl-error (cons curl-exit-code curl-error-message))))
+           (pcase-exhaustive (process-get process :plz-else)
+             (`nil (process-put process :plz-result err))
+             ((and (pred functionp) fn) (funcall fn err)))))
+        ((and code (guard (not (<= 1 code 90))))
+         ;; If we are here, it should mean that the curl process was
+         ;; killed or interrupted, and the code should be something
+         ;; not (<= 1 code 90).
+         (let* ((message (pcase status
+                           ("killed\n" "curl process killed")
+                           ("interrupt\n" "curl process interrupted")
+                           (_ (format "Unexpected curl process status:%S code:%S.  Please report this bug to the `plz' maintainer." status code))))
+                (err (make-plz-error :message message)))
+           (pcase-exhaustive (process-get process :plz-else)
+             (`nil (process-put process :plz-result err))
+             ((and (pred functionp) fn) (funcall fn err)))))
+        (code
+         ;; If we are here, something is really wrong.
+         (let* ((message (format "Unexpected curl process status:%S code:%S.  Please report this bug to the `plz' maintainer." status code))
+                (err (make-plz-error :message message)))
+           (pcase-exhaustive (process-get process :plz-else)
+             (`nil (process-put process :plz-result err))
+             ((and (pred functionp) fn) (funcall fn err))))))
     (when-let ((finally (process-get process :plz-finally)))
       (funcall finally))
     (unless (or (process-get process :plz-sync)
                 (eq 'buffer (process-get process :plz-as)))
-      (kill-buffer buffer))))
+      (plz--kill-buffer buffer))))
 
 (defun plz--stderr-sentinel (process status)
   "Sentinel for STDERR buffer.
@@ -819,7 +922,14 @@ Arguments are PROCESS and STATUS (ok, checkdoc?)."
     ((or "finished\n" "killed\n" "interrupt\n"
          (pred numberp)
          (rx "exited abnormally with code " (1+ digit)))
-     (kill-buffer (process-buffer process)))))
+     (plz--kill-buffer (process-buffer process)))))
+
+(defun plz--kill-buffer (&optional buffer)
+  "Kill BUFFER unconditionally, without asking for confirmation.
+Binds `kill-buffer-query-functions' to nil."
+  ;; TODO(emacs-28): Remove this workaround when requiring Emacs 28+.
+  (let (kill-buffer-query-functions)
+    (kill-buffer buffer)))
 
 ;;;;;; HTTP Responses
 
