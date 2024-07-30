@@ -245,6 +245,10 @@ This limits how long the connection phase may last (the
 \"--connect-timeout\" argument to curl)."
   :type 'number)
 
+(defvar plz-curl-config-args-transformer #'identity
+  "Function takes the alist of config args as argument and return the modified one.
+This gives a chance to change the config args before sending to curl process.")
+
 ;;;; Macros
 
 (require 'warnings)
@@ -492,7 +496,9 @@ into the process buffer.
                                      ('head
                                       (list (cons "--head" "")
                                             (cons "--request" "HEAD"))))))
-         (curl-config (cl-loop for (key . value) in curl-config-args
+         (curl-config (cl-loop for (key . value) in (if plz-curl-config-args-transformer
+                                                        (funcall plz-curl-config-args-transformer curl-config-args)
+                                                      curl-config-args)
                                concat (format "%s \"%s\"\n" key value)))
          (decode (pcase as
                    ('binary nil)
