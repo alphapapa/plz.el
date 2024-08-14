@@ -454,7 +454,9 @@ into the process buffer.
                                                 (`(file ,(and (pred stringp) as-filename))
                                                  (when (file-exists-p as-filename)
                                                    (error "File exists, will not overwrite: %S" as-filename))
-                                                 (setf filename as-filename)
+                                                 ;; Use `expand-file-name' because curl doesn't
+                                                 ;; expand, e.g. "~" into "/home/...".
+                                                 (setf filename (expand-file-name as-filename))
                                                  (list (cons "--output" filename))))))
                                      ((or 'put 'post)
                                       (append (list (cons "--dump-header" "-")
@@ -466,7 +468,9 @@ into the process buffer.
                                                 (`(file ,(and (pred stringp) as-filename))
                                                  (when (file-exists-p as-filename)
                                                    (error "File exists, will not overwrite: %S" as-filename))
-                                                 (setf filename as-filename)
+                                                 ;; Use `expand-file-name' because curl doesn't
+                                                 ;; expand, e.g. "~" into "/home/...".
+                                                 (setf filename (expand-file-name as-filename))
                                                  (list (cons "--output" filename))))
                                               (list
                                                ;; It appears that this must be the last argument
@@ -487,7 +491,9 @@ into the process buffer.
                                                 (`(file ,(and (pred stringp) as-filename))
                                                  (when (file-exists-p as-filename)
                                                    (error "File exists, will not overwrite: %S" as-filename))
-                                                 (setf filename as-filename)
+                                                 ;; Use `expand-file-name' because curl doesn't
+                                                 ;; expand, e.g. "~" into "/home/...".
+                                                 (setf filename (expand-file-name as-filename))
                                                  (list (cons "--output" filename))))))
                                      ('head
                                       (list (cons "--head" "")
