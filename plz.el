@@ -439,69 +439,39 @@ into the process buffer.
          (curl-config-args (append curl-config-header-args
                                    (list (cons "--url" url)
                                          (cons "--create-dirs" "")
-                                         (cons "--request" (upcase (symbol-name method))))
+                                         (cons "--request" (upcase (symbol-name method)))
+                                         (cons "--dump-header" "-"))
                                    (when connect-timeout
                                      (list (cons "--connect-timeout"
                                                  (number-to-string connect-timeout))))
                                    (when timeout
                                      (list (cons "--max-time" (number-to-string timeout))))
-                                   ;; NOTE: To make a HEAD request
-                                   ;; requires using the "--head"
-                                   ;; option rather than "--request
-                                   ;; HEAD", and doing so with
-                                   ;; "--dump-header" duplicates the
-                                   ;; headers, so we must instead
-                                   ;; specify that for each other
-                                   ;; method.
+                                   (pcase as
+                                     ('file
+                                      (setf filename (make-temp-file "plz-"))
+                                      (list (cons "--output" filename)))
+                                     (`(file ,(and (pred stringp) as-filename))
+                                      (when (file-exists-p as-filename)
+                                        (error "File exists, will not overwrite: %S" as-filename))
+                                      ;; Use `expand-file-name' because curl doesn't
+                                      ;; expand, e.g. "~" into "/home/...".
+                                      (setf filename (expand-file-name as-filename))
+                                      (list (cons "--output" filename)))
+                                     ((guard (eq 'head method))
+                                      ;; Don't duplicate headers for HEAD
+                                      ;; requests which output to the terminal.
+                                      (list (cons "--dump-header" null-device))))
                                    (pcase method
-                                     ('get
-                                      (append (list (cons "--dump-header" "-"))
-                                              (pcase as
-                                                ('file
-                                                 (setf filename (make-temp-file "plz-"))
-                                                 (list (cons "--output" filename)))
-                                                (`(file ,(and (pred stringp) as-filename))
-                                                 (when (file-exists-p as-filename)
-                                                   (error "File exists, will not overwrite: %S" as-filename))
-                                                 ;; Use `expand-file-name' because curl doesn't
-                                                 ;; expand, e.g. "~" into "/home/...".
-                                                 (setf filename (expand-file-name as-filename))
-                                                 (list (cons "--output" filename))))))
                                      ((or 'put 'post)
-                                      (append (list (cons "--dump-header" "-"))
-                                              (pcase as
-                                                ('file
-                                                 (setf filename (make-temp-file "plz-"))
-                                                 (list (cons "--output" filename)))
-                                                (`(file ,(and (pred stringp) as-filename))
-                                                 (when (file-exists-p as-filename)
-                                                   (error "File exists, will not overwrite: %S" as-filename))
-                                                 ;; Use `expand-file-name' because curl doesn't
-                                                 ;; expand, e.g. "~" into "/home/...".
-                                                 (setf filename (expand-file-name as-filename))
-                                                 (list (cons "--output" filename))))
-                                              (list
-                                               ;; It appears that this must be the last argument
-                                               ;; in order to pass data on the rest of STDIN.
-                                               (pcase body
-                                                 (`(file ,filename)
-                                                  ;; Use `expand-file-name' because curl doesn't
-                                                  ;; expand, e.g. "~" into "/home/...".
-                                                  (cons "--upload-file" (expand-file-name filename)))
-                                                 (_ (cons data-arg "@-"))))))
-                                     ('delete
-                                      (append (list (cons "--dump-header" "-"))
-                                              (pcase as
-                                                ('file
-                                                 (setf filename (make-temp-file "plz-"))
-                                                 (list (cons "--output" filename)))
-                                                (`(file ,(and (pred stringp) as-filename))
-                                                 (when (file-exists-p as-filename)
-                                                   (error "File exists, will not overwrite: %S" as-filename))
-                                                 ;; Use `expand-file-name' because curl doesn't
-                                                 ;; expand, e.g. "~" into "/home/...".
-                                                 (setf filename (expand-file-name as-filename))
-                                                 (list (cons "--output" filename))))))
+                                      (list
+                                       ;; It appears that this must be the last argument
+                                       ;; in order to pass data on the rest of STDIN.
+                                       (pcase body
+                                         (`(file ,filename)
+                                          ;; Use `expand-file-name' because curl doesn't
+                                          ;; expand, e.g. "~" into "/home/...".
+                                          (cons "--upload-file" (expand-file-name filename)))
+                                         (_ (cons data-arg "@-")))))
                                      ('head
                                       (list (cons "--head" ""))))))
          (curl-config (cl-loop for (key . value) in curl-config-args
