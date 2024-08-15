@@ -432,7 +432,8 @@ into the process buffer.
                                            collect (cons "--header" (format "%s: %s" key value))))
          (curl-config-args (append curl-config-header-args
                                    (list (cons "--url" url)
-                                         (cons "--create-dirs" ""))
+                                         (cons "--create-dirs" "")
+                                         (cons "--request" (upcase (symbol-name method))))
                                    (when connect-timeout
                                      (list (cons "--connect-timeout"
                                                  (number-to-string connect-timeout))))
@@ -461,8 +462,7 @@ into the process buffer.
                                                  (setf filename (expand-file-name as-filename))
                                                  (list (cons "--output" filename))))))
                                      ((or 'put 'post)
-                                      (append (list (cons "--dump-header" "-")
-                                                    (cons "--request" (upcase (symbol-name method))))
+                                      (append (list (cons "--dump-header" "-"))
                                               (pcase as
                                                 ('file
                                                  (setf filename (make-temp-file "plz-"))
@@ -484,8 +484,7 @@ into the process buffer.
                                                   (cons "--upload-file" (expand-file-name filename)))
                                                  (_ (cons data-arg "@-"))))))
                                      ('delete
-                                      (append (list (cons "--dump-header" "-")
-                                                    (cons "--request" (upcase (symbol-name method))))
+                                      (append (list (cons "--dump-header" "-"))
                                               (pcase as
                                                 ('file
                                                  (setf filename (make-temp-file "plz-"))
@@ -498,8 +497,7 @@ into the process buffer.
                                                  (setf filename (expand-file-name as-filename))
                                                  (list (cons "--output" filename))))))
                                      ('head
-                                      (list (cons "--head" "")
-                                            (cons "--request" "HEAD"))))))
+                                      (list (cons "--head" ""))))))
          (curl-config (cl-loop for (key . value) in curl-config-args
                                concat (format "%s \"%s\"\n" key value)))
          (decode (pcase as
