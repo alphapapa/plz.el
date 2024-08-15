@@ -430,7 +430,8 @@ into the process buffer.
          (curl-config-header-args (cl-loop for (key . value) in headers
                                            collect (cons "--header" (format "%s: %s" key value))))
          (curl-config-args (append curl-config-header-args
-                                   (list (cons "--url" url))
+                                   (list (cons "--url" url)
+                                         (cons "--create-dirs" ""))
                                    (when connect-timeout
                                      (list (cons "--connect-timeout"
                                                  (number-to-string connect-timeout))))
