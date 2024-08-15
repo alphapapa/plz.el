@@ -470,6 +470,18 @@ in URL-encoded form)."
       ;; It's a temp file, so it should always be deleted.
       (delete-file filename))))
 
+(plz-deftest plz-head-temp-file ()
+  (let ((filename (plz 'head (url "/image/jpeg")
+                    :as 'file :then 'sync)))
+    (unwind-protect
+        (let ((headers (with-temp-buffer
+                         (insert-file-contents filename)
+                         (plz--headers))))
+          (should (equal "image/jpeg"
+                         (alist-get 'content-type headers))))
+      ;; It's a temp file, so it should always be deleted.
+      (delete-file filename))))
+
 (plz-deftest plz-get-named-file ()
   (let ((filename (make-temp-file "plz-")))
     ;; HACK: Delete the temp file and reuse its name, because
