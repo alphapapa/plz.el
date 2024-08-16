@@ -359,7 +359,8 @@ It may be:
 - `(file FILENAME)' to pass FILENAME after having saved the
   response body to it without decoding.  FILENAME must be a
   non-existent file; if it exists, it will not be overwritten,
-  and an error will be signaled.
+  and an error will be signaled.  FILENAME is passed through
+  `expand-file-name', which see.
 
 - A function, which is called in the response buffer with it
   narrowed to the response body (suitable for, e.g. `json-read').
