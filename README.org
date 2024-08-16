@@ -204,6 +204,10 @@ Nothing new yet.
 
 + The minimum supported Emacs version is now 27.1.  (It is no longer practical to test ~plz~ with Emacs versions older than 27.1.  For Emacs 26.3, an earlier version of ~plz~ may be used, or this version might be compatible, with or without minor changes, which the maintainer cannot offer support for.)
 
+*Additions*
+
++ When downloading to a file, the ~--create-dirs~ option is passed to Curl so it will create any necessary subdirectories automatically.  ([[https://github.com/alphapapa/plz.el/pull/64][#64]].  Thanks to [[https://github.com/josephmturner][Joseph Turner]] and [[https://ushin.org/][USHIN]].)
+
 *Changes*
 
 + Option ~plz-timeout~ is removed.  (It was the default value for ~plz~'s ~:timeout~ argument, which is passed to Curl as its ~--max-time~ argument, limiting the total duration of a request operation.  This argument should be unset by default, because larger or slower downloads might not finish within a certain duration, and it is surprising to the user to have this option set by default, potentially causing requests to timeout unnecessarily.)
