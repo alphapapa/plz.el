@@ -190,7 +190,9 @@ You may also clear a queue with ~plz-clear~, which cancels any active or queued 
 
 ** 0.9.1-pre
 
-Nothing new yet.
+*Fixes*
+
++ Expand filenames when downloading to files (which was already applied to filenames passed for uploading).  (Thanks to [[https://github.com/josephmturner][Joseph Turner]].)  
 
 ** 0.9
 
