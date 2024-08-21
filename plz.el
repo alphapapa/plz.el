@@ -961,10 +961,13 @@ Assumes that point is at beginning of HTTP response."
   "Return coding system for HTTP response in current buffer.
 HEADERS may optionally be an alist of parsed HTTP headers to
 refer to rather than the current buffer's un-parsed headers."
-  (let* ((headers (or headers (plz--headers)))
-         (content-type (alist-get 'content-type headers)))
-    (when content-type
-      (coding-system-from-name content-type))))
+  (when-let* ((headers (or headers (plz--headers)))
+              (raw-content-type (alist-get 'content-type headers))
+              (content-type (downcase raw-content-type))
+              (charset (and (string-match "charset=\\(.+\\)" content-type)
+                            (match-string 1 content-type))))
+    (when charset
+      (coding-system-from-name charset))))
 
 (defun plz--http-status ()
   "Return HTTP status code for HTTP response in current buffer.
