@@ -516,8 +516,6 @@ into the process buffer.
                   (setf (process-get process :plz-as) 'buffer)
                   (lambda ()
                     (let ((coding-system (or (plz--coding-system) 'utf-8)))
-                      (pcase as
-                        ('binary (set-buffer-multibyte nil)))
                       (plz--narrow-to-body)
                       (when decode
                         (decode-coding-region (point) (point-max) coding-system)))
