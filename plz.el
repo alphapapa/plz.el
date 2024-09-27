@@ -856,7 +856,7 @@ argument passed to `plz--sentinel', which see."
                 (pcase-exhaustive (process-get process :plz-else)
                   (`nil (process-put process :plz-result err))
                   ((and (pred functionp) fn) (funcall fn err))))))))
-        ((and code (guard (<= 1 code 90)))
+        ((and code (guard (and (<= 1 code 90) (string= status "finished\n"))))
          ;; Curl exited non-zero.
          (let* ((curl-exit-code (cl-typecase code
                                   (string (string-to-number code))
@@ -866,21 +866,12 @@ argument passed to `plz--sentinel', which see."
            (pcase-exhaustive (process-get process :plz-else)
              (`nil (process-put process :plz-result err))
              ((and (pred functionp) fn) (funcall fn err)))))
-        ((and code (guard (not (<= 1 code 90))))
-         ;; If we are here, it should mean that the curl process was
-         ;; killed or interrupted, and the code should be something
-         ;; not (<= 1 code 90).
+        (code
+         ;; If we are here, something is probably wrong.
          (let* ((message (pcase status
                            ("killed\n" "curl process killed")
                            ("interrupt\n" "curl process interrupted")
                            (_ (format "Unexpected curl process status:%S code:%S.  Please report this bug to the `plz' maintainer." status code))))
-                (err (make-plz-error :message message)))
-           (pcase-exhaustive (process-get process :plz-else)
-             (`nil (process-put process :plz-result err))
-             ((and (pred functionp) fn) (funcall fn err)))))
-        (code
-         ;; If we are here, something is really wrong.
-         (let* ((message (format "Unexpected curl process status:%S code:%S.  Please report this bug to the `plz' maintainer." status code))
                 (err (make-plz-error :message message)))
            (pcase-exhaustive (process-get process :plz-else)
              (`nil (process-put process :plz-result err))
