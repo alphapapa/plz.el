@@ -171,6 +171,20 @@ in URL-encoded form)."
       (should (string-match "curl" .headers.User-Agent))
       (should (string= "value" (alist-get 'key (json-read-from-string .data)))))))
 
+(plz-deftest plz-patch-json-string nil
+  (let* ((json-string (json-encode (list (cons "key" "value"))))
+         (response-json)
+         (process (plz 'patch (url "/patch")
+                    :headers '(("Content-Type" . "application/json"))
+                    :body json-string
+                    :as #'json-read
+                    :then (lambda (json)
+                            (setf response-json json)))))
+    (plz-test-wait process)
+    (let-alist response-json
+      (should (string-match "curl" .headers.User-Agent))
+      (should (string= "value" (alist-get 'key (json-read-from-string .data)))))))
+
 (plz-deftest plz-post-jpeg-string nil
   (let* ((jpeg-to-upload (plz 'get (url "/image/jpeg")
                            :as 'binary :then 'sync))

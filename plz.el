@@ -456,7 +456,7 @@ into the process buffer.
                                       ;; requests which output to the terminal.
                                       (list (cons "--dump-header" null-device))))
                                    (pcase method
-                                     ((or 'put 'post)
+                                     ((or 'put 'post 'patch)
                                       (list
                                        ;; It appears that this must be the last argument
                                        ;; in order to pass data on the rest of STDIN.

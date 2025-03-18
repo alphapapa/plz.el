@@ -190,7 +190,9 @@ You may also clear a queue with ~plz-clear~, which cancels any active or queued 
 
 ** 0.10-pre
 
-Nothing new yet.
+*Additions*
+
++ Support for the HTTP PATCH method.  ([[https://github.com/alphapapa/plz.el/pull/49][#49]].  Thanks to [[https://github.com/fpvmorais][Pedro Morais]].)
 
 ** 0.9.1
 
