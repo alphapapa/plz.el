@@ -885,7 +885,7 @@ argument passed to `plz--sentinel', which see."
            (pcase-exhaustive (process-get process :plz-else)
              (`nil (process-put process :plz-result err))
              ((and (pred functionp) fn) (funcall fn err))))))
-    (when-let ((finally (process-get process :plz-finally)))
+    (when-let* ((finally (process-get process :plz-finally)))
       (funcall finally))
     (unless (or (process-get process :plz-sync)
                 (eq 'buffer (process-get process :plz-as)))
