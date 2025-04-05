@@ -895,7 +895,7 @@ argument passed to `plz--sentinel', which see."
     (unless (or (process-get process :plz-sync)
                 (eq 'buffer (process-get process :plz-as)))
       (plz--kill-buffer buffer))))
-n
+
 (defun plz--stderr-sentinel (process status)
   "Sentinel for STDERR buffer.
 Arguments are PROCESS and STATUS (ok, checkdoc?)."
