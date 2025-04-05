@@ -120,7 +120,7 @@
 ;;;; Constants
 
 (defconst plz-http-response-status-line-regexp
-  (rx "HTTP/" (group (or "1.0" "1.1" "2")) " "
+  (rx "HTTP/" (group (or "1.0" "1.1" "2" "2.0")) " "
       ;; Status code
       (group (1+ digit)) " "
       ;; Reason phrase
