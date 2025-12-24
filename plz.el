@@ -523,6 +523,8 @@ into the process buffer.
                         (decode-coding-region (point) (point-max) coding-system)))
                     (funcall then (current-buffer)))))
        ('response (lambda ()
+                    (unless decode
+                      (set-buffer-multibyte nil))
                     (funcall then (or (plz--response :decode-p decode)
                                       (make-plz-error :message (format "response is nil for buffer:%S  buffer-string:%S"
                                                                        process-buffer (buffer-string)))))))
