@@ -43,7 +43,7 @@
 
 ** Manual
 
- ~plz~ has no dependencies other than Emacs and ~curl~.  It's known to work on Emacs 26.3 or later.  To install it manually, simply place =plz.el= in your ~load-path~ and ~(require 'plz)~.
+ ~plz~ has no dependencies other than Emacs and ~curl~.  It's known to work on Emacs 27.1 or later.  To install it manually, simply place =plz.el= in your ~load-path~ and ~(require 'plz)~.
 
 * Usage
 :PROPERTIES:
