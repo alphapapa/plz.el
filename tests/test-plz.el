@@ -288,6 +288,17 @@ in URL-encoded form)."
     (should (string-match "curl" .headers.User-Agent))
     (should (equal "plz-test-header-value" .headers.X-Plz-Test-Header))))
 
+(plz-deftest plz-get-with-quoted-header-value ()
+  ;; A header value that contains a double quote — e.g. a strong ETag echoed
+  ;; back as an "If-Match" header — must survive curl's "--config" quoting.
+  ;; Before the value was escaped, the embedded quote terminated the "--config"
+  ;; argument early, truncating the header so curl dropped it and the server
+  ;; never saw it.
+  (let-alist (plz 'get (url "/get")
+               :headers '(("X-Plz-Test-Header" . "\"quoted-value\""))
+               :as #'json-read :then 'sync)
+    (should (equal "\"quoted-value\"" .headers.X-Plz-Test-Header))))
+
 ;;;;; HEAD requests
 
 ;; NOTE: httpbin.org doesn't appear to support a "/head" endpoint,
