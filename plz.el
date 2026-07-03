@@ -468,8 +468,14 @@ into the process buffer.
                                          (_ (cons data-arg "@-")))))
                                      ('head
                                       (list (cons "--head" ""))))))
+         ;; Escape "\\" and "\"" in each value: curl parses a double-quoted
+         ;; "--config" argument with "\"" as the escape, so an unescaped quote in
+         ;; a value (e.g. a strong ETag echoed back as an "If-Match" header) would
+         ;; terminate the argument early and silently truncate/drop the header.
          (curl-config (cl-loop for (key . value) in curl-config-args
-                               concat (format "%s \"%s\"\n" key value)))
+                               concat (format "%s \"%s\"\n" key
+                                              (replace-regexp-in-string
+                                               "[\\\"]" "\\\\\\&" value))))
          (decode (pcase as
                    ('binary nil)
                    (_ decode)))
