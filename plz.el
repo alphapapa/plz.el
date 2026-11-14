@@ -802,7 +802,7 @@ for asynchronous ones)."
           (plz-debug "Doing nothing because:" (process-status process))
         ;; Process appears to be dead: check STATUS argument.
         (pcase status
-          ((or "finished\n" "killed\n" "interrupt\n" "workaround"
+          ((or "finished\n" "killed\n" "interrupt\n" "hangup\n" "workaround"
                (pred numberp)
                (rx "exited abnormally with code " (group (1+ digit))))
            ;; STATUS seems okay: call `plz--respond'.
