@@ -856,8 +856,11 @@ argument passed to `plz--sentinel', which see."
                 (pcase-exhaustive (process-get process :plz-else)
                   (`nil (process-put process :plz-result err))
                   ((and (pred functionp) fn) (funcall fn err))))))))
-        ((and code (guard (<= 1 code 90)))
-         ;; Curl exited non-zero.
+        ((and code (guard (and (<= 1 code 90)
+                               (not (eq 'signal (process-status process))))))
+         ;; Curl exited non-zero.  (When curl was killed by a signal,
+         ;; `process-exit-status' returns the signal number, which
+         ;; must not be mistaken for a curl exit code.)
          (let* ((curl-exit-code (cl-typecase code
                                   (string (string-to-number code))
                                   (number code)))
@@ -866,10 +869,10 @@ argument passed to `plz--sentinel', which see."
            (pcase-exhaustive (process-get process :plz-else)
              (`nil (process-put process :plz-result err))
              ((and (pred functionp) fn) (funcall fn err)))))
-        ((and code (guard (not (<= 1 code 90))))
+        ((and code (guard (or (eq 'signal (process-status process))
+                              (not (<= 1 code 90)))))
          ;; If we are here, it should mean that the curl process was
-         ;; killed or interrupted, and the code should be something
-         ;; not (<= 1 code 90).
+         ;; killed or interrupted, and the code is the signal number.
          (let* ((message (pcase status
                            ("killed\n" "curl process killed")
                            ("interrupt\n" "curl process interrupted")
