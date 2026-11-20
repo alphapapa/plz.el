@@ -388,6 +388,40 @@ in URL-encoded form)."
 ;;     (should (equal "curl process killed"
 ;;                    (plz-error-message err)))))
 
+;; When curl is stopped by a signal, `process-exit-status' returns the
+;; signal number, which must not be reported as a curl exit code
+;; (e.g. SIGINT, 2, as "Failed to initialize.").
+
+(plz-deftest plz-get-interrupted-error nil
+  ;; Async.
+  (let* ((err)
+         (process (plz 'get (url "/delay/5")
+                    :as 'string :then #'ignore
+                    :else (lambda (e)
+                            (setf err e)))))
+    (sleep-for 0.1)
+    (interrupt-process process)
+    (plz-test-wait process)
+    (cl-loop repeat 100 until err do (sleep-for 0.1))
+    (should (plz-error-p err))
+    (should-not (plz-error-curl-error err))
+    (should (equal "curl process interrupted" (plz-error-message err)))))
+
+(plz-deftest plz-get-killed-error nil
+  ;; Async.
+  (let* ((err)
+         (process (plz 'get (url "/delay/5")
+                    :as 'string :then #'ignore
+                    :else (lambda (e)
+                            (setf err e)))))
+    (sleep-for 0.1)
+    (kill-process process)
+    (plz-test-wait process)
+    (cl-loop repeat 100 until err do (sleep-for 0.1))
+    (should (plz-error-p err))
+    (should-not (plz-error-curl-error err))
+    (should (equal "curl process killed" (plz-error-message err)))))
+
 (plz-deftest plz-get-curl-error-sync nil
   ;; Sync.
   (pcase-let ((`(,_signal . (,_message ,data))
